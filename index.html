@@ -2127,7 +2127,7 @@ function invCalc(){
   });
   const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
   document.getElementById('invTotal').textContent =
-    `Subtotal: $${sub.toFixed(2)}${tax ? ` · With tax: $${(sub + tax).toFixed(2)}` : ''}`;
+    `Subtotal: Rs ${sub.toFixed(2)}${tax ? ` · With tax: Rs ${(sub + tax).toFixed(2)}` : ''}`;
 }
 function invPDF(){
   if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
@@ -2159,17 +2159,17 @@ function invPDF(){
   rows.forEach(r => {
     doc.text(String(r[0]).slice(0, 55), 18, y);
     doc.text(String(r[1]), 130, y, { align: 'right' });
-    doc.text('$' + r[2].toFixed(2), 160, y, { align: 'right' });
-    doc.text('$' + r[3].toFixed(2), 192, y, { align: 'right' });
+    doc.text('Rs ' + r[2].toFixed(2), 160, y, { align: 'right' });
+    doc.text('Rs ' + r[3].toFixed(2), 192, y, { align: 'right' });
     y += 8;
   });
   doc.line(15, y, 195, y);
   y += 8;
-  doc.text('Subtotal: $' + sub.toFixed(2), 192, y, { align: 'right' });
+  doc.text('Subtotal: Rs ' + sub.toFixed(2), 192, y, { align: 'right' });
   y += 7;
-  if(tax){ doc.text('Tax: $' + tax.toFixed(2), 192, y, { align: 'right' }); y += 7; }
+  if(tax){ doc.text('Tax: Rs ' + tax.toFixed(2), 192, y, { align: 'right' }); y += 7; }
   doc.setFontSize(13); doc.setTextColor(108, 92, 231);
-  doc.text('TOTAL: $' + (sub + tax).toFixed(2), 192, y + 2, { align: 'right' });
+  doc.text('TOTAL: Rs ' + (sub + tax).toFixed(2), 192, y + 2, { align: 'right' });
   doc.save('invoice.pdf');
   toast('Invoice downloaded! 📄');
 }
