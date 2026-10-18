@@ -140,6 +140,14 @@
   .cr-canvas{width:100%;border-radius:10px;background:#111;touch-action:none;display:block;cursor:crosshair}
   .inv-row{display:flex;gap:8px;margin-bottom:8px}
   .inv-row input{margin-bottom:0}
+  .hdr-search{background:var(--card2);border:1px solid #2c3149;color:var(--text);
+    border-radius:999px;padding:9px 16px;font-size:.85rem;width:170px;margin-bottom:0}
+  .hdr-search:focus{outline:none;border-color:var(--accent)}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px;margin-top:4px}
+  .tool-card{background:var(--card2);border:1px solid #2c3149;border-radius:12px;
+    padding:18px 8px;text-align:center;cursor:pointer;transition:.2s}
+  .tool-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  @media(max-width:520px){.hdr-search{width:120px;font-size:.78rem}}
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -153,10 +161,12 @@
 
 <header>
   <div class="logo">Tool<span>Box</span></div>
+  <input type="text" class="hdr-search" id="navSearch" placeholder="🔍 Search tools..." oninput="filterTabs(this.value)">
 </header>
 
 <nav>
-  <button class="tab active" data-panel="resize">🖼️ Resizer</button>
+  <button class="tab active" data-panel="menu">🏠 All Tools</button>
+  <button class="tab" data-panel="resize">🖼️ Resizer</button>
   <button class="tab" data-panel="compress">🗜️ Compress KB</button>
   <button class="tab" data-panel="thumb">🎬 Thumbnail</button>
   <button class="tab" data-panel="img2pdf">📄 Img→PDF</button>
@@ -197,8 +207,18 @@
 
 <main>
 
+<!-- ============ MENU / ALL TOOLS ============ -->
+<section class="panel active" id="menu">
+  <div class="card">
+    <h2>All 37 Tools — one tap away</h2>
+    <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
+    <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
+    <div class="tools-grid" id="menuGrid"></div>
+  </div>
+</section>
+
 <!-- ============ IMAGE RESIZER ============ -->
-<section class="panel active" id="resize">
+<section class="panel" id="resize">
   <div class="card">
     <h2>Image Resizer</h2>
     <p class="sub">Upload an image, set new dimensions, download — everything happens in your browser.</p>
@@ -980,6 +1000,7 @@ document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () =>
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   t.classList.add('active');
   document.getElementById(t.dataset.panel).classList.add('active');
+  t.scrollIntoView({ inline: 'center', block: 'nearest' });
 }));
 
 let toastTimer;
@@ -2301,6 +2322,40 @@ function saveBlob(blob, name, mime){
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+/* ---------- tools menu & search ---------- */
+function buildMenu(){
+  const grid = document.getElementById('menuGrid');
+  grid.innerHTML = '';
+  document.querySelectorAll('.tab').forEach(t => {
+    if(t.dataset.panel === 'menu') return;
+    const label = t.textContent.trim();
+    const parts = label.split(' ');
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.dataset.name = label.toLowerCase();
+    card.innerHTML = `<div style="font-size:1.7rem">${parts[0]}</div>
+      <div style="font-size:.8rem;font-weight:600;margin-top:6px;line-height:1.3">${parts.slice(1).join(' ')}</div>`;
+    card.onclick = () => {
+      document.querySelector('.tab[data-panel="' + t.dataset.panel + '"]').click();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    grid.appendChild(card);
+  });
+}
+function filterMenu(q){
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('#menuGrid .tool-card').forEach(c => {
+    c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+function filterTabs(q){
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.tab').forEach(t => {
+    t.style.display = t.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+buildMenu();
 
 buildUnits();
 </script>
