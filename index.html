@@ -931,19 +931,28 @@
 <section class="panel" id="invoice">
   <div class="card">
     <h2>Invoice Generator (PDF)</h2>
-    <p class="sub">Fill in the details, get a professional PDF invoice — free for your business.</p>
+    <p class="sub">Professional invoices with auto invoice numbers and your brand color. Preview updates live as you type.</p>
     <div class="row">
-      <div><label>Your business name</label><input type="text" id="invFrom" value="My Business"></div>
-      <div><label>Bill to</label><input type="text" id="invTo" value="Client Name"></div>
-      <div><label>Tax %</label><input type="number" id="invTax" value="0"></div>
+      <div><label>Your business name</label><input type="text" id="invFrom" value="My Business" oninput="invPreview()"></div>
+      <div><label>Bill to</label><input type="text" id="invTo" value="Client Name" oninput="invPreview()"></div>
     </div>
+    <div class="row">
+      <div><label>Invoice # (auto-generated)</label><input type="text" id="invNo" readonly></div>
+      <div><label>Date</label><input type="text" id="invDate" readonly></div>
+      <div><label>Theme color</label><input type="color" id="invColor" value="#6c5ce7" oninput="invPreview()"></div>
+      <div><label>GST / Tax %</label><input type="number" id="invTax" value="0" min="0" oninput="invPreview()"></div>
+    </div>
+    <label>Notes (printed at bottom of invoice)</label>
+    <input type="text" id="invNotes" placeholder="e.g. Payment due within 7 days. Thank you!" oninput="invPreview()">
     <label>Items</label>
     <div id="invRows"></div>
     <button class="btn btn-ghost" onclick="invAddRow()" style="margin-bottom:12px">+ Add item</button>
     <div class="result show" style="margin-bottom:14px">
-      <div class="big" id="invTotal">Subtotal: $0.00</div>
-      <small>Tax added on top</small>
+      <div class="big" id="invTotal">Subtotal: Rs 0.00</div>
+      <small>GST/Tax added on top</small>
     </div>
+    <label>Live preview</label>
+    <div id="invPrev"></div>
     <button class="btn" onclick="invPDF()">📄 Generate PDF Invoice</button>
   </div>
 </section>
@@ -2111,24 +2120,70 @@ function recDownload(){
 }
 
 /* ---------- invoice generator ---------- */
-function invAddRow(){
-  const row = document.createElement('div');
-  row.className = 'inv-row';
-  row.innerHTML = `<input type="text" placeholder="Item description" style="flex:3" oninput="invCalc()">
-    <input type="number" placeholder="Qty" min="0" style="flex:1" oninput="invCalc()">
-    <input type="number" placeholder="Price" min="0" style="flex:1" oninput="invCalc()">
-    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();invCalc()">✕</button>`;
-  document.getElementById('invRows').appendChild(row);
+let invCounter = parseInt(localStorage.getItem('invCounter') || '0', 10);
+
+function invNextNumber(){
+  invCounter++;
+  localStorage.setItem('invCounter', invCounter);
+  return 'INV-' + String(invCounter).padStart(4, '0');
 }
-function invCalc(){
+
+function invTotals(){
   let sub = 0;
   document.querySelectorAll('#invRows .inv-row').forEach(r => {
     sub += (+r.children[1].value || 0) * (+r.children[2].value || 0);
   });
   const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
-  document.getElementById('invTotal').textContent =
-    `Subtotal: Rs ${sub.toFixed(2)}${tax ? ` · With tax: Rs ${(sub + tax).toFixed(2)}` : ''}`;
+  return { sub, tax, total: sub + tax };
 }
+
+function invAddRow(){
+  const row = document.createElement('div');
+  row.className = 'inv-row';
+  row.innerHTML = `<input type="text" placeholder="Item description" style="flex:3" oninput="invPreview()">
+    <input type="number" placeholder="Qty" min="0" style="flex:1" oninput="invPreview()">
+    <input type="number" placeholder="Price (Rs)" min="0" style="flex:1" oninput="invPreview()">
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();invPreview()">✕</button>`;
+  document.getElementById('invRows').appendChild(row);
+  invPreview();
+}
+
+function invPreview(){
+  const t = invTotals();
+  document.getElementById('invTotal').textContent =
+    `Subtotal: Rs ${t.sub.toFixed(2)}${t.tax ? ` · With tax: Rs ${t.total.toFixed(2)}` : ''}`;
+  const biz = document.getElementById('invFrom').value || 'Your Business';
+  const client = document.getElementById('invTo').value || 'Client';
+  const no = document.getElementById('invNo').value || '';
+  const date = document.getElementById('invDate').value || '';
+  const c = document.getElementById('invColor').value;
+  let items = 0;
+  document.querySelectorAll('#invRows .inv-row').forEach(r => { if(r.children[0].value.trim()) items++; });
+  document.getElementById('invPrev').innerHTML = `
+    <div style="background:#fff;color:#222;border-radius:12px;padding:18px;border:1px solid #2c3149;font-size:.85rem">
+      <div style="text-align:center">
+        <div style="font-size:1.25rem;font-weight:800;color:${c}">${biz}</div>
+        <div style="font-size:.72rem;color:#888">TAX INVOICE · ${no} · ${date}</div>
+      </div>
+      <div style="border-top:2px solid ${c};margin:10px 0"></div>
+      <div style="color:#555">Bill To: <b>${client}</b></div>
+      <div style="color:#888;margin-top:6px">${items} item(s)</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;color:#555">
+        <span>Subtotal</span><b>Rs ${t.sub.toFixed(2)}</b></div>
+      ${t.tax ? `<div style="display:flex;justify-content:space-between;color:#555">
+        <span>Tax</span><b>Rs ${t.tax.toFixed(2)}</b></div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-top:6px;
+        font-size:1rem;font-weight:800;color:${c}">
+        <span>TOTAL</span><span>Rs ${t.total.toFixed(2)}</span></div>
+    </div>`;
+}
+
+function invInit(){
+  document.getElementById('invNo').value = invNextNumber();
+  document.getElementById('invDate').value = new Date().toLocaleDateString();
+  invPreview();
+}
+
 function invPDF(){
   if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
   const rows = [];
@@ -2141,21 +2196,46 @@ function invPDF(){
   if(!rows.length){ toast('Add at least one item 🧾'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const sub = rows.reduce((s, r) => s + r[3], 0);
-  const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
-  doc.setFontSize(22); doc.setTextColor(108, 92, 231);
-  doc.text('INVOICE', 105, 20, { align: 'center' });
-  doc.setFontSize(11); doc.setTextColor(40);
-  doc.text('From: ' + document.getElementById('invFrom').value, 15, 35);
-  doc.text('Bill To: ' + document.getElementById('invTo').value, 15, 42);
-  doc.text('Date: ' + new Date().toLocaleDateString(), 15, 49);
-  doc.setFillColor(108, 92, 231);
-  doc.rect(15, 58, 180, 8, 'F');
-  doc.setTextColor(255);
-  doc.text('Item', 18, 63.5); doc.text('Qty', 130, 63.5, { align: 'right' });
-  doc.text('Price', 160, 63.5, { align: 'right' }); doc.text('Total', 192, 63.5, { align: 'right' });
+  const [R, G, B] = hexToRgb(document.getElementById('invColor').value);
+  const { sub, tax, total } = invTotals();
+  const no = document.getElementById('invNo').value;
+
+  // Business name: big, bold, centered
+  doc.setFontSize(24);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(R, G, B);
+  doc.text(document.getElementById('invFrom').value || 'Business', 105, 22, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(130);
+  doc.text('T A X   I N V O I C E', 105, 29, { align: 'center' });
+  doc.setDrawColor(R, G, B);
+  doc.setLineWidth(1);
+  doc.line(15, 33, 195, 33);
+
+  // Details
+  doc.setFontSize(11);
   doc.setTextColor(40);
-  let y = 72;
+  doc.text('Bill To:', 15, 42);
+  doc.setFont(undefined, 'bold');
+  doc.text(document.getElementById('invTo').value || 'Client', 15, 48);
+  doc.setFont(undefined, 'normal');
+  doc.text('Invoice #: ' + no, 195, 42, { align: 'right' });
+  doc.text('Date: ' + document.getElementById('invDate').value, 195, 48, { align: 'right' });
+
+  // Items table
+  const hy = 56;
+  doc.setFillColor(R, G, B);
+  doc.rect(15, hy, 180, 8, 'F');
+  doc.setTextColor(255);
+  doc.setFont(undefined, 'bold');
+  doc.text('Item', 18, hy + 5.5);
+  doc.text('Qty', 130, hy + 5.5, { align: 'right' });
+  doc.text('Price', 160, hy + 5.5, { align: 'right' });
+  doc.text('Total', 192, hy + 5.5, { align: 'right' });
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(40);
+  let y = hy + 13;
   rows.forEach(r => {
     doc.text(String(r[0]).slice(0, 55), 18, y);
     doc.text(String(r[1]), 130, y, { align: 'right' });
@@ -2163,17 +2243,38 @@ function invPDF(){
     doc.text('Rs ' + r[3].toFixed(2), 192, y, { align: 'right' });
     y += 8;
   });
-  doc.line(15, y, 195, y);
-  y += 8;
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.3);
+  doc.line(120, y - 2, 195, y - 2);
+  y += 6;
   doc.text('Subtotal: Rs ' + sub.toFixed(2), 192, y, { align: 'right' });
   y += 7;
-  if(tax){ doc.text('Tax: Rs ' + tax.toFixed(2), 192, y, { align: 'right' }); y += 7; }
-  doc.setFontSize(13); doc.setTextColor(108, 92, 231);
-  doc.text('TOTAL: Rs ' + (sub + tax).toFixed(2), 192, y + 2, { align: 'right' });
-  doc.save('invoice.pdf');
-  toast('Invoice downloaded! 📄');
+  if(tax){
+    doc.text('Tax: Rs ' + tax.toFixed(2), 192, y, { align: 'right' });
+    y += 7;
+  }
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(R, G, B);
+  doc.text('TOTAL: Rs ' + total.toFixed(2), 192, y + 2, { align: 'right' });
+
+  // Notes
+  const notes = document.getElementById('invNotes').value.trim();
+  if(notes){
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'italic');
+    doc.setTextColor(120);
+    doc.text(notes, 15, 285);
+  }
+
+  doc.save(no + '.pdf');
+  toast('Invoice ' + no + ' downloaded! 📄');
+  // Next invoice number for this visit
+  document.getElementById('invNo').value = invNextNumber();
+  invPreview();
 }
 invAddRow();
+invInit();
 
 /* ---------- name picker ---------- */
 function pickWinner(){
