@@ -994,7 +994,7 @@
       <h4>👤 Personal Information</h4>
       <div class="row">
         <div><label>Full name</label><input type="text" id="cvName" value="Muhammad Bilal" oninput="cvPreview()"></div>
-        <div><label>Job title</label><input type="text" id="cvTitle" value="Software Developer" oninput="cvPreview()"></div>
+        <div><label>Job title</label><input type="text" id="cvTitle" value="Software Developer" oninput="autoSummary(false);cvPreview()"></div>
       </div>
       <div class="row">
         <div><label>Email</label><input type="text" id="cvEmail" value="bilal@email.com" oninput="cvPreview()"></div>
@@ -1008,7 +1008,7 @@
     </div>
 
     <div class="cv-block">
-      <h4>📝 Professional Summary</h4>
+      <h4>📝 Professional Summary &nbsp;<button class="btn btn-ghost" style="padding:4px 12px;font-size:.72rem" onclick="autoSummary(true)">✨ Auto-write from job title</button></h4>
       <textarea id="cvSummary" rows="3" oninput="cvPreview()">Motivated software developer with hands-on experience building websites and apps. Passionate about learning new technologies and delivering quality work on time.</textarea>
     </div>
 
@@ -2433,6 +2433,7 @@ function cvAddSkill(){
 function renderSkills(){
   document.getElementById('cvSkills').innerHTML = cvSkills.map((s, i) =>
     `<span class="chip" title="Tap to remove" onclick="cvSkills.splice(${i},1);renderSkills();cvPreview()">${s} ✕</span>`).join('');
+  autoSummary(false);
 }
 document.getElementById('cvSkillInput').addEventListener('keydown', e => {
   if(e.key === 'Enter'){ e.preventDefault(); cvAddSkill(); }
@@ -2720,6 +2721,99 @@ async function cvPDF(){
 }
 
 cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
+
+/* ---------- CV auto-summary ---------- */
+const CV_FIELDS = [
+  [['ai','machine learning','deep learning','artificial intelligence'], 'AI and machine learning', ['training accurate ML models','cleaning and preparing data','deploying intelligent features']],
+  [['blockchain','crypto','web3'], 'blockchain technology', ['secure transaction systems','smart contract fundamentals','decentralized application design']],
+  [['cloud','devops','aws','azure','docker','kubernetes'], 'cloud and DevOps', ['automating deployments','managing cloud infrastructure','building CI/CD pipelines']],
+  [['cyber security','cybersecurity','penetration','security analyst','ethical hacker'], 'cyber security', ['detecting and responding to threats','hardening systems securely','applying security best practices']],
+  [['game'], 'game development', ['designing engaging gameplay','writing efficient game logic','polishing the player experience']],
+  [['qa','quality assurance','tester','testing'], 'quality assurance', ['writing clear test cases','finding and reporting bugs','guaranteeing release quality']],
+  [['data','analyst','analysis','scientist'], 'data analysis', ['turning raw data into insights','building clear reports and dashboards','supporting informed decisions']],
+  [['network','it support','helpdesk','sysadmin','computer technician'], 'IT support', ['resolving hardware and software issues','setting up and maintaining networks','giving clear, patient user support']],
+  [['developer','programmer','software','coder','web','app ','android'], 'software development', ['building reliable applications','writing clean, maintainable code','turning ideas into working products']],
+  [['tailor','stitching','fashion'], 'tailoring and fashion', ['precise stitching and perfect fitting','modern design sense','delivering orders on time']],
+  [['interior'], 'interior design', ['functional and beautiful spaces','material and color coordination','client-focused design plans']],
+  [['designer','design','ui','ux','graphic','photoshop'], 'design', ['creating clean modern visuals','user-centered design thinking','strong visual storytelling']],
+  [['video','animator','film','editor'], 'media production', ['editing engaging videos','smooth motion graphics','story-driven content']],
+  [['photographer'], 'photography', ['capturing memorable moments','professional photo editing','creative composition']],
+  [['lab','laboratory'], 'laboratory services', ['accurate sample testing','careful lab equipment handling','strict quality control']],
+  [['pharmacist','pharmacy'], 'pharmacy', ['dispensing medicines accurately','counselling patients clearly','managing medicine inventory']],
+  [['physio','therapist'], 'physiotherapy', ['designing rehabilitation plans','applying therapeutic techniques','tracking patient progress']],
+  [['nurse','medical','health','doctor','clinic','surgeon','dentist'], 'healthcare', ['compassionate patient care','accurate record keeping','staying calm under pressure']],
+  [['accountant','accounting','finance','bookkeep','audit'], 'finance and accounting', ['financial reporting and analysis','bookkeeping and reconciliations','maintaining accurate records']],
+  [['bank','teller'], 'banking', ['serving customers accurately','handling transactions securely','strong product knowledge']],
+  [['procurement','purchasing','supply chain'], 'procurement', ['negotiating with vendors','smart purchase planning','controlling costs']],
+  [['warehouse','inventory','stock'], 'warehouse and inventory', ['accurate stock records','efficient goods handling','regular counts and audits']],
+  [['insurance'], 'insurance services', ['explaining policies clearly','assessing client needs','supporting claims smoothly']],
+  [['real estate','property'], 'real estate', ['property valuation basics','building client relationships','closing deals smoothly']],
+  [['travel'], 'travel services', ['planning itineraries','ticketing and reservations','customer-focused service']],
+  [['event','wedding','planner'], 'event management', ['coordinating vendors and schedules','creative event concepts','flawless on-day execution']],
+  [['marketing','seo','social media','digital'], 'digital marketing', ['growing brands online','data-driven campaigns','content that converts']],
+  [['sales','business development','representative'], 'sales', ['building lasting client relationships','consistently meeting targets','negotiating win-win deals']],
+  [['journalist','reporter','news','anchor'], 'journalism', ['reporting accurate stories','interviewing and research','meeting tight news deadlines']],
+  [['lawyer','legal','advocate','attorney'], 'law', ['legal research and drafting','client representation','thorough case preparation']],
+  [['police','army','forces','defence','ranger'], 'defence and security services', ['discipline and physical fitness','security operations','teamwork under pressure']],
+  [['security guard','watchman','security officer'], 'security services', ['vigilant site protection','controlling access professionally','clear incident reporting']],
+  [['cleaner','housekeeping','sanitation','sweeper'], 'housekeeping', ['maintaining spotless spaces','efficient cleaning routines','strong attention to detail']],
+  [['cook','chef','kitchen','restaurant','baker'], 'food and culinary arts', ['preparing delicious hygienic food','following kitchen safety standards','creative menus and plating']],
+  [['waiter','hotel','hospitality','host'], 'hospitality', ['warm and welcoming guest service','accurate order handling','clean, inviting spaces']],
+  [['beautician','salon','hairdresser','barber','makeup'], 'beauty and grooming', ['modern styling techniques','hygienic salon practices','building loyal repeat clients']],
+  [['farmer','agriculture','livestock','dairy'], 'agriculture', ['modern farming techniques','caring for livestock','smart seasonal planning']],
+  [['shopkeeper','retail','store','cashier','billing'], 'retail', ['friendly customer handling','accurate billing and cash handling','attractive product displays']],
+  [['receptionist','secretary','virtual assistant','personal assistant','office assistant','front desk'], 'office administration', ['managing schedules and correspondence','organized record keeping','smooth day-to-day operations']],
+  [['hr','recruiter','human resource','recruitment'], 'human resources', ['recruitment and onboarding','positive employee relations','fair HR processes']],
+  [['project manager','project coordinator','site supervisor'], 'project management', ['planning and tracking milestones','managing budgets and teams','consistent on-time delivery']],
+  [['manager','management','operations','supervisor','admin'], 'operations management', ['leading and motivating teams','streamlining processes','delivering results on schedule']],
+  [['engineer','engineering','civil','mechanical','electrical'], 'engineering', ['technical problem-solving','precise project execution','quality and safety standards']],
+  [['construction','mason','builder','site'], 'construction', ['safe construction practices','reading basic drawings','on-site team coordination']],
+  [['electrician','technician','mechanic','carpenter','plumber','welder','operator','ac ','solar'], 'technical trades', ['skilled hands-on workmanship','strict safety compliance','reliable quality results']],
+  [['driver','logistics','transport','rider','delivery'], 'transport and logistics', ['safe and timely deliveries','smart route planning','vehicle care and maintenance']],
+  [['principal','academy','school'], 'education', ['running smooth academic operations','supporting teachers and students','maintaining high standards']],
+  [['teacher','teaching','lecturer','education','tutor','trainer'], 'education', ['delivering engaging lessons','supporting student growth','creating effective learning materials']],
+  [['coach','cricket','gym','fitness','athlete','sports'], 'sports and fitness', ['designing training programs','motivating athletes and clients','tracking performance improvements']],
+  [['babysitter','nanny','caregiver'], 'caregiving', ['compassionate personal care','safety and hygiene first','trustworthy, dependable support']],
+  [['writer','copywriter','content','blog'], 'content writing', ['engaging reader-focused content','thorough research','consistently meeting deadlines']],
+  [['ngo','social','volunteer','charity'], 'social services', ['community outreach programs','impact-focused initiatives','working with diverse groups']],
+  [['musician','singer','artist','actor','performer'], 'performing arts', ['live and studio performance','engaging audiences','consistent practice and polish']],
+  [['research','academic','scholar'], 'research', ['structured research methods','careful data analysis','curiosity-driven problem solving']],
+  [['librarian','library'], 'library services', ['organized cataloging','helping readers find resources','managing collections']],
+  [['imam','qari','islamic','religious'], 'religious services', ['Quranic education and recitation','community guidance','organizing religious programs']],
+  [['pilot','aviation','airline','cabin crew'], 'aviation', ['safe flight operations','passenger safety procedures','staying calm under pressure']],
+  [['seaman','marine','navy'], 'maritime services', ['supporting ship operations','following sea safety protocols','long-voyage teamwork']],
+  [['fresh','fresher','student','intern','entry','graduate'], 'entry-level roles', ['learning new skills quickly','supporting team goals with energy','bringing fresh ideas and strong work ethic']],
+];
+function cvGuessField(title){
+  const t = ' ' + title.toLowerCase() + ' ';
+  for(const [keys, field, points] of CV_FIELDS){
+    if(keys.some(k => t.includes(k))) return { field, points };
+  }
+  const clean = title.trim();
+  return { field: clean ? clean : 'my field', points: ['delivering quality work','learning quickly','professional communication'] };
+}
+const CV_SUMMARY_TEMPLATES = [
+  (title, field, pts, skills) => `Results-driven ${title} with hands-on experience in ${field}. Skilled in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}. Passionate about ${pts[1]} and committed to delivering quality work on time.`,
+  (title, field, pts, skills) => `Motivated ${title} with practical knowledge of ${field}. Strong in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}, with a proven focus on ${pts[1]}. Eager to grow and contribute to a dynamic team.`,
+  (title, field, pts, skills) => `Dedicated ${title} experienced in ${field}. Known for ${pts[0]} and ${pts[2]}. Brings ${skills && skills.length ? 'skills in ' + skills.slice(0, 3).join(', ') : 'a strong work ethic'} plus a genuine commitment to excellence.`,
+  (title, field, pts, skills) => `${title} with a solid foundation in ${field} and a track record of ${pts[0]}. Combines ${pts[1]} with ${skills && skills.length ? 'expertise in ' + skills.slice(0, 3).join(', ') : 'a fast-learning mindset'} to exceed expectations.`,
+  (title, field, pts, skills) => `Detail-oriented ${title} with a strong foundation in ${field}. Combines ${pts[0]} with ${skills && skills.length ? 'practical skills in ' + skills.slice(0, 3).join(', ') : 'a fast-learning attitude'} to add immediate value from day one.`,
+  (title, field, pts, skills) => `${title} recognized for ${pts[1]} and ${pts[2]}. Offers solid experience across ${field} with strengths in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}. Ready to take on new challenges and deliver measurable results.`,
+];
+let cvLastAuto = 'Motivated software developer with hands-on experience building websites and apps. Passionate about learning new technologies and delivering quality work on time.';
+function autoSummary(force){
+  const title = document.getElementById('cvTitle').value.trim();
+  const sumEl = document.getElementById('cvSummary');
+  const current = sumEl.value.trim();
+  if(!title){ if(force) toast('Write a job title first ✨'); return; }
+  if(!force && current && current !== cvLastAuto) return; // respect user's own text
+  const { field, points } = cvGuessField(title);
+  const pick = CV_SUMMARY_TEMPLATES[Math.floor(Math.random() * CV_SUMMARY_TEMPLATES.length)];
+  cvLastAuto = pick(title, field, points, cvSkills);
+  sumEl.value = cvLastAuto;
+  cvPreview();
+  if(force) toast('New summary written! ✨ Tap again for another version');
+}
 
 /* ---------- name picker ---------- */
 function pickWinner(){
