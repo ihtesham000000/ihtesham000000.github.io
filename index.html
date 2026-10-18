@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 27 Free Online Tools: Image Compressor, PDF, QR, Calculators & More</title>
-<meta name="description" content="27 free online tools: compress image to KB, image to PDF, QR generator, password generator, fancy text, typing test, BMI, age, GST, EMI calculators, timer and unit converter.">
+<title>ToolBox — 37 Free Online Tools: Image Compressor, Currency, Prayer Times, QR, Calculators</title>
+<meta name="description" content="37 free online tools: compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
@@ -133,6 +133,13 @@
 
   .pomo-mode{font-size:1rem;font-weight:700;text-align:center;color:var(--accent2);margin-bottom:6px}
 
+  .prayer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px}
+  .pr-card{background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:12px 8px;text-align:center}
+  .pr-card b{display:block;font-size:1.15rem;color:var(--accent2);margin-top:4px}
+  .pr-card small{color:var(--muted);font-size:.78rem}
+  .cr-canvas{width:100%;border-radius:10px;background:#111;touch-action:none;display:block;cursor:crosshair}
+  .inv-row{display:flex;gap:8px;margin-bottom:8px}
+  .inv-row input{margin-bottom:0}
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -176,6 +183,16 @@
   <button class="tab" data-panel="sign">✍️ Signature</button>
   <button class="tab" data-panel="random">🎲 Random</button>
   <button class="tab" data-panel="date">📅 Date Calc</button>
+  <button class="tab" data-panel="currency">💱 Currency</button>
+  <button class="tab" data-panel="prayer">🕌 Prayer</button>
+  <button class="tab" data-panel="zakat">🧮 Zakat</button>
+  <button class="tab" data-panel="cgpa">🎓 CGPA</button>
+  <button class="tab" data-panel="json">📦 JSON</button>
+  <button class="tab" data-panel="crop">✂️ Crop/Rotate</button>
+  <button class="tab" data-panel="filters">🎞️ Filters</button>
+  <button class="tab" data-panel="recorder">🎙️ Recorder</button>
+  <button class="tab" data-panel="invoice">🧾 Invoice</button>
+  <button class="tab" data-panel="picker">🎡 Picker</button>
 </nav>
 
 <main>
@@ -756,7 +773,193 @@
   </div>
 </section>
 
-<footer>27 free tools · No uploads · © 2026 ToolBox</footer>
+<!-- ============ CURRENCY ============ -->
+<section class="panel" id="currency">
+  <div class="card">
+    <h2>Currency Converter</h2>
+    <p class="sub">Live exchange rates — USD to PKR, SAR to PKR, and every world currency. <span id="fxTime"></span></p>
+    <div class="row">
+      <div><label>Amount</label><input type="number" id="fxAmt" value="100" oninput="convertFx()"></div>
+      <div><label>From</label><select id="fxFrom" onchange="convertFx()"><option>USD</option></select></div>
+      <div><label>To</label><select id="fxTo" onchange="convertFx()"><option>PKR</option></select></div>
+    </div>
+    <button class="btn btn-ghost" onclick="loadFx(false)">↻ Refresh rates</button>
+    <div class="result show" id="fxResult">
+      <div class="big" id="fxOut">Loading rates...</div>
+      <small>Live data · Rates update daily</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRAYER TIMES ============ -->
+<section class="panel" id="prayer">
+  <div class="card">
+    <h2>Prayer (Namaz) Times</h2>
+    <p class="sub">Today's prayer times with Hijri date — calculation: University of Islamic Sciences, Karachi (method 1).</p>
+    <div class="row">
+      <div><label>City</label><input type="text" id="prCity" value="Lahore"></div>
+      <div><label>Country</label><input type="text" id="prCountry" value="Pakistan"></div>
+    </div>
+    <button class="btn" onclick="loadPrayer()">Get Prayer Times</button>
+    <div class="result" id="prResult">
+      <div class="big" id="prDate"></div>
+      <small id="prHijri"></small>
+    </div>
+    <div class="prayer-grid" id="prGrid" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- ============ ZAKAT ============ -->
+<section class="panel" id="zakat">
+  <div class="card">
+    <h2>Zakat Calculator</h2>
+    <p class="sub">Calculate your annual Zakat (2.5%). Nisab is taken as the lower of 87.48g gold or 612.36g silver.</p>
+    <div class="row">
+      <div><label>Cash &amp; savings (PKR)</label><input type="number" id="zkCash" value="0"></div>
+      <div><label>Debts owed (PKR)</label><input type="number" id="zkDebts" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Gold (grams)</label><input type="number" id="zkGoldG" value="0"></div>
+      <div><label>Gold rate (PKR/gram)</label><input type="number" id="zkGoldR" placeholder="e.g. 29000"></div>
+    </div>
+    <div class="row">
+      <div><label>Silver (grams)</label><input type="number" id="zkSilG" value="0"></div>
+      <div><label>Silver rate (PKR/gram)</label><input type="number" id="zkSilR" placeholder="e.g. 330"></div>
+    </div>
+    <button class="btn" onclick="calcZakat()">Calculate Zakat</button>
+    <div class="result" id="zkResult">
+      <div class="big" id="zkMain"></div>
+      <small id="zkSub"></small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CGPA ============ -->
+<section class="panel" id="cgpa">
+  <div class="card">
+    <h2>CGPA / GPA Calculator</h2>
+    <p class="sub">Add your subjects with credit hours and grades — get your GPA instantly.</p>
+    <div id="cgRows"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="cgAddRow()">+ Add subject</button>
+      <button class="btn" onclick="calcCGPA()">Calculate GPA</button>
+    </div>
+    <div class="result" id="cgResult">
+      <div class="big" id="cgMain"></div>
+      <small id="cgSub"></small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JSON TOOLS ============ -->
+<section class="panel" id="json">
+  <div class="card">
+    <h2>JSON Formatter &amp; Validator</h2>
+    <p class="sub">Paste messy JSON — get it pretty-printed, minified, or checked for errors.</p>
+    <textarea id="jsonIn" rows="6" placeholder='{"paste":"your json here"}'></textarea>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn btn-ghost" onclick="jsonDo('fmt')">Format</button>
+      <button class="btn btn-ghost" onclick="jsonDo('min')">Minify</button>
+      <button class="btn btn-ghost" onclick="jsonDo('val')">Validate</button>
+    </div>
+    <textarea id="jsonOut" rows="6" readonly placeholder="Result appears here..."></textarea>
+  </div>
+</section>
+
+<!-- ============ CROP & ROTATE ============ -->
+<section class="panel" id="crop">
+  <div class="card">
+    <h2>Crop &amp; Rotate Image</h2>
+    <p class="sub">Upload, drag on the image to select a crop area, rotate or flip, then download.</p>
+    <input type="file" id="crFile" accept="image/*">
+    <div id="crWrap" style="display:none">
+      <canvas id="crView" class="cr-canvas"></canvas>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-ghost" onclick="crRotate()">⟳ Rotate 90°</button>
+        <button class="btn btn-ghost" onclick="crFlip(true)">⇋ Flip H</button>
+        <button class="btn btn-ghost" onclick="crFlip(false)">⇅ Flip V</button>
+        <button class="btn" onclick="crApplyCrop()">✂️ Apply Crop</button>
+        <button class="btn" onclick="crDownload()">⬇ Download</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PHOTO FILTERS ============ -->
+<section class="panel" id="filters">
+  <div class="card">
+    <h2>Photo Filters</h2>
+    <p class="sub">Apply Instagram-style filters to any photo — adjust sliders, download the result.</p>
+    <input type="file" id="flFile" accept="image/*">
+    <div id="flWrap" style="display:none">
+      <img class="preview" id="flPreview" alt="">
+      <div class="row" style="margin-top:12px">
+        <div><label>Brightness <span id="flBrightV">100</span>%</label><input type="range" id="flBright" min="20" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Contrast <span id="flContrastV">100</span>%</label><input type="range" id="flContrast" min="20" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Saturation <span id="flSatV">100</span>%</label><input type="range" id="flSat" min="0" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+      </div>
+      <div class="row">
+        <div><label>Grayscale <span id="flGrayV">0</span>%</label><input type="range" id="flGray" min="0" max="100" value="0" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Sepia <span id="flSepV">0</span>%</label><input type="range" id="flSep" min="0" max="100" value="0" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Blur <span id="flBlurV">0</span>px</label><input type="range" id="flBlur" min="0" max="10" value="0" style="padding:0" oninput="applyFilters()"></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="flReset()">Reset</button>
+        <button class="btn" onclick="flDownload()">⬇ Download</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VOICE RECORDER ============ -->
+<section class="panel" id="recorder">
+  <div class="card">
+    <h2>Voice Recorder</h2>
+    <p class="sub">Record your voice, play it back, download as audio file. Nothing is uploaded anywhere.</p>
+    <div class="stopwatch" id="recTime">00:00</div>
+    <div class="row">
+      <button class="btn" id="recBtn" onclick="recToggle()">⏺ Start Recording</button>
+      <button class="btn btn-ghost" onclick="recDownload()" id="recDl" style="display:none">⬇ Download</button>
+    </div>
+    <div id="recPlay" style="display:none;margin-top:14px">
+      <audio id="recAudio" controls style="width:100%"></audio>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INVOICE GENERATOR ============ -->
+<section class="panel" id="invoice">
+  <div class="card">
+    <h2>Invoice Generator (PDF)</h2>
+    <p class="sub">Fill in the details, get a professional PDF invoice — free for your business.</p>
+    <div class="row">
+      <div><label>Your business name</label><input type="text" id="invFrom" value="My Business"></div>
+      <div><label>Bill to</label><input type="text" id="invTo" value="Client Name"></div>
+      <div><label>Tax %</label><input type="number" id="invTax" value="0"></div>
+    </div>
+    <label>Items</label>
+    <div id="invRows"></div>
+    <button class="btn btn-ghost" onclick="invAddRow()" style="margin-bottom:12px">+ Add item</button>
+    <div class="result show" style="margin-bottom:14px">
+      <div class="big" id="invTotal">Subtotal: $0.00</div>
+      <small>Tax added on top</small>
+    </div>
+    <button class="btn" onclick="invPDF()">📄 Generate PDF Invoice</button>
+  </div>
+</section>
+
+<!-- ============ NAME PICKER ============ -->
+<section class="panel" id="picker">
+  <div class="card" style="text-align:center">
+    <h2 style="text-align:left">Random Name Picker</h2>
+    <p class="sub" style="text-align:left">For teachers, giveaways, decisions — paste names (one per line) and pick a winner.</p>
+    <textarea id="pkList" rows="6" placeholder="Ali&#10;Bilal&#10;Sana&#10;Omar&#10;Ava"></textarea>
+    <button class="btn" id="pkBtn" onclick="pickWinner()">🎡 Pick a winner!</button>
+    <div class="big-random" id="pkOut">—</div>
+  </div>
+</section>
+
+<footer>37 free tools · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -1642,6 +1845,352 @@ function calcDateDiff(){
   const weeks = Math.floor(days / 7);
   showResult('dtResult', `${days.toLocaleString()} days`,
     `${weeks} weeks ${days % 7} days · ${(days / 30.44).toFixed(1)} months · ${(days / 365.25).toFixed(2)} years`);
+}
+
+/* ---------- currency converter ---------- */
+let fxRates = null;
+async function loadFx(silent){
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD');
+    const d = await r.json();
+    if(d.result !== 'success') throw 0;
+    fxRates = d.rates;
+    const opts = Object.keys(fxRates).sort().map(c => `<option>${c}</option>`).join('');
+    document.getElementById('fxFrom').innerHTML = opts;
+    document.getElementById('fxTo').innerHTML = opts;
+    document.getElementById('fxFrom').value = 'USD';
+    document.getElementById('fxTo').value = 'PKR';
+    document.getElementById('fxTime').textContent = 'Rates updated: ' + new Date(d.time_last_update_utc).toLocaleDateString();
+    convertFx();
+    if(!silent) toast('Live rates loaded 💱');
+  } catch {
+    document.getElementById('fxOut').textContent = 'Could not load rates';
+    if(!silent) toast('Check your internet and try again');
+  }
+}
+function convertFx(){
+  if(!fxRates) return;
+  const amt = +document.getElementById('fxAmt').value || 0;
+  const from = document.getElementById('fxFrom').value;
+  const to = document.getElementById('fxTo').value;
+  const result = amt / fxRates[from] * fxRates[to];
+  document.getElementById('fxOut').textContent =
+    `${amt.toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}`;
+}
+loadFx(true);
+
+/* ---------- prayer times ---------- */
+async function loadPrayer(){
+  const city = document.getElementById('prCity').value.trim() || 'Lahore';
+  const country = document.getElementById('prCountry').value.trim() || 'Pakistan';
+  document.getElementById('prGrid').innerHTML = '<p class="sub">Loading...</p>';
+  try {
+    const r = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=1`);
+    const d = await r.json();
+    if(d.code !== 200) throw 0;
+    const t = d.data.timings;
+    showResult('prResult',
+      d.data.date.gregorian.date,
+      `${d.data.date.hijri.day} ${d.data.date.hijri.month.en} ${d.data.date.hijri.year} AH · ${city}, ${country}`);
+    const prayers = [['Fajr', t.Fajr], ['Sunrise', t.Sunrise], ['Dhuhr', t.Dhuhr],
+                     ['Asr', t.Asr], ['Maghrib', t.Maghrib], ['Isha', t.Isha]];
+    document.getElementById('prGrid').innerHTML = prayers.map(([n, tm]) =>
+      `<div class="pr-card"><small>${n}</small><b>${tm}</b></div>`).join('');
+  } catch {
+    document.getElementById('prGrid').innerHTML = '';
+    toast('Could not find that city — check spelling');
+  }
+}
+
+/* ---------- zakat ---------- */
+function fmtN(n){ return Math.round(n).toLocaleString(); }
+function calcZakat(){
+  const cash = +document.getElementById('zkCash').value || 0;
+  const debts = +document.getElementById('zkDebts').value || 0;
+  const goldG = +document.getElementById('zkGoldG').value || 0;
+  const goldR = +document.getElementById('zkGoldR').value || 0;
+  const silG = +document.getElementById('zkSilG').value || 0;
+  const silR = +document.getElementById('zkSilR').value || 0;
+  if(!goldR || !silR){ toast('Enter gold and silver rates per gram'); return; }
+  const goldVal = goldG * goldR, silVal = silG * silR;
+  const total = cash + goldVal + silVal;
+  const net = Math.max(0, total - debts);
+  const nisab = Math.min(87.48 * goldR, 612.36 * silR);
+  if(net >= nisab){
+    showResult('zkResult', `Zakat due: PKR ${fmtN(net * 0.025)}`,
+      `Net wealth: ${fmtN(net)} · Nisab: ${fmtN(nisab)} · Rate: 2.5%`);
+  } else {
+    showResult('zkResult', 'No Zakat due ✅',
+      `Net wealth: ${fmtN(net)} is below the nisab (${fmtN(nisab)})`);
+  }
+}
+
+/* ---------- CGPA ---------- */
+const GRADES = [['A', 4.0], ['A-', 3.67], ['B+', 3.33], ['B', 3.0], ['B-', 2.67],
+                ['C+', 2.33], ['C', 2.0], ['C-', 1.67], ['D', 1.0], ['F', 0]];
+function cgAddRow(){
+  const row = document.createElement('div');
+  row.className = 'inv-row';
+  row.innerHTML = `<input type="text" placeholder="Subject (optional)" style="flex:2">
+    <input type="number" placeholder="Credits" min="1" max="6" style="flex:1" oninput="calcCGPA()">
+    <select style="flex:1" onchange="calcCGPA()">${GRADES.map(([g, p]) => `<option value="${p}">${g}</option>`).join('')}</select>
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();calcCGPA()">✕</button>`;
+  document.getElementById('cgRows').appendChild(row);
+}
+function calcCGPA(){
+  let pts = 0, cr = 0;
+  document.querySelectorAll('#cgRows .inv-row').forEach(r => {
+    const c = +r.children[1].value || 0;
+    const g = +r.children[2].value || 0;
+    pts += c * g; cr += c;
+  });
+  if(!cr){ document.getElementById('cgResult').classList.remove('show'); return; }
+  const gpa = pts / cr;
+  const rating = gpa >= 3.7 ? '🏆 Excellent!' : gpa >= 3.0 ? '💪 Very good' : gpa >= 2.5 ? '👍 Good' : '📚 Keep pushing!';
+  showResult('cgResult', `GPA: ${gpa.toFixed(2)} / 4.0`, `${cr} total credits · ${Math.round(gpa / 4 * 100)}% · ${rating}`);
+}
+cgAddRow();
+
+/* ---------- JSON tools ---------- */
+function jsonDo(mode){
+  const t = document.getElementById('jsonIn').value;
+  try {
+    const o = JSON.parse(t);
+    document.getElementById('jsonOut').value =
+      mode === 'min' ? JSON.stringify(o) : mode === 'val' ? '✅ Valid JSON!' : JSON.stringify(o, null, 2);
+    toast('Done! ✔');
+  } catch(err) {
+    document.getElementById('jsonOut').value = '❌ Invalid JSON: ' + err.message;
+    toast('Invalid JSON');
+  }
+}
+
+/* ---------- crop & rotate ---------- */
+let crSrc = null;
+const crView = document.getElementById('crView');
+const crCtx = crView.getContext('2d');
+let crRect = null, crDrag = null;
+document.getElementById('crFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  crSrc = document.createElement('canvas');
+  crSrc.width = img.width; crSrc.height = img.height;
+  crSrc.getContext('2d').drawImage(img, 0, 0);
+  crRect = null;
+  document.getElementById('crWrap').style.display = 'block';
+  crRender();
+  toast('Drag on the image to select crop area ✂️');
+});
+function crRender(){
+  if(!crSrc) return;
+  const scale = Math.min(560, crSrc.width) / crSrc.width;
+  crView.width = Math.round(crSrc.width * scale);
+  crView.height = Math.round(crSrc.height * scale);
+  crCtx.drawImage(crSrc, 0, 0, crView.width, crView.height);
+  if(crRect && crRect.w > 2){
+    crCtx.save();
+    crCtx.strokeStyle = '#6c5ce7'; crCtx.lineWidth = 2; crCtx.setLineDash([6, 4]);
+    crCtx.strokeRect(crRect.x, crRect.y, crRect.w, crRect.h);
+    crCtx.restore();
+  }
+}
+function crPos(e){
+  const r = crView.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * crView.width / r.width,
+           y: (e.clientY - r.top) * crView.height / r.height };
+}
+crView.addEventListener('pointerdown', e => { e.preventDefault(); crDrag = crPos(e); crRect = null; });
+crView.addEventListener('pointermove', e => {
+  if(!crDrag) return;
+  const p = crPos(e);
+  crRect = { x: Math.min(p.x, crDrag.x), y: Math.min(p.y, crDrag.y),
+             w: Math.abs(p.x - crDrag.x), h: Math.abs(p.y - crDrag.y) };
+  crRender();
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+  crView.addEventListener(ev, () => crDrag = null));
+function crRotate(){
+  if(!crSrc) return;
+  const c = document.createElement('canvas');
+  c.width = crSrc.height; c.height = crSrc.width;
+  const ctx = c.getContext('2d');
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(crSrc, -crSrc.width / 2, -crSrc.height / 2);
+  crSrc = c; crRect = null; crRender();
+}
+function crFlip(h){
+  if(!crSrc) return;
+  const c = document.createElement('canvas');
+  c.width = crSrc.width; c.height = crSrc.height;
+  const ctx = c.getContext('2d');
+  if(h){ ctx.translate(c.width, 0); ctx.scale(-1, 1); }
+  else { ctx.translate(0, c.height); ctx.scale(1, -1); }
+  ctx.drawImage(crSrc, 0, 0);
+  crSrc = c; crRender();
+}
+function crApplyCrop(){
+  if(!crSrc || !crRect || crRect.w < 5 || crRect.h < 5){ toast('Drag a crop area first ✂️'); return; }
+  const s = crSrc.width / crView.width;
+  const c = document.createElement('canvas');
+  c.width = Math.round(crRect.w * s); c.height = Math.round(crRect.h * s);
+  c.getContext('2d').drawImage(crSrc, crRect.x * s, crRect.y * s, crRect.w * s, crRect.h * s,
+    0, 0, c.width, c.height);
+  crSrc = c; crRect = null; crRender();
+  toast('Crop applied ✔');
+}
+function crDownload(){
+  if(crSrc){ crSrc.toBlob(b => saveBlob(b, 'edited-image.png'), 'image/png'); toast('Downloading ⬇'); }
+}
+
+/* ---------- photo filters ---------- */
+let flImg = null, flCanvas = null;
+document.getElementById('flFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  flImg = img;
+  flCanvas = document.createElement('canvas');
+  flCanvas.width = img.width; flCanvas.height = img.height;
+  document.getElementById('flWrap').style.display = 'block';
+  applyFilters();
+});
+function applyFilters(){
+  if(!flImg) return;
+  const g = id => document.getElementById(id);
+  const v = id => +g(id).value;
+  g('flBrightV').textContent = v('flBright'); g('flContrastV').textContent = v('flContrast');
+  g('flSatV').textContent = v('flSat'); g('flGrayV').textContent = v('flGray');
+  g('flSepV').textContent = v('flSep'); g('flBlurV').textContent = v('flBlur');
+  const ctx = flCanvas.getContext('2d');
+  ctx.filter = `brightness(${v('flBright')}%) contrast(${v('flContrast')}%) saturate(${v('flSat')}%) grayscale(${v('flGray')}%) sepia(${v('flSep')}%) blur(${v('flBlur')}px)`;
+  ctx.drawImage(flImg, 0, 0);
+  document.getElementById('flPreview').src = flCanvas.toDataURL('image/jpeg', 0.9);
+}
+function flReset(){
+  ['flBright','flContrast','flSat'].forEach(id => document.getElementById(id).value = 100);
+  ['flGray','flSep','flBlur'].forEach(id => document.getElementById(id).value = 0);
+  applyFilters();
+}
+function flDownload(){
+  if(flCanvas){ flCanvas.toBlob(b => saveBlob(b, 'filtered.jpg'), 'image/jpeg', 0.92); toast('Downloading ⬇'); }
+}
+
+/* ---------- voice recorder ---------- */
+let recStream = null, mediaRec = null, recChunks = [], recStartT = null, recInt = null, recBlob = null;
+async function recToggle(){
+  const btn = document.getElementById('recBtn');
+  if(mediaRec && mediaRec.state === 'recording'){
+    mediaRec.stop();
+    clearInterval(recInt);
+    btn.textContent = '⏺ Start Recording';
+    return;
+  }
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch { toast('Microphone permission needed 🎙️'); return; }
+  recChunks = [];
+  mediaRec = new MediaRecorder(recStream);
+  mediaRec.ondataavailable = e => recChunks.push(e.data);
+  mediaRec.onstop = () => {
+    recStream.getTracks().forEach(t => t.stop());
+    recBlob = new Blob(recChunks, { type: mediaRec.mimeType || 'audio/webm' });
+    document.getElementById('recAudio').src = URL.createObjectURL(recBlob);
+    document.getElementById('recPlay').style.display = 'block';
+    document.getElementById('recDl').style.display = 'inline-block';
+    toast('Recording ready! ✔');
+  };
+  mediaRec.start();
+  recStartT = Date.now();
+  btn.textContent = '⏹ Stop Recording';
+  recInt = setInterval(() => {
+    document.getElementById('recTime').textContent = fmtSW(Date.now() - recStartT).slice(0, 5);
+  }, 250);
+}
+function recDownload(){
+  if(recBlob) saveBlob(recBlob, 'recording.webm');
+}
+
+/* ---------- invoice generator ---------- */
+function invAddRow(){
+  const row = document.createElement('div');
+  row.className = 'inv-row';
+  row.innerHTML = `<input type="text" placeholder="Item description" style="flex:3" oninput="invCalc()">
+    <input type="number" placeholder="Qty" min="0" style="flex:1" oninput="invCalc()">
+    <input type="number" placeholder="Price" min="0" style="flex:1" oninput="invCalc()">
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();invCalc()">✕</button>`;
+  document.getElementById('invRows').appendChild(row);
+}
+function invCalc(){
+  let sub = 0;
+  document.querySelectorAll('#invRows .inv-row').forEach(r => {
+    sub += (+r.children[1].value || 0) * (+r.children[2].value || 0);
+  });
+  const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
+  document.getElementById('invTotal').textContent =
+    `Subtotal: $${sub.toFixed(2)}${tax ? ` · With tax: $${(sub + tax).toFixed(2)}` : ''}`;
+}
+function invPDF(){
+  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+  const rows = [];
+  document.querySelectorAll('#invRows .inv-row').forEach(r => {
+    const d = r.children[0].value.trim();
+    const q = +r.children[1].value || 0;
+    const p = +r.children[2].value || 0;
+    if(d) rows.push([d, q, p, q * p]);
+  });
+  if(!rows.length){ toast('Add at least one item 🧾'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const sub = rows.reduce((s, r) => s + r[3], 0);
+  const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
+  doc.setFontSize(22); doc.setTextColor(108, 92, 231);
+  doc.text('INVOICE', 105, 20, { align: 'center' });
+  doc.setFontSize(11); doc.setTextColor(40);
+  doc.text('From: ' + document.getElementById('invFrom').value, 15, 35);
+  doc.text('Bill To: ' + document.getElementById('invTo').value, 15, 42);
+  doc.text('Date: ' + new Date().toLocaleDateString(), 15, 49);
+  doc.setFillColor(108, 92, 231);
+  doc.rect(15, 58, 180, 8, 'F');
+  doc.setTextColor(255);
+  doc.text('Item', 18, 63.5); doc.text('Qty', 130, 63.5, { align: 'right' });
+  doc.text('Price', 160, 63.5, { align: 'right' }); doc.text('Total', 192, 63.5, { align: 'right' });
+  doc.setTextColor(40);
+  let y = 72;
+  rows.forEach(r => {
+    doc.text(String(r[0]).slice(0, 55), 18, y);
+    doc.text(String(r[1]), 130, y, { align: 'right' });
+    doc.text('$' + r[2].toFixed(2), 160, y, { align: 'right' });
+    doc.text('$' + r[3].toFixed(2), 192, y, { align: 'right' });
+    y += 8;
+  });
+  doc.line(15, y, 195, y);
+  y += 8;
+  doc.text('Subtotal: $' + sub.toFixed(2), 192, y, { align: 'right' });
+  y += 7;
+  if(tax){ doc.text('Tax: $' + tax.toFixed(2), 192, y, { align: 'right' }); y += 7; }
+  doc.setFontSize(13); doc.setTextColor(108, 92, 231);
+  doc.text('TOTAL: $' + (sub + tax).toFixed(2), 192, y + 2, { align: 'right' });
+  doc.save('invoice.pdf');
+  toast('Invoice downloaded! 📄');
+}
+invAddRow();
+
+/* ---------- name picker ---------- */
+function pickWinner(){
+  const names = document.getElementById('pkList').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if(names.length < 2){ toast('Add at least 2 names 🎡'); return; }
+  const btn = document.getElementById('pkBtn');
+  btn.disabled = true;
+  let ticks = 0;
+  const int = setInterval(() => {
+    document.getElementById('pkOut').textContent = names[Math.floor(Math.random() * names.length)];
+    if(++ticks > 25){
+      clearInterval(int);
+      document.getElementById('pkOut').textContent = '🏆 ' + names[Math.floor(Math.random() * names.length)];
+      btn.disabled = false;
+      beep();
+    }
+  }, 70);
 }
 
 function saveBlob(blob, name, mime){
