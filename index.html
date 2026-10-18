@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 17 Free Online Tools: Image Resizer, QR Generator, Calculator, Converters</title>
-<meta name="description" content="Free online tools: resize images, make thumbnails, QR code generator, password generator, BMI, age, percentage, discount, EMI loan, tip calculators, timer and unit converter.">
+<title>ToolBox — 27 Free Online Tools: Image Compressor, PDF, QR, Calculators & More</title>
+<meta name="description" content="27 free online tools: compress image to KB, image to PDF, QR generator, password generator, fancy text, typing test, BMI, age, GST, EMI calculators, timer and unit converter.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --bg:#0f1117; --card:#1a1d27; --card2:#222636; --text:#e8eaf2;
@@ -70,7 +71,7 @@
   .gen-out{
     word-break:break-all;font-size:1.25rem;font-weight:700;text-align:center;
     background:var(--card2);border:1px dashed #3a3f58;border-radius:10px;
-    padding:18px 14px;margin:14px 0;letter-spacing:1px;user-select:all;
+    padding:18px 14px;margin:14px 0;user-select:all;
   }
   .qr-wrap{text-align:center}
   .qr-wrap img{width:250px;max-width:80%;background:#fff;padding:10px;border-radius:12px}
@@ -96,6 +97,42 @@
 
   .big-random{font-size:4rem;text-align:center;padding:30px;font-weight:800}
 
+  .fancy-row{
+    display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid #2c3149;
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;
+  }
+  .fancy-row .ft{flex:1;font-size:1.05rem;word-break:break-all;cursor:pointer}
+  .fancy-row .fname{font-size:.7rem;color:var(--muted);display:block}
+  .fancy-row .copy{background:none;border:1px solid #2c3149;color:var(--muted);cursor:pointer;
+    border-radius:8px;padding:6px 12px;font-size:.8rem;flex-shrink:0}
+  .fancy-row .copy:hover{color:var(--accent2);border-color:var(--accent2)}
+
+  .passage{
+    background:var(--card2);border:1px solid #2c3149;border-radius:10px;
+    padding:16px;font-size:1.05rem;line-height:2;margin-bottom:14px;
+  }
+  .passage span{padding:2px 3px;border-radius:4px}
+  .passage span.ok{background:rgba(0,206,201,.25)}
+  .passage span.bad{background:rgba(255,107,107,.3)}
+  .passage span.cur{box-shadow:0 2px 0 var(--accent)}
+  .type-stats{display:flex;gap:10px;margin:14px 0}
+  .type-stats .gen-out{flex:1;margin:0;font-size:1.1rem;padding:12px 8px}
+
+  #sigCanvas{
+    width:100%;height:220px;background:#fff;border-radius:12px;touch-action:none;
+    cursor:crosshair;display:block;margin-bottom:12px;
+  }
+
+  .swatch{height:64px;border-radius:10px;margin-bottom:12px;border:1px solid #2c3149}
+  .color-line{display:flex;align-items:center;gap:10px;background:var(--card2);
+    border:1px solid #2c3149;border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .color-line code{flex:1;font-size:.95rem;color:var(--accent2)}
+  .color-line button{background:none;border:1px solid #2c3149;color:var(--muted);
+    border-radius:8px;padding:4px 12px;font-size:.78rem;cursor:pointer}
+  .color-line button:hover{color:var(--accent2);border-color:var(--accent2)}
+
+  .pomo-mode{font-size:1rem;font-weight:700;text-align:center;color:var(--accent2);margin-bottom:6px}
+
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -113,7 +150,10 @@
 
 <nav>
   <button class="tab active" data-panel="resize">🖼️ Resizer</button>
+  <button class="tab" data-panel="compress">🗜️ Compress KB</button>
   <button class="tab" data-panel="thumb">🎬 Thumbnail</button>
+  <button class="tab" data-panel="img2pdf">📄 Img→PDF</button>
+  <button class="tab" data-panel="textimg">📝 Text on Img</button>
   <button class="tab" data-panel="convert">🔄 Converter</button>
   <button class="tab" data-panel="calc">🧮 Calculator</button>
   <button class="tab" data-panel="units">📏 Units</button>
@@ -124,9 +164,16 @@
   <button class="tab" data-panel="percent">％ Percent</button>
   <button class="tab" data-panel="discount">🏷️ Discount</button>
   <button class="tab" data-panel="emi">💰 Loan EMI</button>
+  <button class="tab" data-panel="gst">🧾 GST Tax</button>
   <button class="tab" data-panel="tip">🍽️ Tip</button>
-  <button class="tab" data-panel="words">🔤 Word Counter</button>
+  <button class="tab" data-panel="words">🔤 Words</button>
+  <button class="tab" data-panel="fancy">✨ Fancy Text</button>
+  <button class="tab" data-panel="encoders">🔡 Base64/URL</button>
+  <button class="tab" data-panel="color">🎨 Color</button>
   <button class="tab" data-panel="timer">⏱️ Timer</button>
+  <button class="tab" data-panel="pomodoro">🍅 Pomodoro</button>
+  <button class="tab" data-panel="typing">⌨️ Typing Test</button>
+  <button class="tab" data-panel="sign">✍️ Signature</button>
   <button class="tab" data-panel="random">🎲 Random</button>
   <button class="tab" data-panel="date">📅 Date Calc</button>
 </nav>
@@ -154,6 +201,28 @@
   </div>
 </section>
 
+<!-- ============ IMAGE COMPRESSOR ============ -->
+<section class="panel" id="compress">
+  <div class="card">
+    <h2>Image Compressor (to exact KB)</h2>
+    <p class="sub">Perfect for online job forms &amp; exam applications that demand photos under a specific size.</p>
+    <input type="file" id="cpFile" accept="image/*">
+    <div class="row">
+      <div><label>Target size (KB)</label><input type="number" id="cpKB" value="50"></div>
+      <div><label>Max width (px, optional)</label><input type="number" id="cpMaxW" placeholder="e.g. 1000"></div>
+    </div>
+    <button class="btn" onclick="compressImage()">Compress Image</button>
+    <div class="result" id="cpResult">
+      <div class="big" id="cpMain"></div>
+      <small id="cpSub"></small>
+    </div>
+    <div id="cpOut" style="display:none">
+      <img class="preview" id="cpPreview" alt="">
+      <button class="btn" style="margin-top:12px" onclick="downloadCompressed()">⬇ Download compressed image</button>
+    </div>
+  </div>
+</section>
+
 <!-- ============ THUMBNAIL MAKER ============ -->
 <section class="panel" id="thumb">
   <div class="card">
@@ -178,6 +247,51 @@
     <div id="thOut" style="display:none">
       <img class="preview" id="thPreview" alt="">
       <button class="btn" style="margin-top:12px" onclick="downloadThumb()">⬇ Download thumbnail</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMAGE TO PDF ============ -->
+<section class="panel" id="img2pdf">
+  <div class="card">
+    <h2>Image to PDF Converter</h2>
+    <p class="sub">Turn photos into a single PDF — for documents, assignments, forms. Select multiple images for multiple pages.</p>
+    <input type="file" id="pdfFiles" accept="image/*" multiple>
+    <p class="sub" id="pdfList"></p>
+    <label>Page size</label>
+    <select id="pdfSize">
+      <option value="a4">A4 (210 × 297 mm)</option>
+      <option value="letter">Letter (8.5 × 11 in)</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="pdfFit" checked style="width:auto;margin:0"> Fit image with margins (uncheck = fill full page)
+    </label>
+    <button class="btn" onclick="makePDF()">Create PDF</button>
+  </div>
+</section>
+
+<!-- ============ TEXT ON IMAGE ============ -->
+<section class="panel" id="textimg">
+  <div class="card">
+    <h2>Add Text to Image</h2>
+    <p class="sub">Make memes, quotes, posters and watermarks — text with outline for readability.</p>
+    <input type="file" id="txFile" accept="image/*">
+    <label>Your text</label>
+    <input type="text" id="txText" value="Your text here" oninput="drawTextImage()">
+    <div class="row">
+      <div><label>Text color</label><input type="color" id="txColor" value="#ffffff" oninput="drawTextImage()"></div>
+      <div><label>Size: <span id="txSizeVal">40</span>px</label>
+        <input type="range" id="txSize" min="14" max="120" value="40" style="padding:0" oninput="drawTextImage()"></div>
+      <div><label>Position</label>
+        <select id="txPos" onchange="drawTextImage()">
+          <option value="top">Top</option>
+          <option value="middle" selected>Middle</option>
+          <option value="bottom">Bottom</option>
+        </select></div>
+    </div>
+    <div id="txOut" style="display:none">
+      <img class="preview" id="txPreview" alt="">
+      <button class="btn" style="margin-top:12px" onclick="downloadTextImage()">⬇ Download image</button>
     </div>
   </div>
 </section>
@@ -409,6 +523,40 @@
   </div>
 </section>
 
+<!-- ============ GST ============ -->
+<section class="panel" id="gst">
+  <div class="card">
+    <h2>GST / Sales Tax Calculator</h2>
+    <p class="sub">Add tax to a price, or find the original price from a tax-inclusive total.</p>
+    <div class="row">
+      <div><label>Amount ($)</label><input type="number" id="gstAmt" value="1000"></div>
+      <div>
+        <label>Tax rate (%)</label>
+        <select id="gstRate">
+          <option value="5">5%</option>
+          <option value="10">10%</option>
+          <option value="15">15%</option>
+          <option value="16">16%</option>
+          <option value="17" selected>17%</option>
+          <option value="18">18%</option>
+          <option value="custom">Custom...</option>
+        </select>
+      </div>
+      <div id="gstCustomWrap" style="display:none"><label>Custom %</label><input type="number" id="gstCustom" value="17"></div>
+    </div>
+    <label>Calculation type</label>
+    <select id="gstMode">
+      <option value="add">Add tax to price (exclusive)</option>
+      <option value="remove">Remove tax from total (inclusive)</option>
+    </select>
+    <button class="btn" onclick="calcGST()">Calculate Tax</button>
+    <div class="result" id="gstResult">
+      <div class="big" id="gstMain"></div>
+      <small id="gstSub"></small>
+    </div>
+  </div>
+</section>
+
 <!-- ============ TIP ============ -->
 <section class="panel" id="tip">
   <div class="card">
@@ -443,6 +591,49 @@
   </div>
 </section>
 
+<!-- ============ FANCY TEXT ============ -->
+<section class="panel" id="fancy">
+  <div class="card">
+    <h2>Fancy Text Generator</h2>
+    <p class="sub">Stylish fonts for Instagram/WhatsApp bios, usernames and posts. Tap any style to copy it.</p>
+    <input type="text" id="ftInput" placeholder="Type your text..." value="Bilal" oninput="renderFancy()">
+    <div id="ftList"></div>
+  </div>
+</section>
+
+<!-- ============ BASE64 / URL TOOLS ============ -->
+<section class="panel" id="encoders">
+  <div class="card">
+    <h2>Base64 &amp; URL Encoder/Decoder</h2>
+    <p class="sub">Handy for developers, APIs and fixing broken links with special characters.</p>
+    <textarea id="enInput" rows="4" placeholder="Paste text here..."></textarea>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn btn-ghost" onclick="doEncode('b64e')">Base64 Encode</button>
+      <button class="btn btn-ghost" onclick="doEncode('b64d')">Base64 Decode</button>
+      <button class="btn btn-ghost" onclick="doEncode('urle')">URL Encode</button>
+      <button class="btn btn-ghost" onclick="doEncode('urld')">URL Decode</button>
+    </div>
+    <textarea id="enOutput" rows="4" readonly placeholder="Result appears here..."></textarea>
+    <button class="btn" onclick="copyEnc()">📋 Copy result</button>
+  </div>
+</section>
+
+<!-- ============ COLOR TOOLS ============ -->
+<section class="panel" id="color">
+  <div class="card">
+    <h2>Color Converter &amp; Picker</h2>
+    <p class="sub">Pick any color, get HEX, RGB and HSL codes — ready for CSS, design tools and printing.</p>
+    <div class="row">
+      <div><label>Pick a color</label><input type="color" id="clPick" value="#6c5ce7" oninput="fromPicker()"></div>
+      <div><label>Or type HEX</label><input type="text" id="clHex" value="#6c5ce7" oninput="fromHex()"></div>
+    </div>
+    <div class="swatch" id="clSwatch"></div>
+    <div class="color-line"><code id="clHEX"></code><button onclick="copyCl('clHEX')">Copy</button></div>
+    <div class="color-line"><code id="clRGB"></code><button onclick="copyCl('clRGB')">Copy</button></div>
+    <div class="color-line"><code id="clHSL"></code><button onclick="copyCl('clHSL')">Copy</button></div>
+  </div>
+</section>
+
 <!-- ============ TIMER & STOPWATCH ============ -->
 <section class="panel" id="timer">
   <div class="card">
@@ -468,6 +659,61 @@
       <button class="btn btn-ghost" onclick="swReset()">Reset</button>
     </div>
     <ul class="laps" id="swLaps"></ul>
+  </div>
+</section>
+
+<!-- ============ POMODORO ============ -->
+<section class="panel" id="pomodoro">
+  <div class="card" style="max-width:420px;margin:0 auto">
+    <h2>Pomodoro Study Timer</h2>
+    <p class="sub">25 minutes focus + 5 minutes rest. The proven method for deep study and work.</p>
+    <div class="pomo-mode" id="pmMode">🎯 FOCUS TIME</div>
+    <div class="stopwatch" id="pmDisplay">25:00</div>
+    <div class="row">
+      <button class="btn" id="pmBtn" onclick="pmToggle()">▶ Start</button>
+      <button class="btn btn-ghost" onclick="pmReset()">Reset</button>
+    </div>
+    <div class="result show" style="margin-top:18px">
+      <small>Completed focus sessions: <b id="pmDone" style="color:var(--accent2)">0</b> 🍅</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TYPING TEST ============ -->
+<section class="panel" id="typing">
+  <div class="card">
+    <h2>Typing Speed Test</h2>
+    <p class="sub">60 seconds. Type the passage below as fast and accurately as you can.</p>
+    <div class="passage" id="typePassage"></div>
+    <textarea id="typeInput" rows="3" placeholder="Start typing here — the timer starts with your first letter..." oninput="typeInput()"></textarea>
+    <div class="type-stats">
+      <div class="gen-out" id="tyWPM">0 WPM</div>
+      <div class="gen-out" id="tyAcc">100%</div>
+      <div class="gen-out" id="tyTime">60s</div>
+    </div>
+    <div class="result" id="tyResult">
+      <div class="big" id="tyFinal"></div>
+      <small id="tyFinalSub"></small>
+    </div>
+    <button class="btn btn-ghost" onclick="typingReset()">↺ Restart Test</button>
+  </div>
+</section>
+
+<!-- ============ SIGNATURE MAKER ============ -->
+<section class="panel" id="sign">
+  <div class="card">
+    <h2>Signature Maker</h2>
+    <p class="sub">Draw your signature with your finger or mouse, download as PNG (transparent background).</p>
+    <canvas id="sigCanvas"></canvas>
+    <div class="row">
+      <div><label>Pen color</label><input type="color" id="sigColor" value="#1a1a2e"></div>
+      <div><label>Thickness: <span id="sigSizeVal">4</span></label>
+        <input type="range" id="sigSize" min="1" max="12" value="4" style="padding:0;margin-top:12px"></div>
+      <div style="display:flex;align-items:flex-end;gap:10px">
+        <button class="btn" onclick="downloadSig()">⬇ Download</button>
+        <button class="btn btn-ghost" onclick="clearSig()">Clear</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -510,7 +756,7 @@
   </div>
 </section>
 
-<footer>17 free tools · No uploads · © 2026 ToolBox</footer>
+<footer>27 free tools · No uploads · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -582,6 +828,52 @@ function resizeImage(){
   toast('Image resized! ⬇');
 }
 
+/* ---------- image compressor ---------- */
+let cpBlob = null;
+function canvasToBlob(c, q){
+  return new Promise(r => c.toBlob(r, 'image/jpeg', q));
+}
+async function compressImage(){
+  const f = document.getElementById('cpFile').files[0];
+  if(!f){ toast('Please choose an image first 📷'); return; }
+  const target = (+document.getElementById('cpKB').value || 50) * 1024;
+  const maxW = +document.getElementById('cpMaxW').value || 4000;
+  const {img} = await loadImage(f);
+  const c = document.createElement('canvas');
+  let scale = Math.min(1, maxW / img.width);
+  c.width = Math.round(img.width * scale);
+  c.height = Math.round(img.height * scale);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+
+  cpBlob = await canvasToBlob(c, 0.92);
+  while(cpBlob.size > target && scale > 0.08){
+    scale *= 0.85;
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    cpBlob = await canvasToBlob(c, 0.85);
+  }
+  let lo = 0.03, hi = 0.95, best = cpBlob;
+  for(let i = 0; i < 12 && best.size > target; i++){
+    const mid = (lo + hi) / 2;
+    const b = await canvasToBlob(c, mid);
+    if(b.size <= target){ best = b; lo = mid; } else { hi = mid; }
+    if(hi - lo < 0.01) break;
+  }
+  if(best.size <= target) cpBlob = best;
+
+  document.getElementById('cpPreview').src = URL.createObjectURL(cpBlob);
+  document.getElementById('cpOut').style.display = 'block';
+  const kb = n => (n / 1024).toFixed(1) + ' KB';
+  showResult('cpResult', kb(cpBlob.size), `Original: ${kb(f.size)} → Compressed: ${kb(cpBlob.size)}${cpBlob.size <= target ? ' ✅ Target reached!' : ' (closest possible)'}`);
+}
+function downloadCompressed(){
+  if(cpBlob) saveBlob(cpBlob, 'compressed-' + Math.round(cpBlob.size/1024) + 'kb.jpg');
+}
+
 /* ---------- thumbnail maker ---------- */
 let thImg = null, thCanvas = null;
 document.getElementById('thFile').addEventListener('change', async e => {
@@ -616,6 +908,94 @@ function downloadThumb(){
   if(!thCanvas) return;
   thCanvas.toBlob(b => saveBlob(b, 'thumbnail.png'), 'image/png');
   toast('Downloading... ⬇');
+}
+
+/* ---------- image to pdf ---------- */
+document.getElementById('pdfFiles').addEventListener('change', function(){
+  const n = this.files.length;
+  document.getElementById('pdfList').textContent = n ? `${n} image(s) selected` : '';
+});
+async function makePDF(){
+  const files = document.getElementById('pdfFiles').files;
+  if(!files.length){ toast('Choose one or more images 📄'); return; }
+  if(!window.jspdf){ toast('PDF library not loaded — check your internet 🌐'); return; }
+  const { jsPDF } = window.jspdf;
+  const size = document.getElementById('pdfSize').value;
+  const fit = document.getElementById('pdfFit').checked;
+  const doc = new jsPDF({ unit: 'mm', format: size });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  for(let i = 0; i < files.length; i++){
+    const {img} = await loadImage(files[i]);
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const data = c.toDataURL('image/jpeg', 0.92);
+    let w = pw, h = ph, x = 0, y = 0;
+    if(fit){
+      const m = 10;
+      const s = Math.min((pw - 2*m) / img.width, (ph - 2*m) / img.height);
+      w = img.width * s; h = img.height * s;
+      x = (pw - w) / 2; y = (ph - h) / 2;
+    }
+    if(i > 0) doc.addPage();
+    doc.addImage(data, 'JPEG', x, y, w, h);
+  }
+  doc.save('images.pdf');
+  toast('PDF created! ⬇');
+}
+
+/* ---------- text on image ---------- */
+let txImg = null, txCanvas = null;
+document.getElementById('txFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  txImg = img;
+  drawTextImage();
+});
+function drawTextImage(){
+  if(!txImg) return;
+  const text = document.getElementById('txText').value || ' ';
+  const size = +document.getElementById('txSize').value;
+  document.getElementById('txSizeVal').textContent = size;
+  const color = document.getElementById('txColor').value;
+  const pos = document.getElementById('txPos').value;
+  const c = document.createElement('canvas');
+  c.width = txImg.width; c.height = txImg.height;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(txImg, 0, 0);
+  const fs = Math.min(size, c.width / 8);
+  ctx.font = `bold ${fs}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.lineWidth = fs / 12;
+  const lines = wrapText(ctx, text, c.width * 0.9);
+  const lh = fs * 1.25;
+  const totalH = lines.length * lh;
+  let startY = pos === 'top' ? fs * 1.3 : pos === 'bottom' ? c.height - totalH + fs * 0.9 : (c.height - totalH) / 2 + fs;
+  lines.forEach((line, i) => {
+    const y = startY + i * lh;
+    ctx.strokeStyle = 'rgba(0,0,0,.75)';
+    ctx.strokeText(line, c.width / 2, y);
+    ctx.fillStyle = color;
+    ctx.fillText(line, c.width / 2, y);
+  });
+  txCanvas = c;
+  document.getElementById('txPreview').src = c.toDataURL('image/png');
+  document.getElementById('txOut').style.display = 'block';
+}
+function wrapText(ctx, text, maxW){
+  const words = text.split(' ');
+  const lines = []; let line = '';
+  for(const w of words){
+    const test = line ? line + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+    else line = test;
+  }
+  if(line) lines.push(line);
+  return lines.slice(0, 6);
+}
+function downloadTextImage(){
+  if(txCanvas) txCanvas.toBlob(b => saveBlob(b, 'text-image.png'), 'image/png');
 }
 
 /* ---------- image converter ---------- */
@@ -743,7 +1123,7 @@ function genPassword(){
   if(!chars){ toast('Select at least one character type'); return; }
   const arr = new Uint32Array(len);
   crypto.getRandomValues(arr);
-  let pw = Array.from(arr, n => chars[n % chars.length]).join('');
+  const pw = Array.from(arr, n => chars[n % chars.length]).join('');
   document.getElementById('pwOut').textContent = pw;
   const s = document.getElementById('pwStrength');
   s.classList.add('show');
@@ -850,6 +1230,26 @@ function calcEMI(){
     `Total paid: $${total.toFixed(2)} · Total interest: $${(total - P).toFixed(2)}`);
 }
 
+/* ---------- GST ---------- */
+document.getElementById('gstRate').addEventListener('change', function(){
+  document.getElementById('gstCustomWrap').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+function calcGST(){
+  const amt = +document.getElementById('gstAmt').value;
+  if(!amt){ toast('Enter an amount 🧾'); return; }
+  const rv = document.getElementById('gstRate').value;
+  const rate = rv === 'custom' ? (+document.getElementById('gstCustom').value || 0) : +rv;
+  if(document.getElementById('gstMode').value === 'add'){
+    const tax = amt * rate / 100;
+    showResult('gstResult', `Total: $${(amt + tax).toFixed(2)}`,
+      `Base price: $${amt.toFixed(2)} + Tax (${rate}%): $${tax.toFixed(2)}`);
+  } else {
+    const base = amt / (1 + rate / 100);
+    showResult('gstResult', `Base price: $${base.toFixed(2)}`,
+      `Tax (${rate}%): $${(amt - base).toFixed(2)} · You paid total: $${amt.toFixed(2)}`);
+  }
+}
+
 /* ---------- tip ---------- */
 function calcTip(){
   const bill = +document.getElementById('tpBill').value;
@@ -873,6 +1273,128 @@ function countWords(){
   const mins = Math.floor(words / 200);
   document.getElementById('wcRead').textContent = mins < 1 ? '< 1 min' : `~${mins} min`;
 }
+
+/* ---------- fancy text ---------- */
+function shift(upperBase, lowerBase){
+  return c => {
+    const code = c.codePointAt(0);
+    if(code >= 65 && code <= 90) return String.fromCodePoint(upperBase + code - 65);
+    if(code >= 97 && code <= 122) return String.fromCodePoint(lowerBase + code - 97);
+    return c;
+  };
+}
+const SMALL_CAPS = 'ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ';
+const FLIP = {a:'ɐ',b:'q',c:'ɔ',d:'p',e:'ǝ',f:'ɟ',g:'ƃ',h:'ɥ',i:'ᴉ',j:'ɾ',k:'ʞ',l:'l',m:'ɯ',n:'u',o:'o',p:'d',q:'b',r:'ɹ',s:'s',t:'ʇ',u:'n',v:'ʌ',w:'ʍ',x:'x',y:'ʎ',z:'z',
+  '0':'0','1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6',
+  '.':'˙',',':'\'','?':'¿','!':'¡','(':')',')':'('};
+const FANCY_STYLES = [
+  ['Bold Serif', shift(0x1D400, 0x1D41A)],
+  ['Italic Serif', shift(0x1D434, 0x1D44E)],
+  ['Bold Script', shift(0x1D4D0, 0x1D4EA)],
+  ['Bold Fraktur', shift(0x1D56C, 0x1D586)],
+  ['Double-Struck', shift(0x1D538, 0x1D552)],
+  ['Sans Bold', shift(0x1D5D4, 0x1D5EE)],
+  ['Sans Italic', shift(0x1D608, 0x1D622)],
+  ['Monospace', shift(0x1D670, 0x1D68A)],
+  ['Circled Ⓐ', c => { const n = c.codePointAt(0);
+    if(n>=65&&n<=90) return String.fromCodePoint(0x24B6+n-65);
+    if(n>=97&&n<=122) return String.fromCodePoint(0x24D0+n-97);
+    if(n>=48&&n<=57) return String.fromCodePoint(0x2460+n-48);
+    return c; }],
+  ['Small Caps', c => { const n = c.toLowerCase().charCodeAt(0);
+    return n>=97&&n<=122 ? SMALL_CAPS[n-97] : c; }],
+  ['Strikethrough', c => c + '\u0336'],
+  ['Underline', c => c + '\u0332'],
+  ['Upside Down ⅋', c => FLIP[c.toLowerCase()] || FLIP[c] || c, true],
+];
+function renderFancy(){
+  const text = document.getElementById('ftInput').value || 'Type above';
+  const list = document.getElementById('ftList');
+  list.innerHTML = '';
+  FANCY_STYLES.forEach(([name, fn, reverse]) => {
+    let out = Array.from(text, fn).join('');
+    if(reverse) out = Array.from(out).reverse().join('');
+    const row = document.createElement('div');
+    row.className = 'fancy-row';
+    row.innerHTML = `<div class="ft"><span class="fname">${name}</span>${out}</div>
+      <button class="copy">Copy</button>`;
+    row.querySelector('.copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(out).then(() => toast('Copied! 📋'));
+    });
+    row.querySelector('.ft').addEventListener('click', () => {
+      navigator.clipboard.writeText(out).then(() => toast('Copied! 📋'));
+    });
+    list.appendChild(row);
+  });
+}
+renderFancy();
+
+/* ---------- base64 / url tools ---------- */
+function doEncode(mode){
+  const t = document.getElementById('enInput').value;
+  const out = document.getElementById('enOutput');
+  try {
+    if(mode === 'b64e'){
+      const bytes = new TextEncoder().encode(t);
+      out.value = btoa(String.fromCharCode(...bytes));
+    } else if(mode === 'b64d'){
+      const bytes = Uint8Array.from(atob(t.trim()), c => c.charCodeAt(0));
+      out.value = new TextDecoder().decode(bytes);
+    } else if(mode === 'urle'){
+      out.value = encodeURIComponent(t);
+    } else {
+      out.value = decodeURIComponent(t);
+    }
+    toast('Done! ✔');
+  } catch { toast('Invalid input for this operation'); }
+}
+function copyEnc(){
+  const o = document.getElementById('enOutput');
+  if(!o.value){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(o.value).then(() => toast('Copied! 📋'));
+}
+
+/* ---------- color tools ---------- */
+function hexToRgb(hex){
+  const m = hex.replace('#','');
+  const v = parseInt(m.length === 3 ? m.split('').map(c => c + c).join('') : m, 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+function rgbToHsl(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if(max !== min){
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if(max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if(max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+function updateColor(hex){
+  hex = hex.trim().replace(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, '#$1');
+  let rgb;
+  try { rgb = hexToRgb(hex); } catch { return; }
+  const hsl = rgbToHsl(...rgb);
+  document.getElementById('clSwatch').style.background = hex;
+  document.getElementById('clHEX').textContent = hex.toUpperCase();
+  document.getElementById('clRGB').textContent = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+  document.getElementById('clHSL').textContent = `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+}
+function fromPicker(){
+  document.getElementById('clHex').value = document.getElementById('clPick').value;
+  updateColor(document.getElementById('clPick').value);
+}
+function fromHex(){
+  updateColor(document.getElementById('clHex').value);
+}
+function copyCl(id){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => toast('Copied! 📋'));
+}
+fromPicker();
 
 /* ---------- timer & stopwatch ---------- */
 let tmEnd = null, tmLeft = 5 * 60 * 1000, tmInt = null;
@@ -954,6 +1476,148 @@ function swReset(){
   document.getElementById('swBtn').textContent = '▶ Start';
 }
 
+/* ---------- pomodoro ---------- */
+const PM = { focus: 25 * 60 * 1000, break: 5 * 60 * 1000 };
+let pmMode = 'focus', pmLeft = PM.focus, pmInt = null, pmDone = 0;
+function pmRender(){
+  document.getElementById('pmDisplay').textContent = fmtMS(pmLeft);
+  document.getElementById('pmMode').textContent = pmMode === 'focus' ? '🎯 FOCUS TIME' : '☕ BREAK TIME';
+  document.getElementById('pmDone').textContent = pmDone;
+}
+function pmToggle(){
+  const btn = document.getElementById('pmBtn');
+  if(pmInt){
+    clearInterval(pmInt); pmInt = null; btn.textContent = '▶ Resume';
+    return;
+  }
+  const end = Date.now() + pmLeft;
+  btn.textContent = '⏸ Pause';
+  pmInt = setInterval(() => {
+    pmLeft = end - Date.now();
+    pmRender();
+    if(pmLeft <= 0){
+      clearInterval(pmInt); pmInt = null;
+      beep(); toast(pmMode === 'focus' ? 'Focus done! Take a break 🍅' : 'Break over! Back to focus 🎯');
+      if(pmMode === 'focus'){ pmDone++; pmMode = 'break'; } else { pmMode = 'focus'; }
+      pmLeft = PM[pmMode];
+      document.getElementById('pmBtn').textContent = '▶ Start';
+      pmRender();
+    }
+  }, 250);
+}
+function pmReset(){
+  clearInterval(pmInt); pmInt = null;
+  pmMode = 'focus'; pmLeft = PM.focus;
+  document.getElementById('pmBtn').textContent = '▶ Start';
+  pmRender();
+}
+pmRender();
+
+/* ---------- typing test ---------- */
+const PASSAGE = 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! Bright vixens jump; dozy fowl quack. Sphinx of black quartz, judge my vow.';
+const PW = PASSAGE.split(' ');
+let tyStart = null, tyInt = null, tyOver = false;
+function renderPassage(typedWords, currentIdx){
+  const box = document.getElementById('typePassage');
+  box.innerHTML = PW.map((w, i) => {
+    let cls = '';
+    if(i < typedWords.length){
+      cls = typedWords[i] === w ? 'ok' : 'bad';
+    } else if(i === currentIdx){
+      cls = 'cur';
+    }
+    return `<span class="${cls}">${w}</span>`;
+  }).join(' ');
+}
+function typingReset(){
+  clearInterval(tyInt); tyInt = null;
+  tyStart = null; tyOver = false;
+  document.getElementById('typeInput').value = '';
+  document.getElementById('typeInput').disabled = false;
+  document.getElementById('tyWPM').textContent = '0 WPM';
+  document.getElementById('tyAcc').textContent = '100%';
+  document.getElementById('tyTime').textContent = '60s';
+  document.getElementById('tyResult').classList.remove('show');
+  renderPassage([], 0);
+  document.getElementById('typeInput').focus();
+}
+function typeInput(){
+  if(tyOver) return;
+  const ta = document.getElementById('typeInput');
+  const typed = ta.value;
+  if(!tyStart && typed.length > 0){
+    tyStart = Date.now();
+    tyInt = setInterval(tickTyping, 400);
+  }
+  const tw = typed.split(/\s+/);
+  renderPassage(tw.filter((w, i) => i < tw.length - 1 || typed.endsWith(' ')), Math.min(tw.length - (typed.endsWith(' ') ? 0 : 1), PW.length - 1));
+  tickTyping();
+}
+function tickTyping(){
+  if(!tyStart) return;
+  const elapsed = (Date.now() - tyStart) / 1000;
+  const left = Math.max(0, 60 - elapsed);
+  document.getElementById('tyTime').textContent = Math.ceil(left) + 's';
+  const typed = document.getElementById('typeInput').value;
+  const tw = typed.trim() ? typed.trim().split(/\s+/) : [];
+  let correct = 0;
+  tw.forEach((w, i) => { if(w === PW[i]) correct++; });
+  const wpm = elapsed > 3 ? Math.round(correct / (elapsed / 60)) : 0;
+  let match = 0;
+  for(let i = 0; i < typed.length; i++) if(typed[i] === PASSAGE[i]) match++;
+  const acc = typed.length ? Math.round(match / typed.length * 100) : 100;
+  document.getElementById('tyWPM').textContent = wpm + ' WPM';
+  document.getElementById('tyAcc').textContent = acc + '%';
+  const finishedAll = correct === PW.length && typed.trim().split(/\s+/).length === PW.length;
+  if(left <= 0 || finishedAll) endTyping(wpm, acc);
+}
+function endTyping(wpm, acc){
+  tyOver = true;
+  clearInterval(tyInt); tyInt = null;
+  document.getElementById('typeInput').disabled = true;
+  const rating = wpm >= 60 ? '🔥 Pro level!' : wpm >= 40 ? '💪 Great job!' : wpm >= 25 ? '👍 Good pace!' : '🌱 Keep practicing!';
+  showResult('tyResult', `${wpm} WPM · ${acc}% accuracy`, rating + ' Tap Restart to try again.');
+}
+typingReset();
+
+/* ---------- signature maker ---------- */
+const sigCanvas = document.getElementById('sigCanvas');
+sigCanvas.width = 800; sigCanvas.height = 300;
+const sctx = sigCanvas.getContext('2d');
+let sigDrawing = false;
+function sigPos(e){
+  const r = sigCanvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * sigCanvas.width / r.width,
+           y: (e.clientY - r.top) * sigCanvas.height / r.height };
+}
+sigCanvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  sigDrawing = true;
+  sigCanvas.setPointerCapture(e.pointerId);
+  const p = sigPos(e);
+  sctx.beginPath();
+  sctx.moveTo(p.x, p.y);
+});
+sigCanvas.addEventListener('pointermove', e => {
+  if(!sigDrawing) return;
+  const p = sigPos(e);
+  sctx.lineWidth = +document.getElementById('sigSize').value * 2;
+  sctx.lineCap = 'round';
+  sctx.lineJoin = 'round';
+  sctx.strokeStyle = document.getElementById('sigColor').value;
+  sctx.lineTo(p.x, p.y);
+  sctx.stroke();
+});
+['pointerup','pointerleave','pointercancel'].forEach(ev =>
+  sigCanvas.addEventListener(ev, () => sigDrawing = false));
+document.getElementById('sigSize').addEventListener('input', function(){
+  document.getElementById('sigSizeVal').textContent = this.value;
+});
+function clearSig(){ sctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); }
+function downloadSig(){
+  sigCanvas.toBlob(b => { saveBlob(b, 'signature.png'); toast('Signature saved! ✍️'); }, 'image/png');
+}
+
 /* ---------- random tools ---------- */
 function rollNumber(){
   const a = Math.ceil(+document.getElementById('rnMin').value);
@@ -989,7 +1653,6 @@ function saveBlob(blob, name, mime){
 }
 
 buildUnits();
-renderTimer();
 </script>
 </body>
 </html>
