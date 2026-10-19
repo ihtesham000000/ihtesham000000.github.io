@@ -6,7 +6,7 @@
 <title>ToolBox — 39 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
 <meta name="description" content="39 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal/dist/index.js"></script>
+<script src="https://unpkg.com/@imgly/background-removal@1.5.5/dist/index.js"></script>
 <style>
   :root{
     --bg:#0f1117; --card:#1a1d27; --card2:#222636; --text:#e8eaf2;
@@ -2783,21 +2783,36 @@ async function removeBg(){
   status.textContent = '⏳ Starting... first use downloads the AI model (~30 MB) — keep this page open.';
   document.getElementById('bgDl').style.display = 'none';
   try {
-    let fn;
+    let fn = null, usedHost = '';
     if(window.ImglyBackgroundRemoval && ImglyBackgroundRemoval.removeBackground){
       fn = ImglyBackgroundRemoval.removeBackground.bind(ImglyBackgroundRemoval);
-    } else {
-      status.textContent = '⏳ Loading AI engine...';
-      const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/index.js');
-      fn = mod.removeBackground;
+      usedHost = 'unpkg.com';
     }
-    const config = {
-      publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.5.5/dist/',
+    const sources = [
+      'https://unpkg.com/@imgly/background-removal@1.5.5/dist/index.js',
+      'https://esm.sh/@imgly/background-removal@1.5.5',
+      'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/index.js'
+    ];
+    for(const src of sources){
+      if(fn) break;
+      try {
+        status.textContent = '⏳ Loading AI engine from ' + src.split('/')[2] + '...';
+        const mod = await import(src);
+        const m = mod.removeBackground ? mod : (mod.default && mod.default.removeBackground ? mod.default : mod);
+        fn = m.removeBackground.bind(m);
+        usedHost = src.split('/')[2];
+      } catch(e){ /* try next CDN */ }
+    }
+    if(!fn) throw new Error('AI engine CDNs unreachable on this network');
+    const dataPath = usedHost.includes('unpkg')
+      ? 'https://unpkg.com/@imgly/background-removal-data@1.5.5/dist/'
+      : 'https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.5.5/dist/';
+    const blob = await fn(f, {
+      publicPath: dataPath,
       progress: (key, current, total) => {
         if(total) status.textContent = '⏳ Downloading AI model: ' + Math.round(current / total * 100) + '% (first use only)';
       }
-    };
-    const blob = await fn(f, config);
+    });
     const url = URL.createObjectURL(blob);
     bgImg = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
     status.style.display = 'none';
@@ -3006,6 +3021,13 @@ welcomeCheck();
 cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
 buildMenu();
 buildUnits();
+
+/* open tool from URL hash (e.g. index.html#tool=compress) */
+const hashTool = location.hash.match(/tool=(\w+)/);
+if(hashTool){
+  const tt = document.querySelector('.tab[data-panel="' + hashTool[1] + '"]');
+  if(tt) tt.click();
+}
 </script>
 </body>
 </html>
