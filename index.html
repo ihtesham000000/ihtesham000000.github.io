@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 39 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
-<meta name="description" content="39 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
+<title>ToolBox — 44 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
+<meta name="description" content="44 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://unpkg.com/@imgly/background-removal@1.5.5/dist/index.js"></script>
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <style>
   :root{
     --bg:#0f1117; --card:#1a1d27; --card2:#222636; --text:#e8eaf2;
@@ -194,6 +195,11 @@
   <button class="tab" data-panel="resize">🖼️ Resizer</button>
   <button class="tab" data-panel="compress">🗜️ Compress KB</button>
   <button class="tab" data-panel="bgremove">🪄 BG Remover</button>
+  <button class="tab" data-panel="wa">📱 WhatsApp</button>
+  <button class="tab" data-panel="pdfmerge">📑 Merge PDF</button>
+  <button class="tab" data-panel="collage">🖼️ Collage</button>
+  <button class="tab" data-panel="result">🎓 Result Card</button>
+  <button class="tab" data-panel="passport">🪪 Passport Photo</button>
   <button class="tab" data-panel="thumb">🎬 Thumbnail</button>
   <button class="tab" data-panel="img2pdf">📄 Img→PDF</button>
   <button class="tab" data-panel="textimg">📝 Text on Img</button>
@@ -237,7 +243,7 @@
 <!-- ============ MENU / ALL TOOLS ============ -->
 <section class="panel active" id="menu">
   <div class="card">
-    <h2>All 39 Tools — one tap away</h2>
+    <h2>All 44 Tools — one tap away</h2>
     <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
     <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
     <label style="margin-top:8px">🔥 Popular tools</label>
@@ -1114,6 +1120,112 @@
   </div>
 </section>
 
+<!-- ============ WHATSAPP TOOLS ============ -->
+<section class="panel" id="wa">
+  <div class="card">
+    <h2>WhatsApp Link Maker</h2>
+    <p class="sub">Create a click-to-chat link — anyone who taps it opens WhatsApp straight to your number, with your message ready to send. Perfect for businesses.</p>
+    <label>Phone number with country code (no + sign, e.g. 923001234567)</label>
+    <input type="tel" id="waPhone" placeholder="92XXXXXXXXXX" oninput="waGenerate()">
+    <label>Message (optional — appears ready-to-send in the chat)</label>
+    <input type="text" id="waMsg" placeholder="Assalam o Alaikum! I want to ask about..." oninput="waGenerate()">
+    <div id="waOut" style="display:none;margin-top:14px">
+      <div class="gen-out" id="waLink" style="font-size:.85rem"></div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="waCopy()">📋 Copy link</button>
+        <a class="btn" id="waOpen" target="_blank" rel="noopener" style="text-decoration:none;text-align:center">🚀 Open WhatsApp</a>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Text Repeater</h2>
+    <p class="sub">Repeat any text up to 5,000 times — for WhatsApp fun, testing and lists.</p>
+    <label>Text to repeat</label>
+    <input type="text" id="rpText" placeholder="Type something...">
+    <div class="row">
+      <div><label>Times</label><input type="number" id="rpCount" value="10" min="1" max="5000"></div>
+      <div><label>Separator</label>
+        <select id="rpSep"><option value="nl">New line</option><option value="sp">Space</option><option value="cm">Comma</option></select></div>
+    </div>
+    <button class="btn" onclick="repeatText()">🔁 Repeat</button>
+    <textarea id="rpOut" rows="6" readonly placeholder="Repeated text appears here..."></textarea>
+    <button class="btn btn-ghost" onclick="copyRp()">📋 Copy result</button>
+  </div>
+</section>
+
+<!-- ============ PDF MERGER ============ -->
+<section class="panel" id="pdfmerge">
+  <div class="card">
+    <h2>Merge PDF Files</h2>
+    <p class="sub">Combine multiple PDFs into one document — free and private, everything happens in your browser. Needs internet once to load the PDF engine.</p>
+    <input type="file" id="mgFiles" accept="application/pdf" multiple>
+    <p class="sub" id="mgList"></p>
+    <button class="btn" onclick="mergePDFs()">📑 Merge into One PDF</button>
+    <p class="sub" id="mgStatus" style="display:none;margin-top:12px"></p>
+  </div>
+</section>
+
+<!-- ============ COLLAGE MAKER ============ -->
+<section class="panel" id="collage">
+  <div class="card">
+    <h2>Photo Collage Maker</h2>
+    <p class="sub">Combine multiple photos into one grid image — for Instagram, WhatsApp and memories.</p>
+    <input type="file" id="clFiles" accept="image/*" multiple>
+    <div class="row">
+      <div><label>Layout</label>
+        <select id="clLayout" onchange="clRender()">
+          <option value="2x1" selected>2 photos (side by side)</option>
+          <option value="1x2">2 photos (stacked)</option>
+          <option value="2x2">4 photos (2×2)</option>
+          <option value="3x2">6 photos (3×2)</option>
+          <option value="2x3">6 photos (2×3)</option>
+          <option value="3x3">9 photos (3×3)</option>
+        </select></div>
+      <div><label>Gap: <span id="clGapV">8</span>px</label>
+        <input type="range" id="clGap" min="0" max="40" value="8" oninput="clRender()"></div>
+      <div><label>Background</label><input type="color" id="clBg" value="#ffffff" oninput="clRender()"></div>
+    </div>
+    <p class="sub" id="clInfo"></p>
+    <img class="preview" id="clPreview" style="display:none" alt="">
+    <button class="btn" style="margin-top:12px;display:none" id="clDl" onclick="clDownload()">⬇ Download collage</button>
+  </div>
+</section>
+
+<!-- ============ RESULT CARD ============ -->
+<section class="panel" id="result">
+  <div class="card">
+    <h2>Result Card / Marksheet Maker</h2>
+    <p class="sub">Create a student result card PDF — for schools, academies and teachers. Automatic percentage, grade and pass/fail (33% pass marks per subject).</p>
+    <div class="row">
+      <div><label>Institute name</label><input id="rsSchool" value="City Model School" oninput="resCalc()"></div>
+      <div><label>Student name</label><input id="rsName" value="Ali Khan" oninput="resCalc()"></div>
+      <div><label>Class</label><input id="rsClass" value="10th" oninput="resCalc()"></div>
+      <div><label>Exam</label><input id="rsExam" value="Annual Exam 2026" oninput="resCalc()"></div>
+    </div>
+    <label>Subjects</label>
+    <div id="rsRows"></div>
+    <button class="btn btn-ghost" onclick="rsAddRow()" style="margin-bottom:12px">+ Add subject</button>
+    <div class="result show">
+      <div class="big" id="rsTotal"></div>
+      <small id="rsGrade"></small>
+    </div>
+    <button class="btn" style="margin-top:14px" onclick="rsPDF()">📄 Download Result Card PDF</button>
+  </div>
+</section>
+
+<!-- ============ PASSPORT PHOTO SHEET ============ -->
+<section class="panel" id="passport">
+  <div class="card">
+    <h2>Passport Size Photo Sheet</h2>
+    <p class="sub">Make a printable 4×6 sheet of 6 passport photos (35×45mm international standard) — take it to any photo shop for instant prints. 💡 Tip: use the Background Remover first for a clean white or blue background!</p>
+    <input type="file" id="ppFile" accept="image/*">
+    <label>Background color</label>
+    <input type="color" id="ppBg" value="#ffffff" oninput="ppDraw()">
+    <img class="preview" id="ppPreview" style="display:none" alt="">
+    <button class="btn" style="margin-top:12px;display:none" id="ppDl" onclick="ppDownload()">⬇ Download print sheet (4×6)</button>
+  </div>
+</section>
+
 <!-- ============ NAME PICKER ============ -->
 <section class="panel" id="picker">
   <div class="card" style="text-align:center">
@@ -1125,7 +1237,7 @@
   </div>
 </section>
 
-<footer>39 free tools · © 2026 ToolBox</footer>
+<footer>44 free tools · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -2957,6 +3069,246 @@ function pickWinner(){
   }, 70);
 }
 
+/* ---------- whatsapp tools ---------- */
+function waGenerate(){
+  const p = document.getElementById('waPhone').value.replace(/\D/g,'');
+  const msg = document.getElementById('waMsg').value.trim();
+  const out = document.getElementById('waOut');
+  if(p.length < 10){ out.style.display='none'; return; }
+  let link = 'https://wa.me/' + p;
+  if(msg) link += '?text=' + encodeURIComponent(msg);
+  document.getElementById('waLink').textContent = link;
+  document.getElementById('waOpen').href = link;
+  out.style.display = 'block';
+}
+function waCopy(){
+  const l = document.getElementById('waLink').textContent;
+  if(!l){ toast('Enter a phone number first'); return; }
+  navigator.clipboard.writeText(l).then(() => toast('Link copied! 📋'));
+}
+function repeatText(){
+  const t = document.getElementById('rpText').value;
+  const n = Math.min(5000, Math.max(1, +document.getElementById('rpCount').value || 1));
+  const sepMap = { nl: '\n', sp: ' ', cm: ', ' };
+  const sep = sepMap[document.getElementById('rpSep').value] || '\n';
+  if(!t){ toast('Type some text first'); return; }
+  document.getElementById('rpOut').value = Array(n).fill(t).join(sep);
+  toast('Repeated ' + n + ' times ✔');
+}
+function copyRp(){
+  const o = document.getElementById('rpOut');
+  if(!o.value){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(o.value).then(() => toast('Copied! 📋'));
+}
+
+/* ---------- pdf merger ---------- */
+document.getElementById('mgFiles').addEventListener('change', function(){
+  document.getElementById('mgList').textContent = this.files.length ? this.files.length + ' PDF file(s) selected' : '';
+});
+async function mergePDFs(){
+  const files = document.getElementById('mgFiles').files;
+  const status = document.getElementById('mgStatus');
+  if(files.length < 2){ toast('Select at least 2 PDF files 📑'); return; }
+  status.style.display = 'block';
+  try {
+    let lib = window.PDFLib;
+    if(!lib){
+      status.textContent = '⏳ Loading PDF engine...';
+      let mod = null;
+      try { mod = await import('https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js'); }
+      catch(e){ mod = await import('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js'); }
+      lib = mod.PDFLib || (mod.default && mod.default.PDFLib);
+    }
+    if(!lib) throw new Error('PDF engine unavailable');
+    const merged = await lib.PDFDocument.create();
+    for(const f of files){
+      status.textContent = '⏳ Merging: ' + f.name;
+      const bytes = await f.arrayBuffer();
+      const src = await lib.PDFDocument.load(bytes);
+      const pages = await merged.copyPages(src, src.getPageIndices());
+      pages.forEach(p => merged.addPage(p));
+    }
+    const out = await merged.save();
+    saveBlob(new Blob([out], { type: 'application/pdf' }), 'merged.pdf');
+    status.style.display = 'none';
+    toast('PDFs merged! ⬇');
+  } catch(e) {
+    status.textContent = '❌ ' + (e && e.message ? e.message : e) + ' — check internet and try again.';
+  }
+}
+
+/* ---------- collage maker ---------- */
+let clImgs = [];
+document.getElementById('clFiles').addEventListener('change', async function(){
+  clImgs = [];
+  for(const f of this.files){
+    const {img} = await loadImage(f);
+    clImgs.push(img);
+  }
+  clRender();
+});
+function clRender(){
+  if(!clImgs.length){
+    document.getElementById('clPreview').style.display = 'none';
+    document.getElementById('clDl').style.display = 'none';
+    return;
+  }
+  const [cols, rows] = document.getElementById('clLayout').value.split('x').map(Number);
+  const gap = +document.getElementById('clGap').value;
+  document.getElementById('clGapV').textContent = gap;
+  const cell = 800;
+  const c = document.createElement('canvas');
+  c.width = cols * cell + (cols - 1) * gap;
+  c.height = rows * cell + (rows - 1) * gap;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = document.getElementById('clBg').value;
+  ctx.fillRect(0, 0, c.width, c.height);
+  const slots = cols * rows;
+  for(let i = 0; i < slots; i++){
+    const x = (i % cols) * (cell + gap), y = Math.floor(i / cols) * (cell + gap);
+    if(!clImgs[i]){
+      ctx.fillStyle = 'rgba(128,128,128,.15)';
+      ctx.fillRect(x, y, cell, cell);
+      continue;
+    }
+    const img = clImgs[i];
+    const s = Math.max(cell / img.width, cell / img.height);
+    const w = img.width * s, h = img.height * s;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, cell, cell); ctx.clip();
+    ctx.drawImage(img, x + (cell - w) / 2, y + (cell - h) / 2, w, h);
+    ctx.restore();
+  }
+  window._clCanvas = c;
+  document.getElementById('clPreview').src = c.toDataURL('image/jpeg', 0.92);
+  document.getElementById('clPreview').style.display = 'block';
+  document.getElementById('clDl').style.display = 'inline-block';
+  document.getElementById('clInfo').textContent = clImgs.length + ' photo(s) loaded — this grid holds ' + slots;
+}
+function clDownload(){
+  if(window._clCanvas){ window._clCanvas.toBlob(b => saveBlob(b, 'collage.jpg'), 'image/jpeg', 0.92); toast('Downloading ⬇'); }
+}
+
+/* ---------- result card maker ---------- */
+function rsAddRow(){
+  const r = document.createElement('div');
+  r.className = 'inv-row';
+  r.innerHTML = `<input type="text" placeholder="Subject" style="flex:2" oninput="resCalc()">
+    <input type="number" placeholder="Total" min="1" style="flex:1" oninput="resCalc()">
+    <input type="number" placeholder="Obtained" min="0" style="flex:1" oninput="resCalc()">
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();resCalc()">✕</button>`;
+  document.getElementById('rsRows').appendChild(r);
+  resCalc();
+}
+function rsData(){
+  const rows = [];
+  document.querySelectorAll('#rsRows .inv-row').forEach(r => {
+    rows.push({ sub: r.children[0].value.trim(), total: +r.children[1].value || 0, obt: +r.children[2].value || 0 });
+  });
+  return rows;
+}
+function rsCalc(){
+  const rows = rsData().filter(r => r.sub);
+  let t = 0, o = 0, pass = true;
+  rows.forEach(r => { t += r.total; o += r.obt; if(r.total && r.obt < r.total * 0.33) pass = false; });
+  const pct = t ? Math.round(o / t * 1000) / 10 : 0;
+  const grade = pct >= 80 ? 'A+' : pct >= 70 ? 'A' : pct >= 60 ? 'B' : pct >= 50 ? 'C' : pct >= 40 ? 'D' : 'F';
+  document.getElementById('rsTotal').textContent = t ? `Total: ${o} / ${t} — ${pct}%` : 'Enter subjects above';
+  document.getElementById('rsGrade').textContent = t ? `Grade: ${grade} · ${pass ? 'PASS ✅' : 'FAIL ❌'}` : '';
+}
+function rsPDF(){
+  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+  const rows = rsData().filter(r => r.sub);
+  if(!rows.length){ toast('Add at least one subject 🎓'); return; }
+  let t = 0, o = 0, pass = true;
+  rows.forEach(r => { t += r.total; o += r.obt; if(r.total && r.obt < r.total * 0.33) pass = false; });
+  const pct = Math.round(o / t * 1000) / 10;
+  const grade = pct >= 80 ? 'A+' : pct >= 70 ? 'A' : pct >= 60 ? 'B' : pct >= 50 ? 'C' : pct >= 40 ? 'D' : 'F';
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18); doc.setTextColor(44, 62, 153); doc.setFont(undefined, 'bold');
+  doc.text(document.getElementById('rsSchool').value || 'Institute', 105, 18, { align: 'center' });
+  doc.setFontSize(11); doc.setTextColor(120); doc.setFont(undefined, 'normal');
+  doc.text('STUDENT RESULT CARD', 105, 25, { align: 'center' });
+  doc.setTextColor(40); doc.setFontSize(11);
+  doc.text('Student: ' + (document.getElementById('rsName').value || '-'), 15, 38);
+  doc.text('Class: ' + (document.getElementById('rsClass').value || '-'), 15, 45);
+  doc.text('Exam: ' + (document.getElementById('rsExam').value || '-'), 120, 38);
+  doc.text('Date: ' + new Date().toLocaleDateString(), 120, 45);
+  const hy = 55;
+  doc.setFillColor(44, 62, 153); doc.rect(15, hy, 180, 8, 'F');
+  doc.setTextColor(255); doc.setFont(undefined, 'bold');
+  doc.text('Subject', 18, hy + 5.5);
+  doc.text('Total', 120, hy + 5.5, { align: 'right' });
+  doc.text('Obtained', 160, hy + 5.5, { align: 'right' });
+  doc.text('%', 192, hy + 5.5, { align: 'right' });
+  doc.setFont(undefined, 'normal'); doc.setTextColor(40);
+  let y = hy + 13;
+  rows.forEach(r => {
+    const p = r.total ? Math.round(r.obt / r.total * 100) : 0;
+    doc.text(r.sub.slice(0, 50), 18, y);
+    doc.text(String(r.total), 120, y, { align: 'right' });
+    doc.text(String(r.obt), 160, y, { align: 'right' });
+    doc.text(p + '%', 192, y, { align: 'right' });
+    y += 7;
+  });
+  doc.setDrawColor(44, 62, 153); doc.line(15, y - 2, 195, y - 2); y += 6;
+  doc.setFont(undefined, 'bold');
+  doc.text('TOTAL: ' + o + ' / ' + t + '   —   ' + pct + '%', 192, y, { align: 'right' }); y += 8;
+  doc.setTextColor(44, 62, 153); doc.setFontSize(14);
+  doc.text('Grade: ' + grade + '   ·   ' + (pass ? 'PASS' : 'FAIL'), 105, y + 2, { align: 'center' });
+  doc.save('result-card.pdf');
+  toast('Result card downloaded! 📄');
+}
+rsAddRow(); rsAddRow(); rsAddRow(); resCalc();
+
+/* ---------- passport photo sheet ---------- */
+let ppImg = null;
+document.getElementById('ppFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  toast('⏳ Generating your sheet...');
+  try {
+    const {img} = await loadImage(e.target.files[0]);
+    ppImg = img;
+    ppDraw();
+    toast('Sheet ready! Scroll down to download 🪪');
+  } catch(err) {
+    toast('Could not read that photo — try a JPG/PNG image');
+  }
+});
+function ppDraw(){
+  if(!ppImg) return;
+  const c = document.createElement('canvas');
+  c.width = 1200; c.height = 1800;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = document.getElementById('ppBg').value;
+  ctx.fillRect(0, 0, c.width, c.height);
+  const pw = 413, ph = 531;
+  const cols = 2, rows = 3;
+  const gx = (c.width - cols * pw) / (cols + 1);
+  const gy = (c.height - rows * ph) / (rows + 1);
+  const s = Math.max(pw / ppImg.width, ph / ppImg.height);
+  const w = ppImg.width * s, h = ppImg.height * s;
+  for(let r = 0; r < rows; r++){
+    for(let col = 0; col < cols; col++){
+      const x = gx + col * (pw + gx), y = gy + r * (ph + gy);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(x, y, pw, ph); ctx.clip();
+      ctx.drawImage(ppImg, x + (pw - w) / 2, y + (ph - h) / 2, w, h);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(0,0,0,.12)';
+      ctx.strokeRect(x, y, pw, ph);
+    }
+  }
+  window._ppCanvas = c;
+  document.getElementById('ppPreview').src = c.toDataURL('image/jpeg', 0.92);
+  document.getElementById('ppPreview').style.display = 'block';
+  document.getElementById('ppDl').style.display = 'inline-block';
+}
+function ppDownload(){
+  if(window._ppCanvas){ window._ppCanvas.toBlob(b => saveBlob(b, 'passport-sheet-4x6.jpg'), 'image/jpeg', 0.95); toast('Downloading ⬇'); }
+}
+
 function saveBlob(blob, name, mime){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3013,7 +3365,7 @@ function welcomeCheck(){
   const b = document.createElement('div');
   b.id = 'welcomeBar';
   b.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;z-index:150;background:linear-gradient(90deg,#6c5ce7,#00cec9);color:#fff;border-radius:14px;padding:14px 16px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45)';
-  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 39 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
+  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 44 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
   document.body.appendChild(b);
 }
 welcomeCheck();
