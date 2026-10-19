@@ -154,6 +154,23 @@
   .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,206,201,.12);border:1px solid rgba(0,206,201,.4);
     color:var(--accent2);border-radius:999px;padding:5px 12px;font-size:.8rem;margin:0 6px 6px 0;cursor:pointer}
   .cv-page{background:#fff;color:#1a1a2e;border-radius:8px;padding:24px;font-size:.78rem;line-height:1.5;overflow:hidden}
+  .theme-btn{background:var(--card2);border:1px solid #2c3149;border-radius:50%;
+    width:38px;height:38px;font-size:1.05rem;cursor:pointer;flex-shrink:0;margin-left:10px}
+  body.light{--bg:#f3f5fa;--card:#ffffff;--card2:#edf0f7;--text:#171a26;--muted:#5d6478}
+  body.light header{background:rgba(255,255,255,.92);border-color:#e2e6f0}
+  body.light nav{background:#f3f5fa;border-color:#e2e6f0}
+  body.light .card,body.light .cv-block{background:#fff;border-color:#e2e6f0}
+  body.light .tab{background:#fff;border-color:#dfe3ee;color:#5d6478}
+  body.light .tab.active{color:#fff;border-color:transparent}
+  body.light input,body.light select,body.light textarea{background:#edf0f7;border-color:#d8ddeb;color:#171a26}
+  body.light .result,body.light .gen-out,body.light .fancy-row,body.light .color-line,
+  body.light .pr-card,body.light .tool-card,body.light .calc-display,body.light .calc-grid button,
+  body.light .cv-row-block,body.light .file-chip{background:#edf0f7;border-color:#d8ddeb;color:#171a26}
+  body.light .chip{background:rgba(0,184,148,.12);border-color:rgba(0,184,148,.45);color:#0a7f74}
+  body.light .laps li{border-color:#e2e6f0}
+  body.light footer{color:#8a90a5}
+  body.light .toast{background:#fff;border-color:#d8ddeb;color:#171a26}
+  body.light .qr-wrap img{background:#fff}
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -168,6 +185,7 @@
 <header>
   <div class="logo">Tool<span>Box</span></div>
   <input type="text" class="hdr-search" id="navSearch" placeholder="🔍 Search tools..." oninput="filterTabs(this.value)">
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Light / Dark mode">🌙</button>
 </header>
 
 <nav>
@@ -217,9 +235,16 @@
 <!-- ============ MENU / ALL TOOLS ============ -->
 <section class="panel active" id="menu">
   <div class="card">
-    <h2>All 37 Tools — one tap away</h2>
+    <h2>All 38 Tools — one tap away</h2>
     <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
     <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
+    <label style="margin-top:8px">🔥 Popular tools</label>
+    <div class="tools-grid" style="margin-top:2px">
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=compress]').click()"><div style="font-size:1.7rem">🗜️</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">Image Compressor</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=cvmaker]').click()"><div style="font-size:1.7rem">📄</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">CV Maker</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=qr]').click()"><div style="font-size:1.7rem">🔳</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">QR Code</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=invoice]').click()"><div style="font-size:1.7rem">🧾</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">Invoice</div></div>
+    </div>
     <div class="tools-grid" id="menuGrid"></div>
   </div>
 </section>
@@ -1082,6 +1107,10 @@
 <div class="toast" id="toast"></div>
 
 <script>
+if(localStorage.getItem('tb_theme') === '1'){
+  document.body.classList.add('light');
+  document.getElementById('themeBtn').textContent = '☀️';
+}
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
@@ -2720,8 +2749,6 @@ async function cvPDF(){
   toast('CV downloaded! 📄');
 }
 
-cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
-
 /* ---------- CV auto-summary ---------- */
 const CV_FIELDS = [
   [['ai','machine learning','deep learning','artificial intelligence'], 'AI and machine learning', ['training accurate ML models','cleaning and preparing data','deploying intelligent features']],
@@ -2873,8 +2900,29 @@ function filterTabs(q){
     t.style.display = t.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
 }
-buildMenu();
+/* ---------- theme, welcome, init ---------- */
+function toggleTheme(){
+  const light = document.body.classList.toggle('light');
+  localStorage.setItem('tb_theme', light ? '1' : '0');
+  document.getElementById('themeBtn').textContent = light ? '☀️' : '🌙';
+}
+function dismissWelcome(){
+  localStorage.setItem('tb_welcomed', '1');
+  const b = document.getElementById('welcomeBar');
+  if(b) b.remove();
+}
+function welcomeCheck(){
+  if(localStorage.getItem('tb_welcomed')) return;
+  const b = document.createElement('div');
+  b.id = 'welcomeBar';
+  b.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;z-index:150;background:linear-gradient(90deg,#6c5ce7,#00cec9);color:#fff;border-radius:14px;padding:14px 16px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45)';
+  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 38 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
+  document.body.appendChild(b);
+}
+welcomeCheck();
 
+cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
+buildMenu();
 buildUnits();
 </script>
 </body>

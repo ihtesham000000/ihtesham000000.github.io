@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 17 Free Online Tools: Image Resizer, QR Generator, Calculator, Converters</title>
-<meta name="description" content="Free online tools: resize images, make thumbnails, QR code generator, password generator, BMI, age, percentage, discount, EMI loan, tip calculators, timer and unit converter.">
+<title>ToolBox — 38 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
+<meta name="description" content="38 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --bg:#0f1117; --card:#1a1d27; --card2:#222636; --text:#e8eaf2;
@@ -70,7 +71,7 @@
   .gen-out{
     word-break:break-all;font-size:1.25rem;font-weight:700;text-align:center;
     background:var(--card2);border:1px dashed #3a3f58;border-radius:10px;
-    padding:18px 14px;margin:14px 0;letter-spacing:1px;user-select:all;
+    padding:18px 14px;margin:14px 0;user-select:all;
   }
   .qr-wrap{text-align:center}
   .qr-wrap img{width:250px;max-width:80%;background:#fff;padding:10px;border-radius:12px}
@@ -96,6 +97,80 @@
 
   .big-random{font-size:4rem;text-align:center;padding:30px;font-weight:800}
 
+  .fancy-row{
+    display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid #2c3149;
+    border-radius:10px;padding:12px 14px;margin-bottom:10px;
+  }
+  .fancy-row .ft{flex:1;font-size:1.05rem;word-break:break-all;cursor:pointer}
+  .fancy-row .fname{font-size:.7rem;color:var(--muted);display:block}
+  .fancy-row .copy{background:none;border:1px solid #2c3149;color:var(--muted);cursor:pointer;
+    border-radius:8px;padding:6px 12px;font-size:.8rem;flex-shrink:0}
+  .fancy-row .copy:hover{color:var(--accent2);border-color:var(--accent2)}
+
+  .passage{
+    background:var(--card2);border:1px solid #2c3149;border-radius:10px;
+    padding:16px;font-size:1.05rem;line-height:2;margin-bottom:14px;
+  }
+  .passage span{padding:2px 3px;border-radius:4px}
+  .passage span.ok{background:rgba(0,206,201,.25)}
+  .passage span.bad{background:rgba(255,107,107,.3)}
+  .passage span.cur{box-shadow:0 2px 0 var(--accent)}
+  .type-stats{display:flex;gap:10px;margin:14px 0}
+  .type-stats .gen-out{flex:1;margin:0;font-size:1.1rem;padding:12px 8px}
+
+  #sigCanvas{
+    width:100%;height:220px;background:#fff;border-radius:12px;touch-action:none;
+    cursor:crosshair;display:block;margin-bottom:12px;
+  }
+
+  .swatch{height:64px;border-radius:10px;margin-bottom:12px;border:1px solid #2c3149}
+  .color-line{display:flex;align-items:center;gap:10px;background:var(--card2);
+    border:1px solid #2c3149;border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .color-line code{flex:1;font-size:.95rem;color:var(--accent2)}
+  .color-line button{background:none;border:1px solid #2c3149;color:var(--muted);
+    border-radius:8px;padding:4px 12px;font-size:.78rem;cursor:pointer}
+  .color-line button:hover{color:var(--accent2);border-color:var(--accent2)}
+
+  .pomo-mode{font-size:1rem;font-weight:700;text-align:center;color:var(--accent2);margin-bottom:6px}
+
+  .prayer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:10px}
+  .pr-card{background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:12px 8px;text-align:center}
+  .pr-card b{display:block;font-size:1.15rem;color:var(--accent2);margin-top:4px}
+  .pr-card small{color:var(--muted);font-size:.78rem}
+  .cr-canvas{width:100%;border-radius:10px;background:#111;touch-action:none;display:block;cursor:crosshair}
+  .inv-row{display:flex;gap:8px;margin-bottom:8px}
+  .inv-row input{margin-bottom:0}
+  .hdr-search{background:var(--card2);border:1px solid #2c3149;color:var(--text);
+    border-radius:999px;padding:9px 16px;font-size:.85rem;width:170px;margin-bottom:0}
+  .hdr-search:focus{outline:none;border-color:var(--accent)}
+  .tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:12px;margin-top:4px}
+  .tool-card{background:var(--card2);border:1px solid #2c3149;border-radius:12px;
+    padding:18px 8px;text-align:center;cursor:pointer;transition:.2s}
+  .tool-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+  @media(max-width:520px){.hdr-search{width:120px;font-size:.78rem}}
+  .cv-block{border:1px solid #2c3149;border-radius:10px;padding:14px;margin-bottom:14px;background:var(--card2)}
+  .cv-block h4{font-size:.85rem;color:var(--accent2);margin-bottom:10px}
+  .cv-row-block{background:var(--card);border:1px solid #2c3149;border-radius:8px;padding:10px;margin-bottom:10px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,206,201,.12);border:1px solid rgba(0,206,201,.4);
+    color:var(--accent2);border-radius:999px;padding:5px 12px;font-size:.8rem;margin:0 6px 6px 0;cursor:pointer}
+  .cv-page{background:#fff;color:#1a1a2e;border-radius:8px;padding:24px;font-size:.78rem;line-height:1.5;overflow:hidden}
+  .theme-btn{background:var(--card2);border:1px solid #2c3149;border-radius:50%;
+    width:38px;height:38px;font-size:1.05rem;cursor:pointer;flex-shrink:0;margin-left:10px}
+  body.light{--bg:#f3f5fa;--card:#ffffff;--card2:#edf0f7;--text:#171a26;--muted:#5d6478}
+  body.light header{background:rgba(255,255,255,.92);border-color:#e2e6f0}
+  body.light nav{background:#f3f5fa;border-color:#e2e6f0}
+  body.light .card,body.light .cv-block{background:#fff;border-color:#e2e6f0}
+  body.light .tab{background:#fff;border-color:#dfe3ee;color:#5d6478}
+  body.light .tab.active{color:#fff;border-color:transparent}
+  body.light input,body.light select,body.light textarea{background:#edf0f7;border-color:#d8ddeb;color:#171a26}
+  body.light .result,body.light .gen-out,body.light .fancy-row,body.light .color-line,
+  body.light .pr-card,body.light .tool-card,body.light .calc-display,body.light .calc-grid button,
+  body.light .cv-row-block,body.light .file-chip{background:#edf0f7;border-color:#d8ddeb;color:#171a26}
+  body.light .chip{background:rgba(0,184,148,.12);border-color:rgba(0,184,148,.45);color:#0a7f74}
+  body.light .laps li{border-color:#e2e6f0}
+  body.light footer{color:#8a90a5}
+  body.light .toast{background:#fff;border-color:#d8ddeb;color:#171a26}
+  body.light .qr-wrap img{background:#fff}
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -109,11 +184,17 @@
 
 <header>
   <div class="logo">Tool<span>Box</span></div>
+  <input type="text" class="hdr-search" id="navSearch" placeholder="🔍 Search tools..." oninput="filterTabs(this.value)">
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Light / Dark mode">🌙</button>
 </header>
 
 <nav>
-  <button class="tab active" data-panel="resize">🖼️ Resizer</button>
+  <button class="tab active" data-panel="menu">🏠 All Tools</button>
+  <button class="tab" data-panel="resize">🖼️ Resizer</button>
+  <button class="tab" data-panel="compress">🗜️ Compress KB</button>
   <button class="tab" data-panel="thumb">🎬 Thumbnail</button>
+  <button class="tab" data-panel="img2pdf">📄 Img→PDF</button>
+  <button class="tab" data-panel="textimg">📝 Text on Img</button>
   <button class="tab" data-panel="convert">🔄 Converter</button>
   <button class="tab" data-panel="calc">🧮 Calculator</button>
   <button class="tab" data-panel="units">📏 Units</button>
@@ -124,17 +205,52 @@
   <button class="tab" data-panel="percent">％ Percent</button>
   <button class="tab" data-panel="discount">🏷️ Discount</button>
   <button class="tab" data-panel="emi">💰 Loan EMI</button>
+  <button class="tab" data-panel="gst">🧾 GST Tax</button>
   <button class="tab" data-panel="tip">🍽️ Tip</button>
-  <button class="tab" data-panel="words">🔤 Word Counter</button>
+  <button class="tab" data-panel="words">🔤 Words</button>
+  <button class="tab" data-panel="fancy">✨ Fancy Text</button>
+  <button class="tab" data-panel="encoders">🔡 Base64/URL</button>
+  <button class="tab" data-panel="color">🎨 Color</button>
   <button class="tab" data-panel="timer">⏱️ Timer</button>
+  <button class="tab" data-panel="pomodoro">🍅 Pomodoro</button>
+  <button class="tab" data-panel="typing">⌨️ Typing Test</button>
+  <button class="tab" data-panel="sign">✍️ Signature</button>
   <button class="tab" data-panel="random">🎲 Random</button>
   <button class="tab" data-panel="date">📅 Date Calc</button>
+  <button class="tab" data-panel="currency">💱 Currency</button>
+  <button class="tab" data-panel="prayer">🕌 Prayer</button>
+  <button class="tab" data-panel="zakat">🧮 Zakat</button>
+  <button class="tab" data-panel="cgpa">🎓 CGPA</button>
+  <button class="tab" data-panel="json">📦 JSON</button>
+  <button class="tab" data-panel="crop">✂️ Crop/Rotate</button>
+  <button class="tab" data-panel="filters">🎞️ Filters</button>
+  <button class="tab" data-panel="recorder">🎙️ Recorder</button>
+  <button class="tab" data-panel="invoice">🧾 Invoice</button>
+  <button class="tab" data-panel="cvmaker">📄 CV Maker</button>
+  <button class="tab" data-panel="picker">🎡 Picker</button>
 </nav>
 
 <main>
 
+<!-- ============ MENU / ALL TOOLS ============ -->
+<section class="panel active" id="menu">
+  <div class="card">
+    <h2>All 38 Tools — one tap away</h2>
+    <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
+    <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
+    <label style="margin-top:8px">🔥 Popular tools</label>
+    <div class="tools-grid" style="margin-top:2px">
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=compress]').click()"><div style="font-size:1.7rem">🗜️</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">Image Compressor</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=cvmaker]').click()"><div style="font-size:1.7rem">📄</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">CV Maker</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=qr]').click()"><div style="font-size:1.7rem">🔳</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">QR Code</div></div>
+      <div class="tool-card" onclick="document.querySelector('.tab[data-panel=invoice]').click()"><div style="font-size:1.7rem">🧾</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">Invoice</div></div>
+    </div>
+    <div class="tools-grid" id="menuGrid"></div>
+  </div>
+</section>
+
 <!-- ============ IMAGE RESIZER ============ -->
-<section class="panel active" id="resize">
+<section class="panel" id="resize">
   <div class="card">
     <h2>Image Resizer</h2>
     <p class="sub">Upload an image, set new dimensions, download — everything happens in your browser.</p>
@@ -151,6 +267,28 @@
       <input type="checkbox" id="rzLock" checked style="width:auto;margin:0"> Lock aspect ratio
     </label>
     <button class="btn" onclick="resizeImage()">Resize &amp; Download</button>
+  </div>
+</section>
+
+<!-- ============ IMAGE COMPRESSOR ============ -->
+<section class="panel" id="compress">
+  <div class="card">
+    <h2>Image Compressor (to exact KB)</h2>
+    <p class="sub">Perfect for online job forms &amp; exam applications that demand photos under a specific size.</p>
+    <input type="file" id="cpFile" accept="image/*">
+    <div class="row">
+      <div><label>Target size (KB)</label><input type="number" id="cpKB" value="50"></div>
+      <div><label>Max width (px, optional)</label><input type="number" id="cpMaxW" placeholder="e.g. 1000"></div>
+    </div>
+    <button class="btn" onclick="compressImage()">Compress Image</button>
+    <div class="result" id="cpResult">
+      <div class="big" id="cpMain"></div>
+      <small id="cpSub"></small>
+    </div>
+    <div id="cpOut" style="display:none">
+      <img class="preview" id="cpPreview" alt="">
+      <button class="btn" style="margin-top:12px" onclick="downloadCompressed()">⬇ Download compressed image</button>
+    </div>
   </div>
 </section>
 
@@ -178,6 +316,51 @@
     <div id="thOut" style="display:none">
       <img class="preview" id="thPreview" alt="">
       <button class="btn" style="margin-top:12px" onclick="downloadThumb()">⬇ Download thumbnail</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMAGE TO PDF ============ -->
+<section class="panel" id="img2pdf">
+  <div class="card">
+    <h2>Image to PDF Converter</h2>
+    <p class="sub">Turn photos into a single PDF — for documents, assignments, forms. Select multiple images for multiple pages.</p>
+    <input type="file" id="pdfFiles" accept="image/*" multiple>
+    <p class="sub" id="pdfList"></p>
+    <label>Page size</label>
+    <select id="pdfSize">
+      <option value="a4">A4 (210 × 297 mm)</option>
+      <option value="letter">Letter (8.5 × 11 in)</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="pdfFit" checked style="width:auto;margin:0"> Fit image with margins (uncheck = fill full page)
+    </label>
+    <button class="btn" onclick="makePDF()">Create PDF</button>
+  </div>
+</section>
+
+<!-- ============ TEXT ON IMAGE ============ -->
+<section class="panel" id="textimg">
+  <div class="card">
+    <h2>Add Text to Image</h2>
+    <p class="sub">Make memes, quotes, posters and watermarks — text with outline for readability.</p>
+    <input type="file" id="txFile" accept="image/*">
+    <label>Your text</label>
+    <input type="text" id="txText" value="Your text here" oninput="drawTextImage()">
+    <div class="row">
+      <div><label>Text color</label><input type="color" id="txColor" value="#ffffff" oninput="drawTextImage()"></div>
+      <div><label>Size: <span id="txSizeVal">40</span>px</label>
+        <input type="range" id="txSize" min="14" max="120" value="40" style="padding:0" oninput="drawTextImage()"></div>
+      <div><label>Position</label>
+        <select id="txPos" onchange="drawTextImage()">
+          <option value="top">Top</option>
+          <option value="middle" selected>Middle</option>
+          <option value="bottom">Bottom</option>
+        </select></div>
+    </div>
+    <div id="txOut" style="display:none">
+      <img class="preview" id="txPreview" alt="">
+      <button class="btn" style="margin-top:12px" onclick="downloadTextImage()">⬇ Download image</button>
     </div>
   </div>
 </section>
@@ -409,6 +592,40 @@
   </div>
 </section>
 
+<!-- ============ GST ============ -->
+<section class="panel" id="gst">
+  <div class="card">
+    <h2>GST / Sales Tax Calculator</h2>
+    <p class="sub">Add tax to a price, or find the original price from a tax-inclusive total.</p>
+    <div class="row">
+      <div><label>Amount ($)</label><input type="number" id="gstAmt" value="1000"></div>
+      <div>
+        <label>Tax rate (%)</label>
+        <select id="gstRate">
+          <option value="5">5%</option>
+          <option value="10">10%</option>
+          <option value="15">15%</option>
+          <option value="16">16%</option>
+          <option value="17" selected>17%</option>
+          <option value="18">18%</option>
+          <option value="custom">Custom...</option>
+        </select>
+      </div>
+      <div id="gstCustomWrap" style="display:none"><label>Custom %</label><input type="number" id="gstCustom" value="17"></div>
+    </div>
+    <label>Calculation type</label>
+    <select id="gstMode">
+      <option value="add">Add tax to price (exclusive)</option>
+      <option value="remove">Remove tax from total (inclusive)</option>
+    </select>
+    <button class="btn" onclick="calcGST()">Calculate Tax</button>
+    <div class="result" id="gstResult">
+      <div class="big" id="gstMain"></div>
+      <small id="gstSub"></small>
+    </div>
+  </div>
+</section>
+
 <!-- ============ TIP ============ -->
 <section class="panel" id="tip">
   <div class="card">
@@ -443,6 +660,49 @@
   </div>
 </section>
 
+<!-- ============ FANCY TEXT ============ -->
+<section class="panel" id="fancy">
+  <div class="card">
+    <h2>Fancy Text Generator</h2>
+    <p class="sub">Stylish fonts for Instagram/WhatsApp bios, usernames and posts. Tap any style to copy it.</p>
+    <input type="text" id="ftInput" placeholder="Type your text..." value="Bilal" oninput="renderFancy()">
+    <div id="ftList"></div>
+  </div>
+</section>
+
+<!-- ============ BASE64 / URL TOOLS ============ -->
+<section class="panel" id="encoders">
+  <div class="card">
+    <h2>Base64 &amp; URL Encoder/Decoder</h2>
+    <p class="sub">Handy for developers, APIs and fixing broken links with special characters.</p>
+    <textarea id="enInput" rows="4" placeholder="Paste text here..."></textarea>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn btn-ghost" onclick="doEncode('b64e')">Base64 Encode</button>
+      <button class="btn btn-ghost" onclick="doEncode('b64d')">Base64 Decode</button>
+      <button class="btn btn-ghost" onclick="doEncode('urle')">URL Encode</button>
+      <button class="btn btn-ghost" onclick="doEncode('urld')">URL Decode</button>
+    </div>
+    <textarea id="enOutput" rows="4" readonly placeholder="Result appears here..."></textarea>
+    <button class="btn" onclick="copyEnc()">📋 Copy result</button>
+  </div>
+</section>
+
+<!-- ============ COLOR TOOLS ============ -->
+<section class="panel" id="color">
+  <div class="card">
+    <h2>Color Converter &amp; Picker</h2>
+    <p class="sub">Pick any color, get HEX, RGB and HSL codes — ready for CSS, design tools and printing.</p>
+    <div class="row">
+      <div><label>Pick a color</label><input type="color" id="clPick" value="#6c5ce7" oninput="fromPicker()"></div>
+      <div><label>Or type HEX</label><input type="text" id="clHex" value="#6c5ce7" oninput="fromHex()"></div>
+    </div>
+    <div class="swatch" id="clSwatch"></div>
+    <div class="color-line"><code id="clHEX"></code><button onclick="copyCl('clHEX')">Copy</button></div>
+    <div class="color-line"><code id="clRGB"></code><button onclick="copyCl('clRGB')">Copy</button></div>
+    <div class="color-line"><code id="clHSL"></code><button onclick="copyCl('clHSL')">Copy</button></div>
+  </div>
+</section>
+
 <!-- ============ TIMER & STOPWATCH ============ -->
 <section class="panel" id="timer">
   <div class="card">
@@ -468,6 +728,61 @@
       <button class="btn btn-ghost" onclick="swReset()">Reset</button>
     </div>
     <ul class="laps" id="swLaps"></ul>
+  </div>
+</section>
+
+<!-- ============ POMODORO ============ -->
+<section class="panel" id="pomodoro">
+  <div class="card" style="max-width:420px;margin:0 auto">
+    <h2>Pomodoro Study Timer</h2>
+    <p class="sub">25 minutes focus + 5 minutes rest. The proven method for deep study and work.</p>
+    <div class="pomo-mode" id="pmMode">🎯 FOCUS TIME</div>
+    <div class="stopwatch" id="pmDisplay">25:00</div>
+    <div class="row">
+      <button class="btn" id="pmBtn" onclick="pmToggle()">▶ Start</button>
+      <button class="btn btn-ghost" onclick="pmReset()">Reset</button>
+    </div>
+    <div class="result show" style="margin-top:18px">
+      <small>Completed focus sessions: <b id="pmDone" style="color:var(--accent2)">0</b> 🍅</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TYPING TEST ============ -->
+<section class="panel" id="typing">
+  <div class="card">
+    <h2>Typing Speed Test</h2>
+    <p class="sub">60 seconds. Type the passage below as fast and accurately as you can.</p>
+    <div class="passage" id="typePassage"></div>
+    <textarea id="typeInput" rows="3" placeholder="Start typing here — the timer starts with your first letter..." oninput="typeInput()"></textarea>
+    <div class="type-stats">
+      <div class="gen-out" id="tyWPM">0 WPM</div>
+      <div class="gen-out" id="tyAcc">100%</div>
+      <div class="gen-out" id="tyTime">60s</div>
+    </div>
+    <div class="result" id="tyResult">
+      <div class="big" id="tyFinal"></div>
+      <small id="tyFinalSub"></small>
+    </div>
+    <button class="btn btn-ghost" onclick="typingReset()">↺ Restart Test</button>
+  </div>
+</section>
+
+<!-- ============ SIGNATURE MAKER ============ -->
+<section class="panel" id="sign">
+  <div class="card">
+    <h2>Signature Maker</h2>
+    <p class="sub">Draw your signature with your finger or mouse, download as PNG (transparent background).</p>
+    <canvas id="sigCanvas"></canvas>
+    <div class="row">
+      <div><label>Pen color</label><input type="color" id="sigColor" value="#1a1a2e"></div>
+      <div><label>Thickness: <span id="sigSizeVal">4</span></label>
+        <input type="range" id="sigSize" min="1" max="12" value="4" style="padding:0;margin-top:12px"></div>
+      <div style="display:flex;align-items:flex-end;gap:10px">
+        <button class="btn" onclick="downloadSig()">⬇ Download</button>
+        <button class="btn btn-ghost" onclick="clearSig()">Clear</button>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -510,18 +825,299 @@
   </div>
 </section>
 
-<footer>17 free tools · No uploads · © 2026 ToolBox</footer>
+<!-- ============ CURRENCY ============ -->
+<section class="panel" id="currency">
+  <div class="card">
+    <h2>Currency Converter</h2>
+    <p class="sub">Live exchange rates — USD to PKR, SAR to PKR, and every world currency. <span id="fxTime"></span></p>
+    <div class="row">
+      <div><label>Amount</label><input type="number" id="fxAmt" value="100" oninput="convertFx()"></div>
+      <div><label>From</label><select id="fxFrom" onchange="convertFx()"><option>USD</option></select></div>
+      <div><label>To</label><select id="fxTo" onchange="convertFx()"><option>PKR</option></select></div>
+    </div>
+    <button class="btn btn-ghost" onclick="loadFx(false)">↻ Refresh rates</button>
+    <div class="result show" id="fxResult">
+      <div class="big" id="fxOut">Loading rates...</div>
+      <small>Live data · Rates update daily</small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRAYER TIMES ============ -->
+<section class="panel" id="prayer">
+  <div class="card">
+    <h2>Prayer (Namaz) Times</h2>
+    <p class="sub">Today's prayer times with Hijri date — calculation: University of Islamic Sciences, Karachi (method 1).</p>
+    <div class="row">
+      <div><label>City</label><input type="text" id="prCity" value="Lahore"></div>
+      <div><label>Country</label><input type="text" id="prCountry" value="Pakistan"></div>
+    </div>
+    <button class="btn" onclick="loadPrayer()">Get Prayer Times</button>
+    <div class="result" id="prResult">
+      <div class="big" id="prDate"></div>
+      <small id="prHijri"></small>
+    </div>
+    <div class="prayer-grid" id="prGrid" style="margin-top:14px"></div>
+  </div>
+</section>
+
+<!-- ============ ZAKAT ============ -->
+<section class="panel" id="zakat">
+  <div class="card">
+    <h2>Zakat Calculator</h2>
+    <p class="sub">Calculate your annual Zakat (2.5%). Nisab is taken as the lower of 87.48g gold or 612.36g silver.</p>
+    <div class="row">
+      <div><label>Cash &amp; savings (PKR)</label><input type="number" id="zkCash" value="0"></div>
+      <div><label>Debts owed (PKR)</label><input type="number" id="zkDebts" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Gold (grams)</label><input type="number" id="zkGoldG" value="0"></div>
+      <div><label>Gold rate (PKR/gram)</label><input type="number" id="zkGoldR" placeholder="e.g. 29000"></div>
+    </div>
+    <div class="row">
+      <div><label>Silver (grams)</label><input type="number" id="zkSilG" value="0"></div>
+      <div><label>Silver rate (PKR/gram)</label><input type="number" id="zkSilR" placeholder="e.g. 330"></div>
+    </div>
+    <button class="btn" onclick="calcZakat()">Calculate Zakat</button>
+    <div class="result" id="zkResult">
+      <div class="big" id="zkMain"></div>
+      <small id="zkSub"></small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CGPA ============ -->
+<section class="panel" id="cgpa">
+  <div class="card">
+    <h2>CGPA / GPA Calculator</h2>
+    <p class="sub">Add your subjects with credit hours and grades — get your GPA instantly.</p>
+    <div id="cgRows"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn btn-ghost" onclick="cgAddRow()">+ Add subject</button>
+      <button class="btn" onclick="calcCGPA()">Calculate GPA</button>
+    </div>
+    <div class="result" id="cgResult">
+      <div class="big" id="cgMain"></div>
+      <small id="cgSub"></small>
+    </div>
+  </div>
+</section>
+
+<!-- ============ JSON TOOLS ============ -->
+<section class="panel" id="json">
+  <div class="card">
+    <h2>JSON Formatter &amp; Validator</h2>
+    <p class="sub">Paste messy JSON — get it pretty-printed, minified, or checked for errors.</p>
+    <textarea id="jsonIn" rows="6" placeholder='{"paste":"your json here"}'></textarea>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn btn-ghost" onclick="jsonDo('fmt')">Format</button>
+      <button class="btn btn-ghost" onclick="jsonDo('min')">Minify</button>
+      <button class="btn btn-ghost" onclick="jsonDo('val')">Validate</button>
+    </div>
+    <textarea id="jsonOut" rows="6" readonly placeholder="Result appears here..."></textarea>
+  </div>
+</section>
+
+<!-- ============ CROP & ROTATE ============ -->
+<section class="panel" id="crop">
+  <div class="card">
+    <h2>Crop &amp; Rotate Image</h2>
+    <p class="sub">Upload, drag on the image to select a crop area, rotate or flip, then download.</p>
+    <input type="file" id="crFile" accept="image/*">
+    <div id="crWrap" style="display:none">
+      <canvas id="crView" class="cr-canvas"></canvas>
+      <div class="row" style="margin-top:12px">
+        <button class="btn btn-ghost" onclick="crRotate()">⟳ Rotate 90°</button>
+        <button class="btn btn-ghost" onclick="crFlip(true)">⇋ Flip H</button>
+        <button class="btn btn-ghost" onclick="crFlip(false)">⇅ Flip V</button>
+        <button class="btn" onclick="crApplyCrop()">✂️ Apply Crop</button>
+        <button class="btn" onclick="crDownload()">⬇ Download</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PHOTO FILTERS ============ -->
+<section class="panel" id="filters">
+  <div class="card">
+    <h2>Photo Filters</h2>
+    <p class="sub">Apply Instagram-style filters to any photo — adjust sliders, download the result.</p>
+    <input type="file" id="flFile" accept="image/*">
+    <div id="flWrap" style="display:none">
+      <img class="preview" id="flPreview" alt="">
+      <div class="row" style="margin-top:12px">
+        <div><label>Brightness <span id="flBrightV">100</span>%</label><input type="range" id="flBright" min="20" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Contrast <span id="flContrastV">100</span>%</label><input type="range" id="flContrast" min="20" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Saturation <span id="flSatV">100</span>%</label><input type="range" id="flSat" min="0" max="200" value="100" style="padding:0" oninput="applyFilters()"></div>
+      </div>
+      <div class="row">
+        <div><label>Grayscale <span id="flGrayV">0</span>%</label><input type="range" id="flGray" min="0" max="100" value="0" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Sepia <span id="flSepV">0</span>%</label><input type="range" id="flSep" min="0" max="100" value="0" style="padding:0" oninput="applyFilters()"></div>
+        <div><label>Blur <span id="flBlurV">0</span>px</label><input type="range" id="flBlur" min="0" max="10" value="0" style="padding:0" oninput="applyFilters()"></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="flReset()">Reset</button>
+        <button class="btn" onclick="flDownload()">⬇ Download</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VOICE RECORDER ============ -->
+<section class="panel" id="recorder">
+  <div class="card">
+    <h2>Voice Recorder</h2>
+    <p class="sub">Record your voice, play it back, download as audio file. Nothing is uploaded anywhere.</p>
+    <div class="stopwatch" id="recTime">00:00</div>
+    <div class="row">
+      <button class="btn" id="recBtn" onclick="recToggle()">⏺ Start Recording</button>
+      <button class="btn btn-ghost" onclick="recDownload()" id="recDl" style="display:none">⬇ Download</button>
+    </div>
+    <div id="recPlay" style="display:none;margin-top:14px">
+      <audio id="recAudio" controls style="width:100%"></audio>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INVOICE GENERATOR ============ -->
+<section class="panel" id="invoice">
+  <div class="card">
+    <h2>Invoice Generator (PDF)</h2>
+    <p class="sub">Professional invoices with auto invoice numbers and your brand color. Preview updates live as you type.</p>
+    <div class="row">
+      <div><label>Your business name</label><input type="text" id="invFrom" value="My Business" oninput="invPreview()"></div>
+      <div><label>Bill to</label><input type="text" id="invTo" value="Client Name" oninput="invPreview()"></div>
+    </div>
+    <div class="row">
+      <div><label>Invoice # (auto-generated)</label><input type="text" id="invNo" readonly></div>
+      <div><label>Date</label><input type="text" id="invDate" readonly></div>
+      <div><label>Theme color</label><input type="color" id="invColor" value="#6c5ce7" oninput="invPreview()"></div>
+      <div><label>GST / Tax %</label><input type="number" id="invTax" value="0" min="0" oninput="invPreview()"></div>
+    </div>
+    <label>Notes (printed at bottom of invoice)</label>
+    <input type="text" id="invNotes" placeholder="e.g. Payment due within 7 days. Thank you!" oninput="invPreview()">
+    <label>Items</label>
+    <div id="invRows"></div>
+    <button class="btn btn-ghost" onclick="invAddRow()" style="margin-bottom:12px">+ Add item</button>
+    <div class="result show" style="margin-bottom:14px">
+      <div class="big" id="invTotal">Subtotal: Rs 0.00</div>
+      <small>GST/Tax added on top</small>
+    </div>
+    <label>Live preview</label>
+    <div id="invPrev"></div>
+    <button class="btn" onclick="invPDF()">📄 Generate PDF Invoice</button>
+  </div>
+</section>
+
+<!-- ============ CV MAKER ============ -->
+<section class="panel" id="cvmaker">
+  <div class="card">
+    <h2>CV / Resume Maker</h2>
+    <p class="sub">Build a professional CV and download it as PDF — free, unlimited, no watermark. Fill your details and watch the preview update live.</p>
+
+    <div class="cv-block">
+      <h4>👤 Personal Information</h4>
+      <div class="row">
+        <div><label>Full name</label><input type="text" id="cvName" value="Muhammad Bilal" oninput="cvPreview()"></div>
+        <div><label>Job title</label><input type="text" id="cvTitle" value="Software Developer" oninput="autoSummary(false);cvPreview()"></div>
+      </div>
+      <div class="row">
+        <div><label>Email</label><input type="text" id="cvEmail" value="bilal@email.com" oninput="cvPreview()"></div>
+        <div><label>Phone</label><input type="text" id="cvPhone" value="+92 300 1234567" oninput="cvPreview()"></div>
+        <div><label>City</label><input type="text" id="cvCity" value="Lahore, Pakistan" oninput="cvPreview()"></div>
+      </div>
+      <div class="row">
+        <div><label>LinkedIn / Portfolio link</label><input type="text" id="cvLink" placeholder="optional" oninput="cvPreview()"></div>
+        <div><label>Photo (optional)</label><input type="file" id="cvPhoto" accept="image/*"></div>
+      </div>
+    </div>
+
+    <div class="cv-block">
+      <h4>📝 Professional Summary &nbsp;<button class="btn btn-ghost" style="padding:4px 12px;font-size:.72rem" onclick="autoSummary(true)">✨ Auto-write from job title</button></h4>
+      <textarea id="cvSummary" rows="3" oninput="cvPreview()">Motivated software developer with hands-on experience building websites and apps. Passionate about learning new technologies and delivering quality work on time.</textarea>
+    </div>
+
+    <div class="cv-block">
+      <h4>💼 Work Experience</h4>
+      <div id="cvExp"></div>
+      <button class="btn btn-ghost" onclick="cvAddExp()">+ Add job</button>
+    </div>
+
+    <div class="cv-block">
+      <h4>🎓 Education</h4>
+      <div id="cvEdu"></div>
+      <button class="btn btn-ghost" onclick="cvAddEdu()">+ Add education</button>
+    </div>
+
+    <div class="cv-block">
+      <h4>🛠️ Skills</h4>
+      <div class="row">
+        <div style="flex:3"><input type="text" id="cvSkillInput" placeholder="Type a skill and press Add (e.g. MS Excel)"></div>
+        <div style="display:flex;align-items:flex-start"><button class="btn" onclick="cvAddSkill()">Add</button></div>
+      </div>
+      <div id="cvSkills"></div>
+    </div>
+
+    <div class="cv-block">
+      <h4>🌍 Languages</h4>
+      <div id="cvLangs"></div>
+      <button class="btn btn-ghost" onclick="cvAddLang()">+ Add language</button>
+    </div>
+
+    <div class="cv-block">
+      <h4>🏆 Certifications (one per line, optional)</h4>
+      <textarea id="cvCerts" rows="2" placeholder="e.g. Web Development — Coursera, 2024" oninput="cvPreview()"></textarea>
+    </div>
+
+    <div class="cv-block">
+      <h4>🎨 Template &amp; Color</h4>
+      <div class="row">
+        <div>
+          <label>Template</label>
+          <select id="cvTemplate" onchange="cvPreview()">
+            <option value="professional">Professional</option>
+            <option value="modern">Modern Sidebar</option>
+            <option value="minimal">Minimal</option>
+          </select>
+        </div>
+        <div><label>Accent color</label><input type="color" id="cvColor" value="#2c3e99" oninput="cvPreview()"></div>
+      </div>
+    </div>
+
+    <label>Live preview</label>
+    <div id="cvPrev"></div>
+    <button class="btn" style="margin-top:14px" onclick="cvPDF()">⬇ Download CV as PDF</button>
+  </div>
+</section>
+
+<!-- ============ NAME PICKER ============ -->
+<section class="panel" id="picker">
+  <div class="card" style="text-align:center">
+    <h2 style="text-align:left">Random Name Picker</h2>
+    <p class="sub" style="text-align:left">For teachers, giveaways, decisions — paste names (one per line) and pick a winner.</p>
+    <textarea id="pkList" rows="6" placeholder="Ali&#10;Bilal&#10;Sana&#10;Omar&#10;Ava"></textarea>
+    <button class="btn" id="pkBtn" onclick="pickWinner()">🎡 Pick a winner!</button>
+    <div class="big-random" id="pkOut">—</div>
+  </div>
+</section>
+
+<footer>38 free tools · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
+if(localStorage.getItem('tb_theme') === '1'){
+  document.body.classList.add('light');
+  document.getElementById('themeBtn').textContent = '☀️';
+}
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   t.classList.add('active');
   document.getElementById(t.dataset.panel).classList.add('active');
+  t.scrollIntoView({ inline: 'center', block: 'nearest' });
 }));
 
 let toastTimer;
@@ -582,6 +1178,52 @@ function resizeImage(){
   toast('Image resized! ⬇');
 }
 
+/* ---------- image compressor ---------- */
+let cpBlob = null;
+function canvasToBlob(c, q){
+  return new Promise(r => c.toBlob(r, 'image/jpeg', q));
+}
+async function compressImage(){
+  const f = document.getElementById('cpFile').files[0];
+  if(!f){ toast('Please choose an image first 📷'); return; }
+  const target = (+document.getElementById('cpKB').value || 50) * 1024;
+  const maxW = +document.getElementById('cpMaxW').value || 4000;
+  const {img} = await loadImage(f);
+  const c = document.createElement('canvas');
+  let scale = Math.min(1, maxW / img.width);
+  c.width = Math.round(img.width * scale);
+  c.height = Math.round(img.height * scale);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+
+  cpBlob = await canvasToBlob(c, 0.92);
+  while(cpBlob.size > target && scale > 0.08){
+    scale *= 0.85;
+    c.width = Math.round(img.width * scale);
+    c.height = Math.round(img.height * scale);
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    cpBlob = await canvasToBlob(c, 0.85);
+  }
+  let lo = 0.03, hi = 0.95, best = cpBlob;
+  for(let i = 0; i < 12 && best.size > target; i++){
+    const mid = (lo + hi) / 2;
+    const b = await canvasToBlob(c, mid);
+    if(b.size <= target){ best = b; lo = mid; } else { hi = mid; }
+    if(hi - lo < 0.01) break;
+  }
+  if(best.size <= target) cpBlob = best;
+
+  document.getElementById('cpPreview').src = URL.createObjectURL(cpBlob);
+  document.getElementById('cpOut').style.display = 'block';
+  const kb = n => (n / 1024).toFixed(1) + ' KB';
+  showResult('cpResult', kb(cpBlob.size), `Original: ${kb(f.size)} → Compressed: ${kb(cpBlob.size)}${cpBlob.size <= target ? ' ✅ Target reached!' : ' (closest possible)'}`);
+}
+function downloadCompressed(){
+  if(cpBlob) saveBlob(cpBlob, 'compressed-' + Math.round(cpBlob.size/1024) + 'kb.jpg');
+}
+
 /* ---------- thumbnail maker ---------- */
 let thImg = null, thCanvas = null;
 document.getElementById('thFile').addEventListener('change', async e => {
@@ -616,6 +1258,94 @@ function downloadThumb(){
   if(!thCanvas) return;
   thCanvas.toBlob(b => saveBlob(b, 'thumbnail.png'), 'image/png');
   toast('Downloading... ⬇');
+}
+
+/* ---------- image to pdf ---------- */
+document.getElementById('pdfFiles').addEventListener('change', function(){
+  const n = this.files.length;
+  document.getElementById('pdfList').textContent = n ? `${n} image(s) selected` : '';
+});
+async function makePDF(){
+  const files = document.getElementById('pdfFiles').files;
+  if(!files.length){ toast('Choose one or more images 📄'); return; }
+  if(!window.jspdf){ toast('PDF library not loaded — check your internet 🌐'); return; }
+  const { jsPDF } = window.jspdf;
+  const size = document.getElementById('pdfSize').value;
+  const fit = document.getElementById('pdfFit').checked;
+  const doc = new jsPDF({ unit: 'mm', format: size });
+  const pw = doc.internal.pageSize.getWidth();
+  const ph = doc.internal.pageSize.getHeight();
+  for(let i = 0; i < files.length; i++){
+    const {img} = await loadImage(files[i]);
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    c.getContext('2d').drawImage(img, 0, 0);
+    const data = c.toDataURL('image/jpeg', 0.92);
+    let w = pw, h = ph, x = 0, y = 0;
+    if(fit){
+      const m = 10;
+      const s = Math.min((pw - 2*m) / img.width, (ph - 2*m) / img.height);
+      w = img.width * s; h = img.height * s;
+      x = (pw - w) / 2; y = (ph - h) / 2;
+    }
+    if(i > 0) doc.addPage();
+    doc.addImage(data, 'JPEG', x, y, w, h);
+  }
+  doc.save('images.pdf');
+  toast('PDF created! ⬇');
+}
+
+/* ---------- text on image ---------- */
+let txImg = null, txCanvas = null;
+document.getElementById('txFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  txImg = img;
+  drawTextImage();
+});
+function drawTextImage(){
+  if(!txImg) return;
+  const text = document.getElementById('txText').value || ' ';
+  const size = +document.getElementById('txSize').value;
+  document.getElementById('txSizeVal').textContent = size;
+  const color = document.getElementById('txColor').value;
+  const pos = document.getElementById('txPos').value;
+  const c = document.createElement('canvas');
+  c.width = txImg.width; c.height = txImg.height;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(txImg, 0, 0);
+  const fs = Math.min(size, c.width / 8);
+  ctx.font = `bold ${fs}px Arial`;
+  ctx.textAlign = 'center';
+  ctx.lineWidth = fs / 12;
+  const lines = wrapText(ctx, text, c.width * 0.9);
+  const lh = fs * 1.25;
+  const totalH = lines.length * lh;
+  let startY = pos === 'top' ? fs * 1.3 : pos === 'bottom' ? c.height - totalH + fs * 0.9 : (c.height - totalH) / 2 + fs;
+  lines.forEach((line, i) => {
+    const y = startY + i * lh;
+    ctx.strokeStyle = 'rgba(0,0,0,.75)';
+    ctx.strokeText(line, c.width / 2, y);
+    ctx.fillStyle = color;
+    ctx.fillText(line, c.width / 2, y);
+  });
+  txCanvas = c;
+  document.getElementById('txPreview').src = c.toDataURL('image/png');
+  document.getElementById('txOut').style.display = 'block';
+}
+function wrapText(ctx, text, maxW){
+  const words = text.split(' ');
+  const lines = []; let line = '';
+  for(const w of words){
+    const test = line ? line + ' ' + w : w;
+    if(ctx.measureText(test).width > maxW && line){ lines.push(line); line = w; }
+    else line = test;
+  }
+  if(line) lines.push(line);
+  return lines.slice(0, 6);
+}
+function downloadTextImage(){
+  if(txCanvas) txCanvas.toBlob(b => saveBlob(b, 'text-image.png'), 'image/png');
 }
 
 /* ---------- image converter ---------- */
@@ -743,7 +1473,7 @@ function genPassword(){
   if(!chars){ toast('Select at least one character type'); return; }
   const arr = new Uint32Array(len);
   crypto.getRandomValues(arr);
-  let pw = Array.from(arr, n => chars[n % chars.length]).join('');
+  const pw = Array.from(arr, n => chars[n % chars.length]).join('');
   document.getElementById('pwOut').textContent = pw;
   const s = document.getElementById('pwStrength');
   s.classList.add('show');
@@ -850,6 +1580,26 @@ function calcEMI(){
     `Total paid: $${total.toFixed(2)} · Total interest: $${(total - P).toFixed(2)}`);
 }
 
+/* ---------- GST ---------- */
+document.getElementById('gstRate').addEventListener('change', function(){
+  document.getElementById('gstCustomWrap').style.display = this.value === 'custom' ? 'block' : 'none';
+});
+function calcGST(){
+  const amt = +document.getElementById('gstAmt').value;
+  if(!amt){ toast('Enter an amount 🧾'); return; }
+  const rv = document.getElementById('gstRate').value;
+  const rate = rv === 'custom' ? (+document.getElementById('gstCustom').value || 0) : +rv;
+  if(document.getElementById('gstMode').value === 'add'){
+    const tax = amt * rate / 100;
+    showResult('gstResult', `Total: $${(amt + tax).toFixed(2)}`,
+      `Base price: $${amt.toFixed(2)} + Tax (${rate}%): $${tax.toFixed(2)}`);
+  } else {
+    const base = amt / (1 + rate / 100);
+    showResult('gstResult', `Base price: $${base.toFixed(2)}`,
+      `Tax (${rate}%): $${(amt - base).toFixed(2)} · You paid total: $${amt.toFixed(2)}`);
+  }
+}
+
 /* ---------- tip ---------- */
 function calcTip(){
   const bill = +document.getElementById('tpBill').value;
@@ -873,6 +1623,128 @@ function countWords(){
   const mins = Math.floor(words / 200);
   document.getElementById('wcRead').textContent = mins < 1 ? '< 1 min' : `~${mins} min`;
 }
+
+/* ---------- fancy text ---------- */
+function shift(upperBase, lowerBase){
+  return c => {
+    const code = c.codePointAt(0);
+    if(code >= 65 && code <= 90) return String.fromCodePoint(upperBase + code - 65);
+    if(code >= 97 && code <= 122) return String.fromCodePoint(lowerBase + code - 97);
+    return c;
+  };
+}
+const SMALL_CAPS = 'ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ';
+const FLIP = {a:'ɐ',b:'q',c:'ɔ',d:'p',e:'ǝ',f:'ɟ',g:'ƃ',h:'ɥ',i:'ᴉ',j:'ɾ',k:'ʞ',l:'l',m:'ɯ',n:'u',o:'o',p:'d',q:'b',r:'ɹ',s:'s',t:'ʇ',u:'n',v:'ʌ',w:'ʍ',x:'x',y:'ʎ',z:'z',
+  '0':'0','1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ϛ','6':'9','7':'ㄥ','8':'8','9':'6',
+  '.':'˙',',':'\'','?':'¿','!':'¡','(':')',')':'('};
+const FANCY_STYLES = [
+  ['Bold Serif', shift(0x1D400, 0x1D41A)],
+  ['Italic Serif', shift(0x1D434, 0x1D44E)],
+  ['Bold Script', shift(0x1D4D0, 0x1D4EA)],
+  ['Bold Fraktur', shift(0x1D56C, 0x1D586)],
+  ['Double-Struck', shift(0x1D538, 0x1D552)],
+  ['Sans Bold', shift(0x1D5D4, 0x1D5EE)],
+  ['Sans Italic', shift(0x1D608, 0x1D622)],
+  ['Monospace', shift(0x1D670, 0x1D68A)],
+  ['Circled Ⓐ', c => { const n = c.codePointAt(0);
+    if(n>=65&&n<=90) return String.fromCodePoint(0x24B6+n-65);
+    if(n>=97&&n<=122) return String.fromCodePoint(0x24D0+n-97);
+    if(n>=48&&n<=57) return String.fromCodePoint(0x2460+n-48);
+    return c; }],
+  ['Small Caps', c => { const n = c.toLowerCase().charCodeAt(0);
+    return n>=97&&n<=122 ? SMALL_CAPS[n-97] : c; }],
+  ['Strikethrough', c => c + '\u0336'],
+  ['Underline', c => c + '\u0332'],
+  ['Upside Down ⅋', c => FLIP[c.toLowerCase()] || FLIP[c] || c, true],
+];
+function renderFancy(){
+  const text = document.getElementById('ftInput').value || 'Type above';
+  const list = document.getElementById('ftList');
+  list.innerHTML = '';
+  FANCY_STYLES.forEach(([name, fn, reverse]) => {
+    let out = Array.from(text, fn).join('');
+    if(reverse) out = Array.from(out).reverse().join('');
+    const row = document.createElement('div');
+    row.className = 'fancy-row';
+    row.innerHTML = `<div class="ft"><span class="fname">${name}</span>${out}</div>
+      <button class="copy">Copy</button>`;
+    row.querySelector('.copy').addEventListener('click', () => {
+      navigator.clipboard.writeText(out).then(() => toast('Copied! 📋'));
+    });
+    row.querySelector('.ft').addEventListener('click', () => {
+      navigator.clipboard.writeText(out).then(() => toast('Copied! 📋'));
+    });
+    list.appendChild(row);
+  });
+}
+renderFancy();
+
+/* ---------- base64 / url tools ---------- */
+function doEncode(mode){
+  const t = document.getElementById('enInput').value;
+  const out = document.getElementById('enOutput');
+  try {
+    if(mode === 'b64e'){
+      const bytes = new TextEncoder().encode(t);
+      out.value = btoa(String.fromCharCode(...bytes));
+    } else if(mode === 'b64d'){
+      const bytes = Uint8Array.from(atob(t.trim()), c => c.charCodeAt(0));
+      out.value = new TextDecoder().decode(bytes);
+    } else if(mode === 'urle'){
+      out.value = encodeURIComponent(t);
+    } else {
+      out.value = decodeURIComponent(t);
+    }
+    toast('Done! ✔');
+  } catch { toast('Invalid input for this operation'); }
+}
+function copyEnc(){
+  const o = document.getElementById('enOutput');
+  if(!o.value){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(o.value).then(() => toast('Copied! 📋'));
+}
+
+/* ---------- color tools ---------- */
+function hexToRgb(hex){
+  const m = hex.replace('#','');
+  const v = parseInt(m.length === 3 ? m.split('').map(c => c + c).join('') : m, 16);
+  return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+function rgbToHsl(r, g, b){
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if(max !== min){
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if(max === r) h = (g - b) / d + (g < b ? 6 : 0);
+    else if(max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+function updateColor(hex){
+  hex = hex.trim().replace(/^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, '#$1');
+  let rgb;
+  try { rgb = hexToRgb(hex); } catch { return; }
+  const hsl = rgbToHsl(...rgb);
+  document.getElementById('clSwatch').style.background = hex;
+  document.getElementById('clHEX').textContent = hex.toUpperCase();
+  document.getElementById('clRGB').textContent = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+  document.getElementById('clHSL').textContent = `hsl(${hsl[0]}, ${hsl[1]}%, ${hsl[2]}%)`;
+}
+function fromPicker(){
+  document.getElementById('clHex').value = document.getElementById('clPick').value;
+  updateColor(document.getElementById('clPick').value);
+}
+function fromHex(){
+  updateColor(document.getElementById('clHex').value);
+}
+function copyCl(id){
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => toast('Copied! 📋'));
+}
+fromPicker();
 
 /* ---------- timer & stopwatch ---------- */
 let tmEnd = null, tmLeft = 5 * 60 * 1000, tmInt = null;
@@ -954,6 +1826,148 @@ function swReset(){
   document.getElementById('swBtn').textContent = '▶ Start';
 }
 
+/* ---------- pomodoro ---------- */
+const PM = { focus: 25 * 60 * 1000, break: 5 * 60 * 1000 };
+let pmMode = 'focus', pmLeft = PM.focus, pmInt = null, pmDone = 0;
+function pmRender(){
+  document.getElementById('pmDisplay').textContent = fmtMS(pmLeft);
+  document.getElementById('pmMode').textContent = pmMode === 'focus' ? '🎯 FOCUS TIME' : '☕ BREAK TIME';
+  document.getElementById('pmDone').textContent = pmDone;
+}
+function pmToggle(){
+  const btn = document.getElementById('pmBtn');
+  if(pmInt){
+    clearInterval(pmInt); pmInt = null; btn.textContent = '▶ Resume';
+    return;
+  }
+  const end = Date.now() + pmLeft;
+  btn.textContent = '⏸ Pause';
+  pmInt = setInterval(() => {
+    pmLeft = end - Date.now();
+    pmRender();
+    if(pmLeft <= 0){
+      clearInterval(pmInt); pmInt = null;
+      beep(); toast(pmMode === 'focus' ? 'Focus done! Take a break 🍅' : 'Break over! Back to focus 🎯');
+      if(pmMode === 'focus'){ pmDone++; pmMode = 'break'; } else { pmMode = 'focus'; }
+      pmLeft = PM[pmMode];
+      document.getElementById('pmBtn').textContent = '▶ Start';
+      pmRender();
+    }
+  }, 250);
+}
+function pmReset(){
+  clearInterval(pmInt); pmInt = null;
+  pmMode = 'focus'; pmLeft = PM.focus;
+  document.getElementById('pmBtn').textContent = '▶ Start';
+  pmRender();
+}
+pmRender();
+
+/* ---------- typing test ---------- */
+const PASSAGE = 'The quick brown fox jumps over the lazy dog. Pack my box with five dozen liquor jugs. How vexingly quick daft zebras jump! Bright vixens jump; dozy fowl quack. Sphinx of black quartz, judge my vow.';
+const PW = PASSAGE.split(' ');
+let tyStart = null, tyInt = null, tyOver = false;
+function renderPassage(typedWords, currentIdx){
+  const box = document.getElementById('typePassage');
+  box.innerHTML = PW.map((w, i) => {
+    let cls = '';
+    if(i < typedWords.length){
+      cls = typedWords[i] === w ? 'ok' : 'bad';
+    } else if(i === currentIdx){
+      cls = 'cur';
+    }
+    return `<span class="${cls}">${w}</span>`;
+  }).join(' ');
+}
+function typingReset(){
+  clearInterval(tyInt); tyInt = null;
+  tyStart = null; tyOver = false;
+  document.getElementById('typeInput').value = '';
+  document.getElementById('typeInput').disabled = false;
+  document.getElementById('tyWPM').textContent = '0 WPM';
+  document.getElementById('tyAcc').textContent = '100%';
+  document.getElementById('tyTime').textContent = '60s';
+  document.getElementById('tyResult').classList.remove('show');
+  renderPassage([], 0);
+  document.getElementById('typeInput').focus();
+}
+function typeInput(){
+  if(tyOver) return;
+  const ta = document.getElementById('typeInput');
+  const typed = ta.value;
+  if(!tyStart && typed.length > 0){
+    tyStart = Date.now();
+    tyInt = setInterval(tickTyping, 400);
+  }
+  const tw = typed.split(/\s+/);
+  renderPassage(tw.filter((w, i) => i < tw.length - 1 || typed.endsWith(' ')), Math.min(tw.length - (typed.endsWith(' ') ? 0 : 1), PW.length - 1));
+  tickTyping();
+}
+function tickTyping(){
+  if(!tyStart) return;
+  const elapsed = (Date.now() - tyStart) / 1000;
+  const left = Math.max(0, 60 - elapsed);
+  document.getElementById('tyTime').textContent = Math.ceil(left) + 's';
+  const typed = document.getElementById('typeInput').value;
+  const tw = typed.trim() ? typed.trim().split(/\s+/) : [];
+  let correct = 0;
+  tw.forEach((w, i) => { if(w === PW[i]) correct++; });
+  const wpm = elapsed > 3 ? Math.round(correct / (elapsed / 60)) : 0;
+  let match = 0;
+  for(let i = 0; i < typed.length; i++) if(typed[i] === PASSAGE[i]) match++;
+  const acc = typed.length ? Math.round(match / typed.length * 100) : 100;
+  document.getElementById('tyWPM').textContent = wpm + ' WPM';
+  document.getElementById('tyAcc').textContent = acc + '%';
+  const finishedAll = correct === PW.length && typed.trim().split(/\s+/).length === PW.length;
+  if(left <= 0 || finishedAll) endTyping(wpm, acc);
+}
+function endTyping(wpm, acc){
+  tyOver = true;
+  clearInterval(tyInt); tyInt = null;
+  document.getElementById('typeInput').disabled = true;
+  const rating = wpm >= 60 ? '🔥 Pro level!' : wpm >= 40 ? '💪 Great job!' : wpm >= 25 ? '👍 Good pace!' : '🌱 Keep practicing!';
+  showResult('tyResult', `${wpm} WPM · ${acc}% accuracy`, rating + ' Tap Restart to try again.');
+}
+typingReset();
+
+/* ---------- signature maker ---------- */
+const sigCanvas = document.getElementById('sigCanvas');
+sigCanvas.width = 800; sigCanvas.height = 300;
+const sctx = sigCanvas.getContext('2d');
+let sigDrawing = false;
+function sigPos(e){
+  const r = sigCanvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * sigCanvas.width / r.width,
+           y: (e.clientY - r.top) * sigCanvas.height / r.height };
+}
+sigCanvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  sigDrawing = true;
+  sigCanvas.setPointerCapture(e.pointerId);
+  const p = sigPos(e);
+  sctx.beginPath();
+  sctx.moveTo(p.x, p.y);
+});
+sigCanvas.addEventListener('pointermove', e => {
+  if(!sigDrawing) return;
+  const p = sigPos(e);
+  sctx.lineWidth = +document.getElementById('sigSize').value * 2;
+  sctx.lineCap = 'round';
+  sctx.lineJoin = 'round';
+  sctx.strokeStyle = document.getElementById('sigColor').value;
+  sctx.lineTo(p.x, p.y);
+  sctx.stroke();
+});
+['pointerup','pointerleave','pointercancel'].forEach(ev =>
+  sigCanvas.addEventListener(ev, () => sigDrawing = false));
+document.getElementById('sigSize').addEventListener('input', function(){
+  document.getElementById('sigSizeVal').textContent = this.value;
+});
+function clearSig(){ sctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); }
+function downloadSig(){
+  sigCanvas.toBlob(b => { saveBlob(b, 'signature.png'); toast('Signature saved! ✍️'); }, 'image/png');
+}
+
 /* ---------- random tools ---------- */
 function rollNumber(){
   const a = Math.ceil(+document.getElementById('rnMin').value);
@@ -980,6 +1994,872 @@ function calcDateDiff(){
     `${weeks} weeks ${days % 7} days · ${(days / 30.44).toFixed(1)} months · ${(days / 365.25).toFixed(2)} years`);
 }
 
+/* ---------- currency converter ---------- */
+let fxRates = null;
+async function loadFx(silent){
+  try {
+    const r = await fetch('https://open.er-api.com/v6/latest/USD');
+    const d = await r.json();
+    if(d.result !== 'success') throw 0;
+    fxRates = d.rates;
+    const opts = Object.keys(fxRates).sort().map(c => `<option>${c}</option>`).join('');
+    document.getElementById('fxFrom').innerHTML = opts;
+    document.getElementById('fxTo').innerHTML = opts;
+    document.getElementById('fxFrom').value = 'USD';
+    document.getElementById('fxTo').value = 'PKR';
+    document.getElementById('fxTime').textContent = 'Rates updated: ' + new Date(d.time_last_update_utc).toLocaleDateString();
+    convertFx();
+    if(!silent) toast('Live rates loaded 💱');
+  } catch {
+    document.getElementById('fxOut').textContent = 'Could not load rates';
+    if(!silent) toast('Check your internet and try again');
+  }
+}
+function convertFx(){
+  if(!fxRates) return;
+  const amt = +document.getElementById('fxAmt').value || 0;
+  const from = document.getElementById('fxFrom').value;
+  const to = document.getElementById('fxTo').value;
+  const result = amt / fxRates[from] * fxRates[to];
+  document.getElementById('fxOut').textContent =
+    `${amt.toLocaleString()} ${from} = ${result.toLocaleString(undefined, {maximumFractionDigits: 2})} ${to}`;
+}
+loadFx(true);
+
+/* ---------- prayer times ---------- */
+async function loadPrayer(){
+  const city = document.getElementById('prCity').value.trim() || 'Lahore';
+  const country = document.getElementById('prCountry').value.trim() || 'Pakistan';
+  document.getElementById('prGrid').innerHTML = '<p class="sub">Loading...</p>';
+  try {
+    const r = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=1`);
+    const d = await r.json();
+    if(d.code !== 200) throw 0;
+    const t = d.data.timings;
+    showResult('prResult',
+      d.data.date.gregorian.date,
+      `${d.data.date.hijri.day} ${d.data.date.hijri.month.en} ${d.data.date.hijri.year} AH · ${city}, ${country}`);
+    const prayers = [['Fajr', t.Fajr], ['Sunrise', t.Sunrise], ['Dhuhr', t.Dhuhr],
+                     ['Asr', t.Asr], ['Maghrib', t.Maghrib], ['Isha', t.Isha]];
+    document.getElementById('prGrid').innerHTML = prayers.map(([n, tm]) =>
+      `<div class="pr-card"><small>${n}</small><b>${tm}</b></div>`).join('');
+  } catch {
+    document.getElementById('prGrid').innerHTML = '';
+    toast('Could not find that city — check spelling');
+  }
+}
+
+/* ---------- zakat ---------- */
+function fmtN(n){ return Math.round(n).toLocaleString(); }
+function calcZakat(){
+  const cash = +document.getElementById('zkCash').value || 0;
+  const debts = +document.getElementById('zkDebts').value || 0;
+  const goldG = +document.getElementById('zkGoldG').value || 0;
+  const goldR = +document.getElementById('zkGoldR').value || 0;
+  const silG = +document.getElementById('zkSilG').value || 0;
+  const silR = +document.getElementById('zkSilR').value || 0;
+  if(!goldR || !silR){ toast('Enter gold and silver rates per gram'); return; }
+  const goldVal = goldG * goldR, silVal = silG * silR;
+  const total = cash + goldVal + silVal;
+  const net = Math.max(0, total - debts);
+  const nisab = Math.min(87.48 * goldR, 612.36 * silR);
+  if(net >= nisab){
+    showResult('zkResult', `Zakat due: PKR ${fmtN(net * 0.025)}`,
+      `Net wealth: ${fmtN(net)} · Nisab: ${fmtN(nisab)} · Rate: 2.5%`);
+  } else {
+    showResult('zkResult', 'No Zakat due ✅',
+      `Net wealth: ${fmtN(net)} is below the nisab (${fmtN(nisab)})`);
+  }
+}
+
+/* ---------- CGPA ---------- */
+const GRADES = [['A', 4.0], ['A-', 3.67], ['B+', 3.33], ['B', 3.0], ['B-', 2.67],
+                ['C+', 2.33], ['C', 2.0], ['C-', 1.67], ['D', 1.0], ['F', 0]];
+function cgAddRow(){
+  const row = document.createElement('div');
+  row.className = 'inv-row';
+  row.innerHTML = `<input type="text" placeholder="Subject (optional)" style="flex:2">
+    <input type="number" placeholder="Credits" min="1" max="6" style="flex:1" oninput="calcCGPA()">
+    <select style="flex:1" onchange="calcCGPA()">${GRADES.map(([g, p]) => `<option value="${p}">${g}</option>`).join('')}</select>
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();calcCGPA()">✕</button>`;
+  document.getElementById('cgRows').appendChild(row);
+}
+function calcCGPA(){
+  let pts = 0, cr = 0;
+  document.querySelectorAll('#cgRows .inv-row').forEach(r => {
+    const c = +r.children[1].value || 0;
+    const g = +r.children[2].value || 0;
+    pts += c * g; cr += c;
+  });
+  if(!cr){ document.getElementById('cgResult').classList.remove('show'); return; }
+  const gpa = pts / cr;
+  const rating = gpa >= 3.7 ? '🏆 Excellent!' : gpa >= 3.0 ? '💪 Very good' : gpa >= 2.5 ? '👍 Good' : '📚 Keep pushing!';
+  showResult('cgResult', `GPA: ${gpa.toFixed(2)} / 4.0`, `${cr} total credits · ${Math.round(gpa / 4 * 100)}% · ${rating}`);
+}
+cgAddRow();
+
+/* ---------- JSON tools ---------- */
+function jsonDo(mode){
+  const t = document.getElementById('jsonIn').value;
+  try {
+    const o = JSON.parse(t);
+    document.getElementById('jsonOut').value =
+      mode === 'min' ? JSON.stringify(o) : mode === 'val' ? '✅ Valid JSON!' : JSON.stringify(o, null, 2);
+    toast('Done! ✔');
+  } catch(err) {
+    document.getElementById('jsonOut').value = '❌ Invalid JSON: ' + err.message;
+    toast('Invalid JSON');
+  }
+}
+
+/* ---------- crop & rotate ---------- */
+let crSrc = null;
+const crView = document.getElementById('crView');
+const crCtx = crView.getContext('2d');
+let crRect = null, crDrag = null;
+document.getElementById('crFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  crSrc = document.createElement('canvas');
+  crSrc.width = img.width; crSrc.height = img.height;
+  crSrc.getContext('2d').drawImage(img, 0, 0);
+  crRect = null;
+  document.getElementById('crWrap').style.display = 'block';
+  crRender();
+  toast('Drag on the image to select crop area ✂️');
+});
+function crRender(){
+  if(!crSrc) return;
+  const scale = Math.min(560, crSrc.width) / crSrc.width;
+  crView.width = Math.round(crSrc.width * scale);
+  crView.height = Math.round(crSrc.height * scale);
+  crCtx.drawImage(crSrc, 0, 0, crView.width, crView.height);
+  if(crRect && crRect.w > 2){
+    crCtx.save();
+    crCtx.strokeStyle = '#6c5ce7'; crCtx.lineWidth = 2; crCtx.setLineDash([6, 4]);
+    crCtx.strokeRect(crRect.x, crRect.y, crRect.w, crRect.h);
+    crCtx.restore();
+  }
+}
+function crPos(e){
+  const r = crView.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * crView.width / r.width,
+           y: (e.clientY - r.top) * crView.height / r.height };
+}
+crView.addEventListener('pointerdown', e => { e.preventDefault(); crDrag = crPos(e); crRect = null; });
+crView.addEventListener('pointermove', e => {
+  if(!crDrag) return;
+  const p = crPos(e);
+  crRect = { x: Math.min(p.x, crDrag.x), y: Math.min(p.y, crDrag.y),
+             w: Math.abs(p.x - crDrag.x), h: Math.abs(p.y - crDrag.y) };
+  crRender();
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+  crView.addEventListener(ev, () => crDrag = null));
+function crRotate(){
+  if(!crSrc) return;
+  const c = document.createElement('canvas');
+  c.width = crSrc.height; c.height = crSrc.width;
+  const ctx = c.getContext('2d');
+  ctx.translate(c.width / 2, c.height / 2);
+  ctx.rotate(Math.PI / 2);
+  ctx.drawImage(crSrc, -crSrc.width / 2, -crSrc.height / 2);
+  crSrc = c; crRect = null; crRender();
+}
+function crFlip(h){
+  if(!crSrc) return;
+  const c = document.createElement('canvas');
+  c.width = crSrc.width; c.height = crSrc.height;
+  const ctx = c.getContext('2d');
+  if(h){ ctx.translate(c.width, 0); ctx.scale(-1, 1); }
+  else { ctx.translate(0, c.height); ctx.scale(1, -1); }
+  ctx.drawImage(crSrc, 0, 0);
+  crSrc = c; crRender();
+}
+function crApplyCrop(){
+  if(!crSrc || !crRect || crRect.w < 5 || crRect.h < 5){ toast('Drag a crop area first ✂️'); return; }
+  const s = crSrc.width / crView.width;
+  const c = document.createElement('canvas');
+  c.width = Math.round(crRect.w * s); c.height = Math.round(crRect.h * s);
+  c.getContext('2d').drawImage(crSrc, crRect.x * s, crRect.y * s, crRect.w * s, crRect.h * s,
+    0, 0, c.width, c.height);
+  crSrc = c; crRect = null; crRender();
+  toast('Crop applied ✔');
+}
+function crDownload(){
+  if(crSrc){ crSrc.toBlob(b => saveBlob(b, 'edited-image.png'), 'image/png'); toast('Downloading ⬇'); }
+}
+
+/* ---------- photo filters ---------- */
+let flImg = null, flCanvas = null;
+document.getElementById('flFile').addEventListener('change', async e => {
+  if(!e.target.files[0]) return;
+  const {img} = await loadImage(e.target.files[0]);
+  flImg = img;
+  flCanvas = document.createElement('canvas');
+  flCanvas.width = img.width; flCanvas.height = img.height;
+  document.getElementById('flWrap').style.display = 'block';
+  applyFilters();
+});
+function applyFilters(){
+  if(!flImg) return;
+  const g = id => document.getElementById(id);
+  const v = id => +g(id).value;
+  g('flBrightV').textContent = v('flBright'); g('flContrastV').textContent = v('flContrast');
+  g('flSatV').textContent = v('flSat'); g('flGrayV').textContent = v('flGray');
+  g('flSepV').textContent = v('flSep'); g('flBlurV').textContent = v('flBlur');
+  const ctx = flCanvas.getContext('2d');
+  ctx.filter = `brightness(${v('flBright')}%) contrast(${v('flContrast')}%) saturate(${v('flSat')}%) grayscale(${v('flGray')}%) sepia(${v('flSep')}%) blur(${v('flBlur')}px)`;
+  ctx.drawImage(flImg, 0, 0);
+  document.getElementById('flPreview').src = flCanvas.toDataURL('image/jpeg', 0.9);
+}
+function flReset(){
+  ['flBright','flContrast','flSat'].forEach(id => document.getElementById(id).value = 100);
+  ['flGray','flSep','flBlur'].forEach(id => document.getElementById(id).value = 0);
+  applyFilters();
+}
+function flDownload(){
+  if(flCanvas){ flCanvas.toBlob(b => saveBlob(b, 'filtered.jpg'), 'image/jpeg', 0.92); toast('Downloading ⬇'); }
+}
+
+/* ---------- voice recorder ---------- */
+let recStream = null, mediaRec = null, recChunks = [], recStartT = null, recInt = null, recBlob = null;
+async function recToggle(){
+  const btn = document.getElementById('recBtn');
+  if(mediaRec && mediaRec.state === 'recording'){
+    mediaRec.stop();
+    clearInterval(recInt);
+    btn.textContent = '⏺ Start Recording';
+    return;
+  }
+  try {
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch { toast('Microphone permission needed 🎙️'); return; }
+  recChunks = [];
+  mediaRec = new MediaRecorder(recStream);
+  mediaRec.ondataavailable = e => recChunks.push(e.data);
+  mediaRec.onstop = () => {
+    recStream.getTracks().forEach(t => t.stop());
+    recBlob = new Blob(recChunks, { type: mediaRec.mimeType || 'audio/webm' });
+    document.getElementById('recAudio').src = URL.createObjectURL(recBlob);
+    document.getElementById('recPlay').style.display = 'block';
+    document.getElementById('recDl').style.display = 'inline-block';
+    toast('Recording ready! ✔');
+  };
+  mediaRec.start();
+  recStartT = Date.now();
+  btn.textContent = '⏹ Stop Recording';
+  recInt = setInterval(() => {
+    document.getElementById('recTime').textContent = fmtSW(Date.now() - recStartT).slice(0, 5);
+  }, 250);
+}
+function recDownload(){
+  if(recBlob) saveBlob(recBlob, 'recording.webm');
+}
+
+/* ---------- invoice generator ---------- */
+let invCounter = parseInt(localStorage.getItem('invCounter') || '0', 10);
+
+function invNextNumber(){
+  invCounter++;
+  localStorage.setItem('invCounter', invCounter);
+  return 'INV-' + String(invCounter).padStart(4, '0');
+}
+
+function invTotals(){
+  let sub = 0;
+  document.querySelectorAll('#invRows .inv-row').forEach(r => {
+    sub += (+r.children[1].value || 0) * (+r.children[2].value || 0);
+  });
+  const tax = sub * (+document.getElementById('invTax').value || 0) / 100;
+  return { sub, tax, total: sub + tax };
+}
+
+function invAddRow(){
+  const row = document.createElement('div');
+  row.className = 'inv-row';
+  row.innerHTML = `<input type="text" placeholder="Item description" style="flex:3" oninput="invPreview()">
+    <input type="number" placeholder="Qty" min="0" style="flex:1" oninput="invPreview()">
+    <input type="number" placeholder="Price (Rs)" min="0" style="flex:1" oninput="invPreview()">
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();invPreview()">✕</button>`;
+  document.getElementById('invRows').appendChild(row);
+  invPreview();
+}
+
+function invPreview(){
+  const t = invTotals();
+  document.getElementById('invTotal').textContent =
+    `Subtotal: Rs ${t.sub.toFixed(2)}${t.tax ? ` · With tax: Rs ${t.total.toFixed(2)}` : ''}`;
+  const biz = document.getElementById('invFrom').value || 'Your Business';
+  const client = document.getElementById('invTo').value || 'Client';
+  const no = document.getElementById('invNo').value || '';
+  const date = document.getElementById('invDate').value || '';
+  const c = document.getElementById('invColor').value;
+  let items = 0;
+  document.querySelectorAll('#invRows .inv-row').forEach(r => { if(r.children[0].value.trim()) items++; });
+  document.getElementById('invPrev').innerHTML = `
+    <div style="background:#fff;color:#222;border-radius:12px;padding:18px;border:1px solid #2c3149;font-size:.85rem">
+      <div style="text-align:center">
+        <div style="font-size:1.25rem;font-weight:800;color:${c}">${biz}</div>
+        <div style="font-size:.72rem;color:#888">TAX INVOICE · ${no} · ${date}</div>
+      </div>
+      <div style="border-top:2px solid ${c};margin:10px 0"></div>
+      <div style="color:#555">Bill To: <b>${client}</b></div>
+      <div style="color:#888;margin-top:6px">${items} item(s)</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;color:#555">
+        <span>Subtotal</span><b>Rs ${t.sub.toFixed(2)}</b></div>
+      ${t.tax ? `<div style="display:flex;justify-content:space-between;color:#555">
+        <span>Tax</span><b>Rs ${t.tax.toFixed(2)}</b></div>` : ''}
+      <div style="display:flex;justify-content:space-between;margin-top:6px;
+        font-size:1rem;font-weight:800;color:${c}">
+        <span>TOTAL</span><span>Rs ${t.total.toFixed(2)}</span></div>
+    </div>`;
+}
+
+function invInit(){
+  document.getElementById('invNo').value = invNextNumber();
+  document.getElementById('invDate').value = new Date().toLocaleDateString();
+  invPreview();
+}
+
+function invPDF(){
+  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+  const rows = [];
+  document.querySelectorAll('#invRows .inv-row').forEach(r => {
+    const d = r.children[0].value.trim();
+    const q = +r.children[1].value || 0;
+    const p = +r.children[2].value || 0;
+    if(d) rows.push([d, q, p, q * p]);
+  });
+  if(!rows.length){ toast('Add at least one item 🧾'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const [R, G, B] = hexToRgb(document.getElementById('invColor').value);
+  const { sub, tax, total } = invTotals();
+  const no = document.getElementById('invNo').value;
+
+  // Business name: big, bold, centered
+  doc.setFontSize(24);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(R, G, B);
+  doc.text(document.getElementById('invFrom').value || 'Business', 105, 22, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(130);
+  doc.text('T A X   I N V O I C E', 105, 29, { align: 'center' });
+  doc.setDrawColor(R, G, B);
+  doc.setLineWidth(1);
+  doc.line(15, 33, 195, 33);
+
+  // Details
+  doc.setFontSize(11);
+  doc.setTextColor(40);
+  doc.text('Bill To:', 15, 42);
+  doc.setFont(undefined, 'bold');
+  doc.text(document.getElementById('invTo').value || 'Client', 15, 48);
+  doc.setFont(undefined, 'normal');
+  doc.text('Invoice #: ' + no, 195, 42, { align: 'right' });
+  doc.text('Date: ' + document.getElementById('invDate').value, 195, 48, { align: 'right' });
+
+  // Items table
+  const hy = 56;
+  doc.setFillColor(R, G, B);
+  doc.rect(15, hy, 180, 8, 'F');
+  doc.setTextColor(255);
+  doc.setFont(undefined, 'bold');
+  doc.text('Item', 18, hy + 5.5);
+  doc.text('Qty', 130, hy + 5.5, { align: 'right' });
+  doc.text('Price', 160, hy + 5.5, { align: 'right' });
+  doc.text('Total', 192, hy + 5.5, { align: 'right' });
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(40);
+  let y = hy + 13;
+  rows.forEach(r => {
+    doc.text(String(r[0]).slice(0, 55), 18, y);
+    doc.text(String(r[1]), 130, y, { align: 'right' });
+    doc.text('Rs ' + r[2].toFixed(2), 160, y, { align: 'right' });
+    doc.text('Rs ' + r[3].toFixed(2), 192, y, { align: 'right' });
+    y += 8;
+  });
+  doc.setDrawColor(200);
+  doc.setLineWidth(0.3);
+  doc.line(120, y - 2, 195, y - 2);
+  y += 6;
+  doc.text('Subtotal: Rs ' + sub.toFixed(2), 192, y, { align: 'right' });
+  y += 7;
+  if(tax){
+    doc.text('Tax: Rs ' + tax.toFixed(2), 192, y, { align: 'right' });
+    y += 7;
+  }
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(R, G, B);
+  doc.text('TOTAL: Rs ' + total.toFixed(2), 192, y + 2, { align: 'right' });
+
+  // Notes
+  const notes = document.getElementById('invNotes').value.trim();
+  if(notes){
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'italic');
+    doc.setTextColor(120);
+    doc.text(notes, 15, 285);
+  }
+
+  doc.save(no + '.pdf');
+  toast('Invoice ' + no + ' downloaded! 📄');
+  // Next invoice number for this visit
+  document.getElementById('invNo').value = invNextNumber();
+  invPreview();
+}
+invAddRow();
+invInit();
+
+/* ---------- CV maker ---------- */
+let cvSkills = ['HTML', 'CSS', 'JavaScript', 'MS Office'];
+let cvPhotoData = null;
+
+document.getElementById('cvPhoto').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => { cvPhotoData = ev.target.result; cvPreview(); toast('Photo added ✔'); };
+  reader.readAsDataURL(f);
+});
+
+function cvAddExp(){
+  const b = document.createElement('div');
+  b.className = 'cv-row-block';
+  b.innerHTML = `<div class="row">
+      <input class="cv-role" type="text" placeholder="Job title (e.g. Web Developer)" oninput="cvPreview()">
+      <input class="cv-company" type="text" placeholder="Company" oninput="cvPreview()">
+      <input class="cv-dates" type="text" placeholder="2023 - Present" oninput="cvPreview()">
+    </div>
+    <textarea class="cv-desc" rows="2" placeholder="Achievements — one point per line" oninput="cvPreview()"></textarea>
+    <button class="btn btn-ghost" style="padding:6px 14px;font-size:.8rem" onclick="this.parentElement.remove();cvPreview()">✕ Remove</button>`;
+  document.getElementById('cvExp').appendChild(b);
+  cvPreview();
+}
+function cvAddEdu(){
+  const b = document.createElement('div');
+  b.className = 'cv-row-block';
+  b.innerHTML = `<div class="row">
+      <input class="cv-degree" type="text" placeholder="Degree (e.g. BS Computer Science)" oninput="cvPreview()">
+      <input class="cv-school" type="text" placeholder="Institution" oninput="cvPreview()">
+      <input class="cv-year" type="text" placeholder="2019 - 2023" oninput="cvPreview()">
+    </div>
+    <button class="btn btn-ghost" style="padding:6px 14px;font-size:.8rem" onclick="this.parentElement.remove();cvPreview()">✕ Remove</button>`;
+  document.getElementById('cvEdu').appendChild(b);
+  cvPreview();
+}
+function cvAddSkill(){
+  const inp = document.getElementById('cvSkillInput');
+  const s = inp.value.trim();
+  if(!s) return;
+  cvSkills.push(s);
+  inp.value = '';
+  renderSkills(); cvPreview();
+}
+function renderSkills(){
+  document.getElementById('cvSkills').innerHTML = cvSkills.map((s, i) =>
+    `<span class="chip" title="Tap to remove" onclick="cvSkills.splice(${i},1);renderSkills();cvPreview()">${s} ✕</span>`).join('');
+  autoSummary(false);
+}
+document.getElementById('cvSkillInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); cvAddSkill(); }
+});
+function cvAddLang(){
+  const b = document.createElement('div');
+  b.className = 'cv-row-block';
+  b.innerHTML = `<div class="row">
+      <input class="cv-lang" type="text" placeholder="Language (e.g. English)" oninput="cvPreview()">
+      <select class="cv-level" onchange="cvPreview()">
+        <option>Basic</option><option>Conversational</option>
+        <option selected>Fluent</option><option>Native</option>
+      </select>
+      <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.parentElement.remove();cvPreview()">✕</button>
+    </div>`;
+  document.getElementById('cvLangs').appendChild(b);
+  cvPreview();
+}
+
+function cvCollect(){
+  const v = id => document.getElementById(id).value;
+  const exp = [], edu = [], langs = [];
+  document.querySelectorAll('#cvExp .cv-row-block').forEach(b => {
+    exp.push({
+      role: b.querySelector('.cv-role').value, company: b.querySelector('.cv-company').value,
+      dates: b.querySelector('.cv-dates').value, desc: b.querySelector('.cv-desc').value
+    });
+  });
+  document.querySelectorAll('#cvEdu .cv-row-block').forEach(b => {
+    edu.push({
+      degree: b.querySelector('.cv-degree').value, school: b.querySelector('.cv-school').value,
+      year: b.querySelector('.cv-year').value
+    });
+  });
+  document.querySelectorAll('#cvLangs .cv-row-block').forEach(b => {
+    langs.push({ name: b.querySelector('.cv-lang').value, level: b.querySelector('.cv-level').value });
+  });
+  return {
+    name: v('cvName'), title: v('cvTitle'), email: v('cvEmail'), phone: v('cvPhone'),
+    city: v('cvCity'), link: v('cvLink'), summary: v('cvSummary'),
+    certs: v('cvCerts').split('\n').map(s => s.trim()).filter(Boolean),
+    exp, edu, langs, skills: cvSkills, photo: cvPhotoData,
+    color: document.getElementById('cvColor').value,
+    template: document.getElementById('cvTemplate').value
+  };
+}
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function cvPreview(){
+  const d = cvCollect();
+  const c = d.color;
+  const photo = d.photo ? `<img src="${d.photo}" style="width:72px;height:72px;border-radius:50%;object-fit:cover">` : '';
+  const contact = [d.email, d.phone, d.city, d.link].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+  const expH = d.exp.filter(e => e.role || e.company).map(e => `
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between">
+        <b>${esc(e.role)}${e.company ? ' — ' + esc(e.company) : ''}</b>
+        <span style="color:#888">${esc(e.dates)}</span></div>
+      <div style="white-space:pre-line;color:#444">${esc(e.desc)}</div>
+    </div>`).join('');
+  const eduH = d.edu.filter(e => e.degree || e.school).map(e => `
+    <div style="margin-bottom:6px"><b>${esc(e.degree)}</b>${e.school ? ' — ' + esc(e.school) : ''}
+      <span style="color:#888"> &nbsp;${esc(e.year)}</span></div>`).join('');
+  const head = t => `<div style="color:${c};border-bottom:2px solid ${c};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px">${t}</div>`;
+  let html = '';
+  if(d.template === 'modern'){
+    html = `<div class="cv-page" style="display:flex;gap:16px;padding:0">
+      <div style="width:36%;background:${c};color:#fff;padding:18px 12px;border-radius:8px 0 0 8px">
+        <div style="text-align:center;margin-bottom:12px">${photo}</div>
+        <div style="font-weight:800;font-size:1rem;line-height:1.3">${esc(d.name)}</div>
+        <div style="font-size:.75rem;opacity:.85;margin-bottom:12px">${esc(d.title)}</div>
+        <div style="font-size:.68rem;word-break:break-all;line-height:1.7">${[d.email,d.phone,d.city,d.link].filter(Boolean).map(esc).join('<br>')}</div>
+        ${head ? '' : ''}
+        <div style="border-top:1px solid rgba(255,255,255,.4);margin:12px 0 6px;font-weight:700;font-size:.7rem;text-transform:uppercase">Skills</div>
+        <div style="font-size:.7rem">${d.skills.map(esc).join(' · ')}</div>
+        <div style="border-top:1px solid rgba(255,255,255,.4);margin:12px 0 6px;font-weight:700;font-size:.7rem;text-transform:uppercase">Languages</div>
+        <div style="font-size:.7rem">${d.langs.filter(l=>l.name).map(l => esc(l.name) + ' (' + l.level + ')').join('<br>')}</div>
+      </div>
+      <div style="flex:1;padding:16px 14px">
+        ${head('Summary')}<div>${esc(d.summary)}</div>
+        ${head('Experience')}${expH}
+        ${head('Education')}${eduH}
+        ${d.certs.length ? head('Certifications') + d.certs.map(esc).join('<br>') : ''}
+      </div></div>`;
+  } else {
+    const minimal = d.template === 'minimal';
+    const hc = minimal ? '#333' : c;
+    html = `<div class="cv-page">
+      ${minimal ? '' : `<div style="background:${c};color:#fff;margin:-24px -24px 14px;padding:20px 24px;text-align:center;border-radius:8px 8px 0 0">`}
+      ${minimal ? `<div style="display:flex;justify-content:space-between;align-items:center">` : ''}
+      <div style="font-size:1.5rem;font-weight:800;color:${minimal ? '#222' : '#fff'};line-height:1.2">${esc(d.name)}</div>
+      ${minimal ? `<div>${photo}</div></div>` : ''}
+      <div style="font-size:.85rem;color:${minimal ? '#555' : 'rgba(255,255,255,.9)'};margin-top:2px">${esc(d.title)}</div>
+      <div style="font-size:.7rem;margin-top:4px;color:${minimal ? '#777' : 'rgba(255,255,255,.85)'}">${contact}</div>
+      ${minimal ? '' : '</div>'}
+      <div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Summary</div>
+      <div>${esc(d.summary)}</div>
+      <div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Experience</div>
+      ${expH || '<span style="color:#999">—</span>'}
+      <div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Education</div>
+      ${eduH || '<span style="color:#999">—</span>'}
+      <div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Skills</div>
+      <div>${d.skills.map(esc).join(' · ')}</div>
+      <div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Languages</div>
+      <div>${d.langs.filter(l=>l.name).map(l => esc(l.name) + ' — ' + l.level).join('<br>')}</div>
+      ${d.certs.length ? `<div style="color:${hc};border-bottom:2px solid ${hc};font-weight:800;font-size:.85rem;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 6px">Certifications</div>` + d.certs.map(esc).join('<br>') : ''}
+    </div>`;
+  }
+  document.getElementById('cvPrev').innerHTML = html;
+}
+
+async function circlePhoto(dataURL, size){
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataURL; });
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const s = Math.max(size / img.width, size / img.height);
+  ctx.drawImage(img, (size - img.width * s) / 2, (size - img.height * s) / 2, img.width * s, img.height * s);
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2); ctx.fill();
+  return c.toDataURL('image/png');
+}
+
+async function cvPDF(){
+  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+  const d = cvCollect();
+  const { jsPDF } = window.jspdf;
+  const [R, G, B] = hexToRgb(d.color);
+  const minimal = d.template === 'minimal';
+  const acc = minimal ? [80, 80, 80] : [R, G, B];
+
+  if(d.template === 'modern'){
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFillColor(R, G, B);
+    doc.rect(0, 0, 65, 297, 'F');
+    doc.setTextColor(255);
+    let y = 12;
+    if(d.photo){
+      try { const ph = await circlePhoto(d.photo, 300); doc.addImage(ph, 'PNG', 17, 10, 31, 31); y = 48; } catch(e){}
+    }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(15);
+    doc.splitTextToSize(d.name || 'Your Name', 57).forEach(l => { doc.text(l, 8, y); y += 7; });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(10);
+    doc.text(d.title || '', 8, y); y += 10;
+    doc.setFontSize(8.5);
+    doc.setFont(undefined, 'normal');
+    [d.email, d.phone, d.city, d.link].filter(Boolean).forEach(line => {
+      doc.splitTextToSize(line, 52).forEach(l => { if(y > 285){ return; } doc.text(l, 8, y); y += 4.6; });
+    });
+    const sideSection = (title) => {
+      y += 4;
+      doc.setDrawColor(255); doc.setLineWidth(0.2); doc.line(8, y, 57, y);
+      doc.setFont(undefined, 'bold'); doc.setFontSize(9);
+      doc.text(title.toUpperCase(), 8, y + 5); y += 10;
+      doc.setFont(undefined, 'normal'); doc.setFontSize(8.5);
+    };
+    sideSection('Skills');
+    doc.splitTextToSize(d.skills.join('  ·  ') || '—', 52).forEach(l => { doc.text(l, 8, y); y += 4.6; });
+    sideSection('Languages');
+    d.langs.filter(l => l.name).forEach(l => { doc.text(l.name + ' — ' + l.level, 8, y); y += 4.8; });
+
+    // main column
+    let m = 46;
+    let mx = 75, mw = 122;
+    doc.setTextColor(30);
+    doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.setTextColor(R, G, B);
+    doc.text('SUMMARY', mx, 15); doc.setDrawColor(R, G, B); doc.line(mx, 17, 197, 17);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9.5); doc.setTextColor(50);
+    m = 23;
+    doc.splitTextToSize(d.summary || '', mw).forEach(l => { doc.text(l, mx, m); m += 4.8; });
+    const mainSection = (title) => {
+      if(m > 270){ doc.addPage(); m = 20; }
+      doc.setFont(undefined, 'bold'); doc.setFontSize(13); doc.setTextColor(R, G, B);
+      doc.text(title.toUpperCase(), mx, m); doc.setDrawColor(R, G, B); doc.line(mx, m + 2, 197, m + 2);
+      doc.setFont(undefined, 'normal'); doc.setFontSize(9.5); doc.setTextColor(50);
+      m += 9;
+    };
+    mainSection('Experience');
+    d.exp.filter(e => e.role || e.company).forEach(e => {
+      if(m > 262){ doc.addPage(); m = 20; }
+      doc.setFont(undefined, 'bold'); doc.setTextColor(30);
+      doc.text((e.role || '') + (e.company ? '  —  ' + e.company : ''), mx, m);
+      doc.setFont(undefined, 'normal'); doc.setTextColor(120); doc.setFontSize(8.5);
+      doc.text(e.dates || '', 197, m, { align: 'right' });
+      doc.setFontSize(9); doc.setTextColor(60); m += 5;
+      (e.desc || '').split('\n').filter(x => x.trim()).forEach(line => {
+        doc.splitTextToSize('• ' + line.trim(), mw).forEach(l => { doc.text(l, mx, m); m += 4.5; });
+      });
+      m += 4; doc.setTextColor(50);
+    });
+    mainSection('Education');
+    d.edu.filter(e => e.degree || e.school).forEach(e => {
+      if(m > 270){ doc.addPage(); m = 20; }
+      doc.setFont(undefined, 'bold'); doc.setTextColor(30);
+      doc.text(e.degree || '', mx, m);
+      doc.setFont(undefined, 'normal'); doc.setTextColor(120);
+      doc.text(e.year || '', 197, m, { align: 'right' });
+      m += 5; doc.setTextColor(60);
+      doc.text(e.school || '', mx, m); m += 7;
+    });
+    if(d.certs.length){
+      mainSection('Certifications');
+      d.certs.forEach(ct => { doc.text('• ' + ct, mx, m); m += 5; });
+    }
+    doc.save((d.name || 'CV').replace(/\s+/g, '_') + '_CV.pdf');
+    toast('CV downloaded! 📄');
+    return;
+  }
+
+  // professional / minimal
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  if(!minimal){
+    doc.setFillColor(R, G, B);
+    doc.rect(0, 0, 210, 34, 'F');
+    doc.setTextColor(255);
+  } else {
+    doc.setTextColor(30);
+  }
+  doc.setFont(undefined, 'bold'); doc.setFontSize(23);
+  doc.text(d.name || 'Your Name', 105, 15, { align: 'center' });
+  doc.setFont(undefined, 'normal'); doc.setFontSize(12);
+  doc.text(d.title || '', 105, 23, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(minimal ? 100 : 235);
+  const contact = [d.email, d.phone, d.city, d.link].filter(Boolean).join('   |   ');
+  doc.text(contact, 105, 30, { align: 'center' });
+  if(d.photo){
+    try {
+      const ph = d.template === 'professional' ? await circlePhoto(d.photo, 300) : null;
+      if(ph) doc.addImage(ph, 'PNG', 180, 4, 26, 26);
+    } catch(e){}
+  }
+  let y = 44;
+  const section = (title) => {
+    if(y > 272){ doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(12);
+    doc.setTextColor(acc[0], acc[1], acc[2]);
+    doc.text(title.toUpperCase(), 15, y);
+    doc.setDrawColor(acc[0], acc[1], acc[2]); doc.setLineWidth(0.5);
+    doc.line(15, y + 1.5, 195, y + 1.5);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(10); doc.setTextColor(50);
+    y += 8;
+  };
+  const para = (text, indent = 15, maxW = 180) => {
+    doc.splitTextToSize(text || '', maxW).forEach(l => {
+      if(y > 283){ doc.addPage(); y = 20; }
+      doc.text(l, indent, y); y += 5;
+    });
+    y += 2;
+  };
+  section('Summary'); para(d.summary);
+  section('Experience');
+  d.exp.filter(e => e.role || e.company).forEach(e => {
+    if(y > 262){ doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.setTextColor(30);
+    doc.text((e.role || '') + (e.company ? '  —  ' + e.company : ''), 15, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(e.dates || '', 195, y, { align: 'right' });
+    y += 6; doc.setFontSize(10); doc.setTextColor(60);
+    (e.desc || '').split('\n').filter(x => x.trim()).forEach(line => {
+      doc.splitTextToSize('• ' + line.trim(), 180).forEach(l => { doc.text(l, 15, y); y += 5; });
+    });
+    y += 4;
+  });
+  section('Education');
+  d.edu.filter(e => e.degree || e.school).forEach(e => {
+    if(y > 270){ doc.addPage(); y = 20; }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.setTextColor(30);
+    doc.text(e.degree || '', 15, y);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.setTextColor(120);
+    doc.text(e.year || '', 195, y, { align: 'right' });
+    y += 5.5; doc.setFontSize(10); doc.setTextColor(60);
+    doc.text(e.school || '', 15, y); y += 8;
+  });
+  section('Skills'); para(d.skills.join('  •  '));
+  section('Languages');
+  d.langs.filter(l => l.name).forEach(l => { doc.text(l.name + ' — ' + l.level, 15, y); y += 5.5; });
+  if(d.certs.length){
+    section('Certifications');
+    d.certs.forEach(ct => { doc.text('• ' + ct, 15, y); y += 5.5; });
+  }
+  doc.save((d.name || 'CV').replace(/\s+/g, '_') + '_CV.pdf');
+  toast('CV downloaded! 📄');
+}
+
+/* ---------- CV auto-summary ---------- */
+const CV_FIELDS = [
+  [['ai','machine learning','deep learning','artificial intelligence'], 'AI and machine learning', ['training accurate ML models','cleaning and preparing data','deploying intelligent features']],
+  [['blockchain','crypto','web3'], 'blockchain technology', ['secure transaction systems','smart contract fundamentals','decentralized application design']],
+  [['cloud','devops','aws','azure','docker','kubernetes'], 'cloud and DevOps', ['automating deployments','managing cloud infrastructure','building CI/CD pipelines']],
+  [['cyber security','cybersecurity','penetration','security analyst','ethical hacker'], 'cyber security', ['detecting and responding to threats','hardening systems securely','applying security best practices']],
+  [['game'], 'game development', ['designing engaging gameplay','writing efficient game logic','polishing the player experience']],
+  [['qa','quality assurance','tester','testing'], 'quality assurance', ['writing clear test cases','finding and reporting bugs','guaranteeing release quality']],
+  [['data','analyst','analysis','scientist'], 'data analysis', ['turning raw data into insights','building clear reports and dashboards','supporting informed decisions']],
+  [['network','it support','helpdesk','sysadmin','computer technician'], 'IT support', ['resolving hardware and software issues','setting up and maintaining networks','giving clear, patient user support']],
+  [['developer','programmer','software','coder','web','app ','android'], 'software development', ['building reliable applications','writing clean, maintainable code','turning ideas into working products']],
+  [['tailor','stitching','fashion'], 'tailoring and fashion', ['precise stitching and perfect fitting','modern design sense','delivering orders on time']],
+  [['interior'], 'interior design', ['functional and beautiful spaces','material and color coordination','client-focused design plans']],
+  [['designer','design','ui','ux','graphic','photoshop'], 'design', ['creating clean modern visuals','user-centered design thinking','strong visual storytelling']],
+  [['video','animator','film','editor'], 'media production', ['editing engaging videos','smooth motion graphics','story-driven content']],
+  [['photographer'], 'photography', ['capturing memorable moments','professional photo editing','creative composition']],
+  [['lab','laboratory'], 'laboratory services', ['accurate sample testing','careful lab equipment handling','strict quality control']],
+  [['pharmacist','pharmacy'], 'pharmacy', ['dispensing medicines accurately','counselling patients clearly','managing medicine inventory']],
+  [['physio','therapist'], 'physiotherapy', ['designing rehabilitation plans','applying therapeutic techniques','tracking patient progress']],
+  [['nurse','medical','health','doctor','clinic','surgeon','dentist'], 'healthcare', ['compassionate patient care','accurate record keeping','staying calm under pressure']],
+  [['accountant','accounting','finance','bookkeep','audit'], 'finance and accounting', ['financial reporting and analysis','bookkeeping and reconciliations','maintaining accurate records']],
+  [['bank','teller'], 'banking', ['serving customers accurately','handling transactions securely','strong product knowledge']],
+  [['procurement','purchasing','supply chain'], 'procurement', ['negotiating with vendors','smart purchase planning','controlling costs']],
+  [['warehouse','inventory','stock'], 'warehouse and inventory', ['accurate stock records','efficient goods handling','regular counts and audits']],
+  [['insurance'], 'insurance services', ['explaining policies clearly','assessing client needs','supporting claims smoothly']],
+  [['real estate','property'], 'real estate', ['property valuation basics','building client relationships','closing deals smoothly']],
+  [['travel'], 'travel services', ['planning itineraries','ticketing and reservations','customer-focused service']],
+  [['event','wedding','planner'], 'event management', ['coordinating vendors and schedules','creative event concepts','flawless on-day execution']],
+  [['marketing','seo','social media','digital'], 'digital marketing', ['growing brands online','data-driven campaigns','content that converts']],
+  [['sales','business development','representative'], 'sales', ['building lasting client relationships','consistently meeting targets','negotiating win-win deals']],
+  [['journalist','reporter','news','anchor'], 'journalism', ['reporting accurate stories','interviewing and research','meeting tight news deadlines']],
+  [['lawyer','legal','advocate','attorney'], 'law', ['legal research and drafting','client representation','thorough case preparation']],
+  [['police','army','forces','defence','ranger'], 'defence and security services', ['discipline and physical fitness','security operations','teamwork under pressure']],
+  [['security guard','watchman','security officer'], 'security services', ['vigilant site protection','controlling access professionally','clear incident reporting']],
+  [['cleaner','housekeeping','sanitation','sweeper'], 'housekeeping', ['maintaining spotless spaces','efficient cleaning routines','strong attention to detail']],
+  [['cook','chef','kitchen','restaurant','baker'], 'food and culinary arts', ['preparing delicious hygienic food','following kitchen safety standards','creative menus and plating']],
+  [['waiter','hotel','hospitality','host'], 'hospitality', ['warm and welcoming guest service','accurate order handling','clean, inviting spaces']],
+  [['beautician','salon','hairdresser','barber','makeup'], 'beauty and grooming', ['modern styling techniques','hygienic salon practices','building loyal repeat clients']],
+  [['farmer','agriculture','livestock','dairy'], 'agriculture', ['modern farming techniques','caring for livestock','smart seasonal planning']],
+  [['shopkeeper','retail','store','cashier','billing'], 'retail', ['friendly customer handling','accurate billing and cash handling','attractive product displays']],
+  [['receptionist','secretary','virtual assistant','personal assistant','office assistant','front desk'], 'office administration', ['managing schedules and correspondence','organized record keeping','smooth day-to-day operations']],
+  [['hr','recruiter','human resource','recruitment'], 'human resources', ['recruitment and onboarding','positive employee relations','fair HR processes']],
+  [['project manager','project coordinator','site supervisor'], 'project management', ['planning and tracking milestones','managing budgets and teams','consistent on-time delivery']],
+  [['manager','management','operations','supervisor','admin'], 'operations management', ['leading and motivating teams','streamlining processes','delivering results on schedule']],
+  [['engineer','engineering','civil','mechanical','electrical'], 'engineering', ['technical problem-solving','precise project execution','quality and safety standards']],
+  [['construction','mason','builder','site'], 'construction', ['safe construction practices','reading basic drawings','on-site team coordination']],
+  [['electrician','technician','mechanic','carpenter','plumber','welder','operator','ac ','solar'], 'technical trades', ['skilled hands-on workmanship','strict safety compliance','reliable quality results']],
+  [['driver','logistics','transport','rider','delivery'], 'transport and logistics', ['safe and timely deliveries','smart route planning','vehicle care and maintenance']],
+  [['principal','academy','school'], 'education', ['running smooth academic operations','supporting teachers and students','maintaining high standards']],
+  [['teacher','teaching','lecturer','education','tutor','trainer'], 'education', ['delivering engaging lessons','supporting student growth','creating effective learning materials']],
+  [['coach','cricket','gym','fitness','athlete','sports'], 'sports and fitness', ['designing training programs','motivating athletes and clients','tracking performance improvements']],
+  [['babysitter','nanny','caregiver'], 'caregiving', ['compassionate personal care','safety and hygiene first','trustworthy, dependable support']],
+  [['writer','copywriter','content','blog'], 'content writing', ['engaging reader-focused content','thorough research','consistently meeting deadlines']],
+  [['ngo','social','volunteer','charity'], 'social services', ['community outreach programs','impact-focused initiatives','working with diverse groups']],
+  [['musician','singer','artist','actor','performer'], 'performing arts', ['live and studio performance','engaging audiences','consistent practice and polish']],
+  [['research','academic','scholar'], 'research', ['structured research methods','careful data analysis','curiosity-driven problem solving']],
+  [['librarian','library'], 'library services', ['organized cataloging','helping readers find resources','managing collections']],
+  [['imam','qari','islamic','religious'], 'religious services', ['Quranic education and recitation','community guidance','organizing religious programs']],
+  [['pilot','aviation','airline','cabin crew'], 'aviation', ['safe flight operations','passenger safety procedures','staying calm under pressure']],
+  [['seaman','marine','navy'], 'maritime services', ['supporting ship operations','following sea safety protocols','long-voyage teamwork']],
+  [['fresh','fresher','student','intern','entry','graduate'], 'entry-level roles', ['learning new skills quickly','supporting team goals with energy','bringing fresh ideas and strong work ethic']],
+];
+function cvGuessField(title){
+  const t = ' ' + title.toLowerCase() + ' ';
+  for(const [keys, field, points] of CV_FIELDS){
+    if(keys.some(k => t.includes(k))) return { field, points };
+  }
+  const clean = title.trim();
+  return { field: clean ? clean : 'my field', points: ['delivering quality work','learning quickly','professional communication'] };
+}
+const CV_SUMMARY_TEMPLATES = [
+  (title, field, pts, skills) => `Results-driven ${title} with hands-on experience in ${field}. Skilled in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}. Passionate about ${pts[1]} and committed to delivering quality work on time.`,
+  (title, field, pts, skills) => `Motivated ${title} with practical knowledge of ${field}. Strong in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}, with a proven focus on ${pts[1]}. Eager to grow and contribute to a dynamic team.`,
+  (title, field, pts, skills) => `Dedicated ${title} experienced in ${field}. Known for ${pts[0]} and ${pts[2]}. Brings ${skills && skills.length ? 'skills in ' + skills.slice(0, 3).join(', ') : 'a strong work ethic'} plus a genuine commitment to excellence.`,
+  (title, field, pts, skills) => `${title} with a solid foundation in ${field} and a track record of ${pts[0]}. Combines ${pts[1]} with ${skills && skills.length ? 'expertise in ' + skills.slice(0, 3).join(', ') : 'a fast-learning mindset'} to exceed expectations.`,
+  (title, field, pts, skills) => `Detail-oriented ${title} with a strong foundation in ${field}. Combines ${pts[0]} with ${skills && skills.length ? 'practical skills in ' + skills.slice(0, 3).join(', ') : 'a fast-learning attitude'} to add immediate value from day one.`,
+  (title, field, pts, skills) => `${title} recognized for ${pts[1]} and ${pts[2]}. Offers solid experience across ${field} with strengths in ${skills && skills.length ? skills.slice(0, 3).join(', ') : pts[0]}. Ready to take on new challenges and deliver measurable results.`,
+];
+let cvLastAuto = 'Motivated software developer with hands-on experience building websites and apps. Passionate about learning new technologies and delivering quality work on time.';
+function autoSummary(force){
+  const title = document.getElementById('cvTitle').value.trim();
+  const sumEl = document.getElementById('cvSummary');
+  const current = sumEl.value.trim();
+  if(!title){ if(force) toast('Write a job title first ✨'); return; }
+  if(!force && current && current !== cvLastAuto) return; // respect user's own text
+  const { field, points } = cvGuessField(title);
+  const pick = CV_SUMMARY_TEMPLATES[Math.floor(Math.random() * CV_SUMMARY_TEMPLATES.length)];
+  cvLastAuto = pick(title, field, points, cvSkills);
+  sumEl.value = cvLastAuto;
+  cvPreview();
+  if(force) toast('New summary written! ✨ Tap again for another version');
+}
+
+/* ---------- name picker ---------- */
+function pickWinner(){
+  const names = document.getElementById('pkList').value.split('\n').map(s => s.trim()).filter(Boolean);
+  if(names.length < 2){ toast('Add at least 2 names 🎡'); return; }
+  const btn = document.getElementById('pkBtn');
+  btn.disabled = true;
+  let ticks = 0;
+  const int = setInterval(() => {
+    document.getElementById('pkOut').textContent = names[Math.floor(Math.random() * names.length)];
+    if(++ticks > 25){
+      clearInterval(int);
+      document.getElementById('pkOut').textContent = '🏆 ' + names[Math.floor(Math.random() * names.length)];
+      btn.disabled = false;
+      beep();
+    }
+  }, 70);
+}
+
 function saveBlob(blob, name, mime){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -988,8 +2868,62 @@ function saveBlob(blob, name, mime){
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
+/* ---------- tools menu & search ---------- */
+function buildMenu(){
+  const grid = document.getElementById('menuGrid');
+  grid.innerHTML = '';
+  document.querySelectorAll('.tab').forEach(t => {
+    if(t.dataset.panel === 'menu') return;
+    const label = t.textContent.trim();
+    const parts = label.split(' ');
+    const card = document.createElement('div');
+    card.className = 'tool-card';
+    card.dataset.name = label.toLowerCase();
+    card.innerHTML = `<div style="font-size:1.7rem">${parts[0]}</div>
+      <div style="font-size:.8rem;font-weight:600;margin-top:6px;line-height:1.3">${parts.slice(1).join(' ')}</div>`;
+    card.onclick = () => {
+      document.querySelector('.tab[data-panel="' + t.dataset.panel + '"]').click();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    grid.appendChild(card);
+  });
+}
+function filterMenu(q){
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('#menuGrid .tool-card').forEach(c => {
+    c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+  });
+}
+function filterTabs(q){
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.tab').forEach(t => {
+    t.style.display = t.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+/* ---------- theme, welcome, init ---------- */
+function toggleTheme(){
+  const light = document.body.classList.toggle('light');
+  localStorage.setItem('tb_theme', light ? '1' : '0');
+  document.getElementById('themeBtn').textContent = light ? '☀️' : '🌙';
+}
+function dismissWelcome(){
+  localStorage.setItem('tb_welcomed', '1');
+  const b = document.getElementById('welcomeBar');
+  if(b) b.remove();
+}
+function welcomeCheck(){
+  if(localStorage.getItem('tb_welcomed')) return;
+  const b = document.createElement('div');
+  b.id = 'welcomeBar';
+  b.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;z-index:150;background:linear-gradient(90deg,#6c5ce7,#00cec9);color:#fff;border-radius:14px;padding:14px 16px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45)';
+  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 38 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
+  document.body.appendChild(b);
+}
+welcomeCheck();
+
+cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
+buildMenu();
 buildUnits();
-renderTimer();
 </script>
 </body>
 </html>
