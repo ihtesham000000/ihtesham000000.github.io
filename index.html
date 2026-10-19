@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ToolBox — 44 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
 <meta name="description" content="44 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://unpkg.com/@imgly/background-removal@1.5.5/dist/index.js"></script>
-<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%236c5ce7'/><text x='50' y='70' font-size='55' text-anchor='middle'>🛠</text></svg>">
 <style>
   :root{
     --bg:#0f1117; --card:#1a1d27; --card2:#222636; --text:#e8eaf2;
@@ -1404,7 +1402,10 @@ document.getElementById('pdfFiles').addEventListener('change', function(){
 async function makePDF(){
   const files = document.getElementById('pdfFiles').files;
   if(!files.length){ toast('Choose one or more images 📄'); return; }
-  if(!window.jspdf){ toast('PDF library not loaded — check your internet 🌐'); return; }
+  if(!window.jspdf){
+    toast('Loading PDF engine... 🌐');
+    if(!(await ensureJsPDF())){ toast('Could not load PDF engine — check internet'); return; }
+  }
   const { jsPDF } = window.jspdf;
   const size = document.getElementById('pdfSize').value;
   const fit = document.getElementById('pdfFit').checked;
@@ -2458,8 +2459,11 @@ function invInit(){
   invPreview();
 }
 
-function invPDF(){
-  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+async function invPDF(){
+  if(!window.jspdf){
+    toast('Loading PDF engine... 🌐');
+    if(!(await ensureJsPDF())){ toast('Could not load PDF engine — check internet'); return; }
+  }
   const rows = [];
   document.querySelectorAll('#invRows .inv-row').forEach(r => {
     const d = r.children[0].value.trim();
@@ -2724,7 +2728,10 @@ async function circlePhoto(dataURL, size){
 }
 
 async function cvPDF(){
-  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+  if(!window.jspdf){
+    toast('Loading PDF engine... 🌐');
+    if(!(await ensureJsPDF())){ toast('Could not load PDF engine — check internet'); return; }
+  }
   const d = cvCollect();
   const { jsPDF } = window.jspdf;
   const [R, G, B] = hexToRgb(d.color);
@@ -3216,8 +3223,11 @@ function rsCalc(){
   document.getElementById('rsTotal').textContent = t ? `Total: ${o} / ${t} — ${pct}%` : 'Enter subjects above';
   document.getElementById('rsGrade').textContent = t ? `Grade: ${grade} · ${pass ? 'PASS ✅' : 'FAIL ❌'}` : '';
 }
-function rsPDF(){
-  if(!window.jspdf){ toast('PDF library not loaded — check internet 🌐'); return; }
+async function rsPDF(){
+  if(!window.jspdf){
+    toast('Loading PDF engine... 🌐');
+    if(!(await ensureJsPDF())){ toast('Could not load PDF engine — check internet'); return; }
+  }
   const rows = rsData().filter(r => r.sub);
   if(!rows.length){ toast('Add at least one subject 🎓'); return; }
   let t = 0, o = 0, pass = true;
@@ -3307,6 +3317,23 @@ function ppDraw(){
 }
 function ppDownload(){
   if(window._ppCanvas){ window._ppCanvas.toBlob(b => saveBlob(b, 'passport-sheet-4x6.jpg'), 'image/jpeg', 0.95); toast('Downloading ⬇'); }
+}
+
+/* ---------- lazy CDN loaders (speed fix: nothing heavy loads until needed) ---------- */
+const _scriptCache = {};
+function loadScript(src){
+  if(_scriptCache[src]) return _scriptCache[src];
+  _scriptCache[src] = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  return _scriptCache[src];
+}
+async function ensureJsPDF(){
+  if(window.jspdf) return true;
+  try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'); return true; }
+  catch { return false; }
 }
 
 function saveBlob(blob, name, mime){
