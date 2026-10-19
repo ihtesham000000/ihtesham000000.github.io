@@ -2780,11 +2780,24 @@ async function removeBg(){
   const status = document.getElementById('bgStatus');
   if(!f){ toast('Choose a photo first 🖼️'); return; }
   status.style.display = 'block';
-  status.textContent = '⏳ Removing background... first use downloads the AI model (~30 MB) — please wait 30–60 seconds. Later uses are instant.';
+  status.textContent = '⏳ Starting... first use downloads the AI model (~30 MB) — keep this page open.';
   document.getElementById('bgDl').style.display = 'none';
   try {
-    if(typeof ImglyBackgroundRemoval === 'undefined') throw new Error('no lib');
-    const blob = await ImglyBackgroundRemoval.removeBackground(f);
+    let fn;
+    if(window.ImglyBackgroundRemoval && ImglyBackgroundRemoval.removeBackground){
+      fn = ImglyBackgroundRemoval.removeBackground.bind(ImglyBackgroundRemoval);
+    } else {
+      status.textContent = '⏳ Loading AI engine...';
+      const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.5/dist/index.js');
+      fn = mod.removeBackground;
+    }
+    const config = {
+      publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.5.5/dist/',
+      progress: (key, current, total) => {
+        if(total) status.textContent = '⏳ Downloading AI model: ' + Math.round(current / total * 100) + '% (first use only)';
+      }
+    };
+    const blob = await fn(f, config);
     const url = URL.createObjectURL(blob);
     bgImg = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
     status.style.display = 'none';
@@ -2792,7 +2805,7 @@ async function removeBg(){
     applyBg();
     toast('Background removed! ✨ Now pick white, blue or any color');
   } catch(e) {
-    status.textContent = '❌ Could not process. Make sure you have internet (the AI model downloads once), then try a photo with one clear subject.';
+    status.textContent = '❌ Error: ' + (e && e.message ? e.message : e) + ' — check your internet and try again.';
   }
 }
 function applyBg(){
