@@ -2894,6 +2894,27 @@ async function cvPDF(){
 
 /* ---------- background remover (AI) ---------- */
 let bgImg = null, bgCanvas = null;
+/* AI engine loader: ESM with multi-CDN fallback (library stopped shipping UMD builds) */
+async function getImgly(){
+  if(window.ImglyBackgroundRemoval && window.ImglyBackgroundRemoval.removeBackground){
+    return window.ImglyBackgroundRemoval;
+  }
+  const sources = [
+    'https://esm.sh/@imgly/background-removal@1.4.5',
+    'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm',
+    'https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.mjs'
+  ];
+  let lastErr = null;
+  for(const s of sources){
+    try {
+      const mod = await import(s);
+      const lib = mod.default && mod.default.removeBackground ? mod.default : mod;
+      if(lib && lib.removeBackground) return lib;
+    } catch(e) { lastErr = e; }
+  }
+  throw lastErr || new Error('AI engine unreachable');
+}
+
 async function removeBg(){
   const f = document.getElementById('bgFile').files[0];
   const status = document.getElementById('bgStatus');
@@ -2902,15 +2923,9 @@ async function removeBg(){
   status.textContent = '⏳ Starting... first use downloads the AI model (~30 MB) — keep this page open.';
   document.getElementById('bgDl').style.display = 'none';
   try {
-    if(!(window.ImglyBackgroundRemoval && window.ImglyBackgroundRemoval.removeBackground)){
-      status.textContent = '⏳ Loading AI engine...';
-      try { await loadScript('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/index.js'); }
-      catch(e) { await loadScript('https://unpkg.com/@imgly/background-removal@1.4.5/dist/index.js'); }
-    }
-    if(!(window.ImglyBackgroundRemoval && window.ImglyBackgroundRemoval.removeBackground)){
-      throw new Error('AI engine could not be loaded on this connection');
-    }
-    const blob = await window.ImglyBackgroundRemoval.removeBackground(f, {
+    const lib = await getImgly();
+    status.textContent = '⏳ AI engine ready — downloading model (first use only)...';
+    const blob = await lib.removeBackground(f, {
       publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.4.5/dist/',
       progress: (key, current, total) => {
         if(total) status.textContent = '⏳ Downloading AI model: ' + Math.round(current / total * 100) + '% (first use only)';
@@ -2923,7 +2938,8 @@ async function removeBg(){
     applyBg();
     toast('Background removed! ✨ Now pick white, blue or any color');
   } catch(e) {
-    status.textContent = '❌ ' + (e && e.message ? e.message : e) + ' — check your internet and try again.';
+    const msg = (e && e.message) ? e.message : 'Unknown error';
+    status.textContent = '❌ ' + msg + ' — check your internet and try again.';
   }
 }
 function applyBg(){
@@ -3309,7 +3325,7 @@ function loadScript(src){
   if(_scriptCache[src]) return _scriptCache[src];
   _scriptCache[src] = new Promise((res, rej) => {
     const s = document.createElement('script');
-    s.src = src; s.onload = res; s.onerror = rej;
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('Failed to load: ' + src));
     document.head.appendChild(s);
   });
   return _scriptCache[src];
