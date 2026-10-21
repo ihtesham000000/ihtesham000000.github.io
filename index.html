@@ -2920,13 +2920,13 @@ async function removeBg(){
   const status = document.getElementById('bgStatus');
   if(!f){ toast('Choose a photo first 🖼️'); return; }
   status.style.display = 'block';
-  status.textContent = '⏳ Starting... first use downloads the AI model (~30 MB) — keep this page open.';
+  status.textContent = '⏳ Starting... first use downloads the AI model (~50 MB) — keep this page open, then it is instant forever.';
   document.getElementById('bgDl').style.display = 'none';
   try {
     const lib = await getImgly();
     status.textContent = '⏳ AI engine ready — downloading model (first use only)...';
     const blob = await lib.removeBackground(f, {
-      publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal-data@1.4.5/dist/',
+      model: 'small',
       progress: (key, current, total) => {
         if(total) status.textContent = '⏳ Downloading AI model: ' + Math.round(current / total * 100) + '% (first use only)';
       }
