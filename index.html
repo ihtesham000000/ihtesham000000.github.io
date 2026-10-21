@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 44 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
-<meta name="description" content="44 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
+<title>ToolBox — 49 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
+<meta name="description" content="49 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%236c5ce7'/><text x='50' y='70' font-size='55' text-anchor='middle'>🛠</text></svg>">
 <style>
   :root{
@@ -234,6 +234,11 @@
   <button class="tab" data-panel="invoice">🧾 Invoice</button>
   <button class="tab" data-panel="cvmaker">📄 CV Maker</button>
   <button class="tab" data-panel="picker">🎡 Picker</button>
+  <button class="tab" data-panel="pdfsuite">📑 PDF Tools</button>
+  <button class="tab" data-panel="ytthumb">🖼️ YT Thumb</button>
+  <button class="tab" data-panel="ocr">🔤 Image→Text</button>
+  <button class="tab" data-panel="heic">📱 HEIC→JPG</button>
+  <button class="tab" data-panel="symbols">😀 Symbols</button>
 </nav>
 
 <main>
@@ -241,7 +246,7 @@
 <!-- ============ MENU / ALL TOOLS ============ -->
 <section class="panel active" id="menu">
   <div class="card">
-    <h2>All 44 Tools — one tap away</h2>
+    <h2>All 49 Tools — one tap away</h2>
     <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
     <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
     <label style="margin-top:8px">🔥 Popular tools</label>
@@ -1235,7 +1240,95 @@
   </div>
 </section>
 
-<footer>44 free tools · © 2026 ToolBox</footer>
+<!-- ============ PDF SUITE ============ -->
+<section class="panel" id="pdfsuite">
+  <div class="card">
+    <h2>PDF Tools</h2>
+    <p class="sub">Six essential PDF jobs in one place — everything runs on your device, files never leave your phone.</p>
+    <input type="file" id="pdFile" accept="application/pdf">
+    <label>Choose operation</label>
+    <select id="pdMode" onchange="pdModeChanged()">
+      <option value="split">✂️ Split — extract a page range</option>
+      <option value="delete">🗑️ Delete pages</option>
+      <option value="rotate">🔄 Rotate pages</option>
+      <option value="watermark">💧 Add text watermark</option>
+      <option value="pagenum">🔢 Add page numbers</option>
+      <option value="text">🔤 Extract text from PDF</option>
+    </select>
+    <div id="pdSplit" class="row">
+      <div><label>From page</label><input type="number" id="pdFrom" value="1" min="1"></div>
+      <div><label>To page</label><input type="number" id="pdTo" value="1" min="1"></div>
+    </div>
+    <div id="pdDelete" style="display:none"><label>Pages to delete (e.g. 1,3,5-7)</label><input type="text" id="pdDelList" placeholder="1,3,5-7"></div>
+    <div id="pdRotate" style="display:none" class="row">
+      <div><label>Pages (blank = all)</label><input type="text" id="pdRotList" placeholder="leave empty for all"></div>
+      <div><label>Rotation</label><select id="pdRotDeg"><option value="90">90° clockwise</option><option value="180">180°</option><option value="270">270° clockwise</option></select></div>
+    </div>
+    <div id="pdWatermark" style="display:none"><label>Watermark text</label><input type="text" id="pdWmText" value="CONFIDENTIAL"></div>
+    <button class="btn" onclick="pdfProcess()">Run → Download PDF</button>
+    <p class="sub" id="pdStatus" style="display:none;margin-top:12px"></p>
+    <textarea id="pdTextOut" rows="6" readonly style="display:none;margin-top:12px" placeholder="Extracted text appears here..."></textarea>
+    <button class="btn btn-ghost" id="pdCopyBtn" style="display:none;margin-top:8px" onclick="pdCopyText()">📋 Copy text</button>
+  </div>
+</section>
+
+<!-- ============ YOUTUBE THUMBNAIL ============ -->
+<section class="panel" id="ytthumb">
+  <div class="card">
+    <h2>YouTube Thumbnail Downloader</h2>
+    <p class="sub">Paste any YouTube video link to grab its thumbnail in full quality — works with Shorts too.</p>
+    <input type="text" id="ytUrl" placeholder="https://youtube.com/watch?v=...">
+    <button class="btn" onclick="ytLoad()">Get Thumbnails</button>
+    <div id="ytRows" style="display:none;margin-top:16px"></div>
+  </div>
+</section>
+
+<!-- ============ IMAGE TO TEXT (OCR) ============ -->
+<section class="panel" id="ocr">
+  <div class="card">
+    <h2>Image to Text (OCR)</h2>
+    <p class="sub">Extract text from photos, screenshots and scanned documents with AI — in English, Urdu, Arabic and Hindi.</p>
+    <input type="file" id="ocrFile" accept="image/*">
+    <label>Language</label>
+    <select id="ocrLang">
+      <option value="eng">English</option>
+      <option value="urd">Urdu — اردو</option>
+      <option value="ara">Arabic — العربية</option>
+      <option value="hin">Hindi — हिन्दी</option>
+    </select>
+    <button class="btn" onclick="runOCR()">🔍 Extract Text</button>
+    <p class="sub" id="ocrStatus" style="display:none;margin-top:12px"></p>
+    <textarea id="ocrOut" rows="6" readonly style="display:none;margin-top:12px" placeholder="Extracted text appears here..."></textarea>
+    <button class="btn btn-ghost" id="ocrCopy" style="display:none;margin-top:8px" onclick="copyOcr()">📋 Copy text</button>
+  </div>
+</section>
+
+<!-- ============ HEIC TO JPG ============ -->
+<section class="panel" id="heic">
+  <div class="card">
+    <h2>HEIC to JPG Converter</h2>
+    <p class="sub">iPhone photos (.heic) won't open on Windows or Android — convert them to JPG in one tap.</p>
+    <input type="file" id="heicFile" accept=".heic,.heif,image/heic,image/heif">
+    <button class="btn" onclick="convertHeic()">Convert to JPG</button>
+    <p class="sub" id="heicStatus" style="display:none;margin-top:12px"></p>
+    <div id="heicOut" style="display:none">
+      <img class="preview" id="heicPreview" alt="">
+      <button class="btn" style="margin-top:12px" onclick="downloadHeic()">⬇ Download JPG</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SYMBOLS COPY-PASTE ============ -->
+<section class="panel" id="symbols">
+  <div class="card">
+    <h2>Symbols & Emoji Copy-Paste</h2>
+    <p class="sub">Tap any symbol to copy it instantly — perfect for bios, names, comments and documents.</p>
+    <input type="text" id="symSearch" placeholder="🔍 Search symbols (e.g. star, arrow, heart)..." oninput="renderSymbols()">
+    <div id="symWrap" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<footer>49 free tools · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -3336,6 +3429,285 @@ async function ensureJsPDF(){
   catch { return false; }
 }
 
+/* ---------- PDF suite ---------- */
+let _pdfLibP = null;
+function ensurePdfLib(){
+  if(window.PDFLib) return Promise.resolve(true);
+  if(!_pdfLibP){
+    _pdfLibP = loadScript('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js').then(() => true).catch(() => false);
+  }
+  return _pdfLibP;
+}
+function pdModeChanged(){
+  const m = document.getElementById('pdMode').value;
+  ['pdSplit','pdDelete','pdRotate','pdWatermark'].forEach(id => document.getElementById(id).style.display = 'none');
+  if(m === 'split') document.getElementById('pdSplit').style.display = 'flex';
+  if(m === 'delete') document.getElementById('pdDelete').style.display = 'block';
+  if(m === 'rotate') document.getElementById('pdRotate').style.display = 'flex';
+  if(m === 'watermark') document.getElementById('pdWatermark').style.display = 'block';
+}
+function parsePages(str, max){
+  const set = new Set();
+  String(str).split(',').forEach(part => {
+    const m = part.trim().match(/^(\d+)(?:\s*-\s*(\d+))?$/);
+    if(m){
+      const a = +m[1], b = +(m[2] || m[1]);
+      for(let i = a; i <= b; i++) if(i >= 1 && i <= max) set.add(i);
+    }
+  });
+  return [...set].sort((x, y) => x - y);
+}
+async function ensurePdfJs(){
+  if(window.pdfjsLib) return true;
+  try {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    return true;
+  } catch { return false; }
+}
+async function pdfProcess(){
+  const f = document.getElementById('pdFile').files[0];
+  const st = document.getElementById('pdStatus');
+  document.getElementById('pdTextOut').style.display = 'none';
+  document.getElementById('pdCopyBtn').style.display = 'none';
+  if(!f){ toast('Choose a PDF first 📑'); return; }
+  const mode = document.getElementById('pdMode').value;
+  st.style.display = 'block';
+  try {
+    if(mode === 'text'){
+      st.textContent = '⏳ Loading text extractor...';
+      if(!(await ensurePdfJs())){ st.textContent = '❌ Could not load text extractor — check internet'; return; }
+      const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+      let text = '';
+      for(let i = 1; i <= pdf.numPages; i++){
+        const page = await pdf.getPage(i);
+        const tc = await page.getTextContent();
+        text += tc.items.map(it => it.str).join(' ') + '\n\n';
+      }
+      const out = document.getElementById('pdTextOut');
+      out.value = text.trim() || '(No selectable text found — this may be a scanned image PDF. Try the Image to Text tool with screenshots instead.)';
+      out.style.display = 'block';
+      document.getElementById('pdCopyBtn').style.display = 'inline-block';
+      st.style.display = 'none';
+      toast('Text extracted ✔');
+      return;
+    }
+    st.textContent = '⏳ Processing PDF...';
+    if(!(await ensurePdfLib())){ st.textContent = '❌ Could not load PDF engine — check internet'; return; }
+    const { PDFDocument, degrees, rgb, StandardFonts } = PDFLib;
+    const src = await PDFDocument.load(await f.arrayBuffer());
+    const n = src.getPageCount();
+    const out = await PDFDocument.create();
+    if(mode === 'split'){
+      const a = Math.max(1, +document.getElementById('pdFrom').value || 1);
+      const b = Math.min(n, Math.max(a, +document.getElementById('pdTo').value || n));
+      const idx = []; for(let i = a; i <= b; i++) idx.push(i - 1);
+      if(!idx.length){ st.textContent = '❌ Invalid page range'; return; }
+      (await out.copyPages(src, idx)).forEach(p => out.addPage(p));
+    } else if(mode === 'delete'){
+      const drop = new Set(parsePages(document.getElementById('pdDelList').value, n));
+      if(!drop.size){ st.textContent = '❌ Enter pages to delete, e.g. 1,3,5-7'; return; }
+      const idx = []; for(let i = 0; i < n; i++) if(!drop.has(i + 1)) idx.push(i);
+      if(!idx.length){ st.textContent = '❌ Cannot delete every page'; return; }
+      (await out.copyPages(src, idx)).forEach(p => out.addPage(p));
+    } else if(mode === 'rotate'){
+      const list = document.getElementById('pdRotList').value.trim()
+        ? parsePages(document.getElementById('pdRotList').value, n)
+        : [...Array(n + 1).keys()].slice(1);
+      const rot = +document.getElementById('pdRotDeg').value;
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach((p, i) => {
+        if(list.includes(i + 1)) p.setRotation(degrees((p.getRotation().angle + rot) % 360));
+        out.addPage(p);
+      });
+    } else if(mode === 'watermark'){
+      const text = document.getElementById('pdWmText').value.trim();
+      if(!text){ st.textContent = '❌ Enter watermark text'; return; }
+      const font = await out.embedFont(StandardFonts.HelveticaBold);
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach(p => {
+        const { width, height } = p.getSize();
+        p.drawText(text, {
+          x: width / 2 - font.widthOfTextAtSize(text, 44) / 2,
+          y: height / 2, size: 44, color: rgb(0.6, 0.6, 0.6),
+          opacity: 0.22, rotate: degrees(45)
+        });
+        out.addPage(p);
+      });
+    } else if(mode === 'pagenum'){
+      const font = await out.embedFont(StandardFonts.Helvetica);
+      const pages = await out.copyPages(src, src.getPageIndices());
+      pages.forEach((p, i) => {
+        const { width } = p.getSize();
+        const t = (i + 1) + ' / ' + pages.length;
+        p.drawText(t, { x: width / 2 - font.widthOfTextAtSize(t, 10) / 2, y: 18, size: 10, color: rgb(0.4, 0.4, 0.4) });
+        out.addPage(p);
+      });
+    }
+    const bytes = await out.save();
+    saveBlob(new Blob([bytes], { type: 'application/pdf' }), 'pdf-' + mode + '.pdf');
+    st.style.display = 'none';
+    toast('PDF ready! ⬇');
+  } catch(e) {
+    st.textContent = '❌ ' + (e.message || e);
+  }
+}
+function pdCopyText(){
+  const o = document.getElementById('pdTextOut');
+  if(!o.value){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(o.value).then(() => toast('Copied! 📋'));
+}
+
+/* ---------- YouTube thumbnail downloader ---------- */
+function ytExtractId(url){
+  const m = url.match(/(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/)|youtu\.be\/)([\w-]{11})/);
+  return m ? m[1] : (url.trim().length === 11 && /^[\w-]+$/.test(url.trim()) ? url.trim() : null);
+}
+function ytLoad(){
+  const id = ytExtractId(document.getElementById('ytUrl').value);
+  const wrap = document.getElementById('ytRows');
+  wrap.innerHTML = '';
+  if(!id){ toast('That does not look like a YouTube link 🤔'); return; }
+  [['maxresdefault','Full HD — 1280×720'],['sddefault','SD — 640×480'],['hqdefault','Standard — 480×360']].forEach(([q, label]) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'background:var(--card2);border:1px solid #2c3149;border-radius:12px;padding:12px;margin-bottom:12px';
+    const img = document.createElement('img');
+    img.style.cssText = 'width:100%;border-radius:8px;display:block;margin-bottom:8px';
+    img.src = 'https://i.ytimg.com/vi/' + id + '/' + q + '.jpg';
+    img.onerror = () => { row.remove(); };
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;justify-content:space-between;align-items:center';
+    bar.innerHTML = '<b style="font-size:.85rem">' + label + '</b>';
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-ghost';
+    btn.style.cssText = 'padding:6px 14px;font-size:.8rem';
+    btn.textContent = '⬇ Download';
+    btn.onclick = () => ytDl(img.src, q);
+    bar.appendChild(btn);
+    row.appendChild(img);
+    row.appendChild(bar);
+    wrap.appendChild(row);
+  });
+  wrap.style.display = 'block';
+  toast('Thumbnails loaded ✔');
+}
+async function ytDl(src, q){
+  try {
+    const r = await fetch(src);
+    const b = await r.blob();
+    saveBlob(b, 'thumbnail-' + q + '.jpg');
+    toast('Downloading ⬇');
+  } catch { window.open(src, '_blank'); }
+}
+
+/* ---------- OCR image to text ---------- */
+async function ensureTesseract(){
+  if(window.Tesseract) return true;
+  try { await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'); return true; }
+  catch { return false; }
+}
+async function runOCR(){
+  const f = document.getElementById('ocrFile').files[0];
+  const st = document.getElementById('ocrStatus');
+  if(!f){ toast('Choose an image first 🖼️'); return; }
+  st.style.display = 'block';
+  st.textContent = '⏳ Loading OCR engine...';
+  if(!(await ensureTesseract())){ st.textContent = '❌ Could not load OCR engine — check internet'; return; }
+  try {
+    const lang = document.getElementById('ocrLang').value;
+    st.textContent = '⏳ Reading image...';
+    const res = await Tesseract.recognize(f, lang, {
+      logger: m => { if(m.status) st.textContent = '⏳ ' + m.status + (m.progress ? ' — ' + Math.round(m.progress * 100) + '%' : ''); }
+    });
+    const out = document.getElementById('ocrOut');
+    out.value = res.data.text.trim() || '(No text found in this image)';
+    out.style.display = 'block';
+    document.getElementById('ocrCopy').style.display = 'inline-block';
+    st.style.display = 'none';
+    toast('Text extracted! ✨');
+  } catch(e) {
+    st.textContent = '❌ OCR failed: ' + (e.message || e);
+  }
+}
+function copyOcr(){
+  const o = document.getElementById('ocrOut');
+  if(!o.value){ toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(o.value).then(() => toast('Copied! 📋'));
+}
+
+/* ---------- HEIC to JPG ---------- */
+async function ensureHeicLib(){
+  if(window.heic2any) return true;
+  try { await loadScript('https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'); return true; }
+  catch { return false; }
+}
+let heicBlob = null;
+async function convertHeic(){
+  const f = document.getElementById('heicFile').files[0];
+  const st = document.getElementById('heicStatus');
+  if(!f){ toast('Choose a .heic photo first 📱'); return; }
+  st.style.display = 'block';
+  st.textContent = '⏳ Loading converter...';
+  if(!(await ensureHeicLib())){ st.textContent = '❌ Could not load converter — check internet'; return; }
+  try {
+    st.textContent = '⏳ Converting...';
+    const out = await heic2any({ blob: f, toType: 'image/jpeg', quality: 0.92 });
+    heicBlob = Array.isArray(out) ? out[0] : out;
+    document.getElementById('heicPreview').src = URL.createObjectURL(heicBlob);
+    document.getElementById('heicOut').style.display = 'block';
+    st.style.display = 'none';
+    toast('Converted! ✨');
+  } catch(e) {
+    st.textContent = '❌ ' + (e.message || e) + ' — make sure it is a real .heic file';
+  }
+}
+function downloadHeic(){ if(heicBlob) saveBlob(heicBlob, 'converted.jpg'); }
+
+/* ---------- symbols copy-paste ---------- */
+const SYM_CATS = [
+  ['Stars', ['★','☆','✦','✧','✩','✪','✫','✬','✭','✮','✯','✰','⋆','✢','✣','✤','✥']],
+  ['Hearts', ['❤','♡','♥','❥','❣','💕','💖','💗','💝','🖤','💛','💚','💙','💜','🤍']],
+  ['Check and Cross', ['✓','✔','✗','✘','☑','☒','✅','❌','⚠','‼','⁉','❎']],
+  ['Arrows', ['→','←','↑','↓','↔','↕','↗','↘','↙','↖','⇒','⇐','⇑','⇓','⇔','➤','➜','➡','⬅','⬆','⬇']],
+  ['Math', ['±','×','÷','≈','≠','≤','≥','∞','√','∑','∏','∫','∂','∆','π','°','‰','½','⅓','¼','¾']],
+  ['Currency', ['$','€','£','¥','₹','₨','¢','₿','₽','₩','₪','₦','৳','₫','₴']],
+  ['Bullets', ['•','●','◦','‣','⁃','◘','○','◙','▪','▫']],
+  ['Shapes', ['■','□','▪','▫','▲','△','▶','▷','▼','▽','◆','◇','○','◎','●','◐','◑','⬟','⬢','⬡']],
+  ['Lines and Boxes', ['─','━','│','┃','┄','┅','┆','┇','┌','┐','└','┘','├','┤','┬','┴','┼','═','║','╔','╗','╚','╝']],
+  ['Hands', ['☝','☚','☛','✌','✍','👍','👎','👏','🙏','✋','👌','💪','🤝']],
+  ['Weather', ['☀','☁','☂','☔','❄','⛄','⚡','🌈','☾','☄','🌊','🔥']],
+  ['Music', ['♩','♪','♫','♬','🎵','🎶','🎤','🎧','🎸','🥁']],
+  ['Cards and Chess', ['♠','♣','♥','♦','♤','♧','♡','♢','♔','♕','♖','♗','♘','♙','♚','♛','♜','♝','♞','♟']],
+  ['Zodiac', ['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓']],
+  ['Smileys', ['☺','☻','😀','😂','😍','😎','🤔','😢','😡','🥺','😴','🤯']],
+  ['Special', ['©','®','™','§','¶','†','‡','·','…','«','»','‹','›','′','″','№','℉','℃','Ω','µ','α','β']]
+];
+function renderSymbols(){
+  const q = document.getElementById('symSearch').value.toLowerCase().trim();
+  const wrap = document.getElementById('symWrap');
+  wrap.innerHTML = '';
+  SYM_CATS.forEach(([name, syms]) => {
+    const uniq = [...new Set(syms)];
+    const shown = q ? uniq.filter(s => s.includes(q) || name.toLowerCase().includes(q)) : uniq;
+    if(!shown.length) return;
+    const head = document.createElement('div');
+    head.style.cssText = 'font-size:.78rem;color:var(--muted);margin:12px 0 6px;font-weight:600';
+    head.textContent = name;
+    wrap.appendChild(head);
+    const row = document.createElement('div');
+    shown.forEach(s => {
+      const b = document.createElement('span');
+      b.className = 'chip';
+      b.style.cssText = 'font-size:1.15rem;user-select:none';
+      b.textContent = s;
+      b.onclick = () => navigator.clipboard.writeText(s).then(() => toast('Copied: ' + s + ' 📋'));
+      row.appendChild(b);
+    });
+    wrap.appendChild(row);
+  });
+  if(!wrap.innerHTML) wrap.innerHTML = '<p class="sub">No matches — try "star", "arrow" or "heart".</p>';
+}
+
 function saveBlob(blob, name, mime){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -3392,11 +3764,12 @@ function welcomeCheck(){
   const b = document.createElement('div');
   b.id = 'welcomeBar';
   b.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;z-index:150;background:linear-gradient(90deg,#6c5ce7,#00cec9);color:#fff;border-radius:14px;padding:14px 16px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45)';
-  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 44 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
+  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 49 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
   document.body.appendChild(b);
 }
 welcomeCheck();
 
+pdModeChanged(); renderSymbols();
 cvAddExp(); cvAddEdu(); cvAddLang(); renderSkills(); cvPreview();
 buildMenu();
 buildUnits();
