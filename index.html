@@ -1195,10 +1195,10 @@
     <h2>Result Card / Marksheet Maker</h2>
     <p class="sub">Create a student result card PDF — for schools, academies and teachers. Automatic percentage, grade and pass/fail (33% pass marks per subject).</p>
     <div class="row">
-      <div><label>Institute name</label><input id="rsSchool" value="City Model School" oninput="resCalc()"></div>
-      <div><label>Student name</label><input id="rsName" value="Ali Khan" oninput="resCalc()"></div>
-      <div><label>Class</label><input id="rsClass" value="10th" oninput="resCalc()"></div>
-      <div><label>Exam</label><input id="rsExam" value="Annual Exam 2026" oninput="resCalc()"></div>
+      <div><label>Institute name</label><input id="rsSchool" value="City Model School" oninput="rsCalc()"></div>
+      <div><label>Student name</label><input id="rsName" value="Ali Khan" oninput="rsCalc()"></div>
+      <div><label>Class</label><input id="rsClass" value="10th" oninput="rsCalc()"></div>
+      <div><label>Exam</label><input id="rsExam" value="Annual Exam 2026" oninput="rsCalc()"></div>
     </div>
     <label>Subjects</label>
     <div id="rsRows"></div>
@@ -3184,12 +3184,12 @@ function clDownload(){
 function rsAddRow(){
   const r = document.createElement('div');
   r.className = 'inv-row';
-  r.innerHTML = `<input type="text" placeholder="Subject" style="flex:2" oninput="resCalc()">
-    <input type="number" placeholder="Total" min="1" style="flex:1" oninput="resCalc()">
-    <input type="number" placeholder="Obtained" min="0" style="flex:1" oninput="resCalc()">
-    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();resCalc()">✕</button>`;
+  r.innerHTML = `<input type="text" placeholder="Subject" style="flex:2" oninput="rsCalc()">
+    <input type="number" placeholder="Total" min="1" style="flex:1" oninput="rsCalc()">
+    <input type="number" placeholder="Obtained" min="0" style="flex:1" oninput="rsCalc()">
+    <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();rsCalc()">✕</button>`;
   document.getElementById('rsRows').appendChild(r);
-  resCalc();
+  rsCalc();
 }
 function rsData(){
   const rows = [];
@@ -3254,7 +3254,7 @@ async function rsPDF(){
   doc.save('result-card.pdf');
   toast('Result card downloaded! 📄');
 }
-rsAddRow(); rsAddRow(); rsAddRow(); resCalc();
+rsAddRow(); rsAddRow(); rsAddRow(); rsCalc();
 
 /* ---------- passport photo sheet ---------- */
 let ppImg = null;
