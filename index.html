@@ -1394,6 +1394,11 @@
     </div>
     <div class="cv-block">
       <h4>✉️ Letter</h4>
+      <label>PDF type</label>
+      <select id="ltType" onchange="ltPreview()">
+        <option value="filled">📝 Full letter with content</option>
+        <option value="blank">✍️ Blank letterhead — header + footer only, empty A4 center (print &amp; write)</option>
+      </select>
       <div class="row">
         <div><label>Date</label><input type="text" id="ltDate" oninput="ltPreview()"></div>
         <div><label>Recipient name</label><input type="text" id="ltToName" value="The Branch Manager" oninput="ltPreview()"></div>
@@ -1454,6 +1459,11 @@ Kindly process this request at your earliest convenience. Thank you for your coo
     </div>
     <div class="cv-block">
       <h4>✉️ Letter</h4>
+      <label>PDF type</label>
+      <select id="ltType" onchange="ltPreview()">
+        <option value="filled">📝 Full letter with content</option>
+        <option value="blank">✍️ Blank letterhead — header + footer only, empty A4 center (print &amp; write)</option>
+      </select>
       <div class="row">
         <div><label>Date</label><input type="text" id="ltDate" oninput="ltPreview()"></div>
         <div><label>Recipient name</label><input type="text" id="ltToName" value="The Branch Manager" oninput="ltPreview()"></div>
@@ -4081,6 +4091,20 @@ function ltInit(){
 }
 function ltPreview(){
   const v = id => document.getElementById(id).value;
+  if(v('ltType') === 'blank'){
+    const cb = v('ltColor');
+    const contact = [v('ltAddr'), v('ltPhone'), v('ltEmail')].filter(Boolean).join(' · ');
+    const logo = ltLogoData ? '<img src="' + ltLogoData + '" style="width:40px;height:40px;object-fit:contain">' : '';
+    const head = (v('ltStyle') === 'classic')
+      ? '<div style="background:' + cb + ';color:#fff;padding:14px 18px;display:flex;gap:10px;align-items:center"><div>' + logo + '</div><div style="flex:1"><div style="font-size:1.1rem;font-weight:800">' + (v('ltBiz') || 'Business') + '</div><div style="font-size:.68rem;opacity:.9">' + (v('ltTag') || '') + '</div></div><div style="font-size:.6rem;text-align:right;opacity:.85">' + contact + '</div></div>'
+      : '<div style="padding:14px 18px 8px;display:flex;gap:10px;align-items:center"><div>' + logo + '</div><div><div style="font-size:1.15rem;font-weight:800;color:' + cb + '">' + (v('ltBiz') || 'Business') + '</div><div style="font-size:.68rem;color:#777">' + (v('ltTag') || '') + '</div></div></div><div style="padding:0 18px 8px;font-size:.62rem;color:#888">' + contact + '</div><div style="height:3px;background:' + cb + ';margin:0 18px"></div>';
+    document.getElementById('ltPrev').innerHTML =
+      '<div style="background:#fff;color:#1a1a2e;border-radius:8px;overflow:hidden">' + head +
+      '<div style="height:340px;display:flex;align-items:center;justify-content:center;color:#c9c9c9;font-size:.75rem">— blank letterhead · A4 · print and write —</div>' +
+      '<div style="border-top:2px solid ' + cb + ';margin:0 18px"></div>' +
+      '<div style="padding:8px 18px 12px;font-size:.6rem;color:#999;text-align:center">' + contact + (v('ltWeb') ? ' · ' + v('ltWeb') : '') + '</div></div>';
+    return;
+  }
   const c = v('ltColor');
   const classic = v('ltStyle') === 'classic';
   const contact = [v('ltAddr'), v('ltPhone'), v('ltEmail')].filter(Boolean).join(' · ');
@@ -4134,6 +4158,16 @@ async function ltPDF(){
     doc.text([v('ltAddr'), v('ltPhone'), v('ltEmail'), v('ltWeb')].filter(Boolean).join('   |   '), 15, 33);
     doc.setDrawColor(R, G, B); doc.setLineWidth(1);
     doc.line(15, 37, W - 15, 37);
+  }
+  if(v('ltType') === 'blank'){
+    const footTxt = [v('ltBiz'), v('ltAddr'), v('ltPhone'), v('ltEmail'), v('ltWeb')].filter(Boolean).join('   ·   ');
+    doc.setDrawColor(R, G, B); doc.setLineWidth(0.4);
+    doc.line(15, 284, W - 15, 284);
+    doc.setFont(undefined, 'normal'); doc.setFontSize(7.5); doc.setTextColor(140);
+    doc.text(footTxt, W / 2, 289, { align: 'center' });
+    doc.save('letterhead-blank.pdf');
+    toast('Blank letterhead downloaded! 📄');
+    return;
   }
   y = 48;
   doc.setTextColor(30); doc.setFontSize(10);
