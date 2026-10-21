@@ -1333,13 +1333,21 @@
 <section class="panel" id="enhance">
   <div class="card">
     <h2>AI Photo Enhancer</h2>
-    <p class="sub">Make old, blurry or faded photos clearer and sharper. AI upscales your photo to HD (2× bigger), then smart-sharpening and auto color-fix bring back the detail. Everything happens on your device.</p>
+    <p class="sub">Make old, blurry or faded photos clearer, sharper and bigger in HD. AI upscaling + smart detail recovery + auto color fix — all on your device.</p>
     <input type="file" id="enFile" accept="image/*">
+    <label>Output quality</label>
+    <select id="enQual">
+      <option value="hd">HD — 2× bigger (fast, ~20 sec)</option>
+      <option value="fhd">Full HD — 4× bigger (slower, maximum detail)</option>
+    </select>
     <button class="btn" onclick="enhancePhoto()">✨ Enhance Photo</button>
     <p class="sub" id="enStatus" style="display:none;margin-top:12px"></p>
     <div id="enControls" style="display:none;margin-top:16px">
-      <label>Sharpening: <span id="enSharpV">35</span>%</label>
-      <input type="range" id="enSharp" min="0" max="100" value="35" style="padding:0" oninput="enReRender()">
+      <label>Sharpening: <span id="enSharpV">45</span>%</label>
+      <input type="range" id="enSharp" min="0" max="100" value="45" style="padding:0" oninput="enReRender()">
+      <label style="display:flex;align-items:center;gap:8px;margin:10px 0">
+        <input type="checkbox" id="enDenoise" checked style="width:auto;margin:0" onchange="enReRender()"> Auto denoise (removes grain for cleaner detail)
+      </label>
       <label style="display:flex;align-items:center;gap:8px;margin:10px 0">
         <input type="checkbox" id="enAuto" checked style="width:auto;margin:0" onchange="enReRender()"> Auto color &amp; brightness fix
       </label>
@@ -1349,11 +1357,11 @@
       </div>
       <button class="btn" style="margin-top:12px" onclick="downloadEnhanced()">⬇ Download HD Photo</button>
     </div>
-    <p class="sub" style="margin-top:14px">💡 Works best on slightly blurry, faded or WhatsApp-compressed photos. Very dark, torn or heavily damaged photos can only be improved so much in a browser.</p>
+    <p class="sub" style="margin-top:14px">💡 Full HD (4×) gives the most detail but takes 1–2 minutes on phones. Works best on slightly blurry or faded photos; very dark, torn or heavily damaged photos can only be improved so much in a browser.</p>
   </div>
 </section>
 
-<footer>50 free tools · © 2026 ToolBox</footer>
+<footer>50 free tools · © 2026 ToolBox</footer><footer>50 free tools · © 2026 ToolBox</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -3743,20 +3751,80 @@ async function ensureEnhanceLibs(){
     return true;
   } catch { return false; }
 }
+function boxBlurCanvas(src, radius){
+  const w = src.width, h = src.height;
+  const ctx = src.getContext('2d');
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const r = radius;
+  const tmp = new Uint8ClampedArray(d.length);
+  for(let y = 0; y < h; y++){
+    for(let x = 0; x < w; x++){
+      let sr = 0, sg = 0, sb = 0, n = 0;
+      for(let k = -r; k <= r; k++){
+        const xx = x + k; if(xx < 0 || xx >= w) continue;
+        const i = (y * w + xx) * 4;
+        sr += d[i]; sg += d[i + 1]; sb += d[i + 2]; n++;
+      }
+      const o = (y * w + x) * 4;
+      tmp[o] = sr / n; tmp[o + 1] = sg / n; tmp[o + 2] = sb / n; tmp[o + 3] = 255;
+    }
+  }
+  const out = new Uint8ClampedArray(d.length);
+  for(let y = 0; y < h; y++){
+    for(let x = 0; x < w; x++){
+      let sr = 0, sg = 0, sb = 0, n = 0;
+      for(let k = -r; k <= r; k++){
+        const yy = y + k; if(yy < 0 || yy >= h) continue;
+        const i = (yy * w + x) * 4;
+        sr += tmp[i]; sg += tmp[i + 1]; sb += tmp[i + 2]; n++;
+      }
+      const o = (y * w + x) * 4;
+      out[o] = sr / n; out[o + 1] = sg / n; out[o + 2] = sb / n; out[o + 3] = 255;
+    }
+  }
+  const res = document.createElement('canvas');
+  res.width = w; res.height = h;
+  const outImg = res.getContext('2d').createImageData(w, h);
+  outImg.data.set(out);
+  res.getContext('2d').putImageData(outImg, 0, 0);
+  return res;
+}
+function blendToward(canvas, blurred, amount){
+  const ctx = canvas.getContext('2d');
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  const bd = blurred.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  for(let i = 0; i < d.length; i += 4){
+    for(let c = 0; c < 3; c++) d[i + c] = d[i + c] + amount * (bd[i + c] - d[i + c]);
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function unsharpCanvas(canvas, amount, radius){
+  if(amount <= 0) return;
+  const blurred = boxBlurCanvas(canvas, radius);
+  const ctx = canvas.getContext('2d');
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = img.data;
+  const bd = blurred.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+  for(let i = 0; i < d.length; i += 4){
+    for(let c = 0; c < 3; c++) d[i + c] = d[i + c] + amount * (d[i + c] - bd[i + c]);
+  }
+  ctx.putImageData(img, 0, 0);
+}
 function sharpenCanvas(canvas, amount){
   const w = canvas.width, h = canvas.height;
   const ctx = canvas.getContext('2d');
   const img = ctx.getImageData(0, 0, w, h);
   const src = new Uint8ClampedArray(img.data);
   const d = img.data;
-  const k = amount;
   for(let y = 1; y < h - 1; y++){
     for(let x = 1; x < w - 1; x++){
       const i = (y * w + x) * 4;
       for(let c = 0; c < 3; c++){
         const center = src[i + c];
         const lap = 4 * center - src[i - 4 + c] - src[i + 4 + c] - src[i - w * 4 + c] - src[i + w * 4 + c];
-        d[i + c] = center + k * lap;
+        d[i + c] = center + amount * lap;
       }
     }
   }
@@ -3788,13 +3856,25 @@ function autoFixCanvas(canvas){
 }
 function enRender(){
   if(!enBase) return;
+  const st = document.getElementById('enStatus');
   const c = document.createElement('canvas');
   c.width = enBase.width; c.height = enBase.height;
   c.getContext('2d').drawImage(enBase, 0, 0);
-  if(document.getElementById('enAuto').checked) autoFixCanvas(c);
-  sharpenCanvas(c, (+document.getElementById('enSharp').value) / 100 * 0.55);
+  if(document.getElementById('enDenoise').checked){
+    st.style.display = 'block';
+    st.textContent = '⏳ Cleaning noise...';
+    blendToward(c, boxBlurCanvas(c, 1), 0.35);
+  }
+  if(document.getElementById('enAuto').checked){
+    st.textContent = '⏳ Fixing colors...';
+    autoFixCanvas(c);
+  }
+  st.textContent = '⏳ Recovering details...';
+  unsharpCanvas(c, 0.30, 2);
+  sharpenCanvas(c, (+document.getElementById('enSharp').value) / 100 * 0.85);
   document.getElementById('enAfter').src = c.toDataURL('image/jpeg', 0.92);
   window._enOut = c;
+  st.style.display = 'none';
 }
 function enReRender(){
   document.getElementById('enSharpV').textContent = document.getElementById('enSharp').value;
@@ -3807,9 +3887,11 @@ async function enhancePhoto(){
   st.style.display = 'block';
   document.getElementById('enControls').style.display = 'none';
   try {
+    const fhd = document.getElementById('enQual').value === 'fhd';
     st.textContent = '⏳ Preparing photo...';
     const {img} = await loadImage(f);
-    const s = Math.min(1, 720 / img.width);
+    const cap = fhd ? 640 : 1024;
+    const s = Math.min(1, cap / img.width);
     const small = document.createElement('canvas');
     small.width = Math.round(img.width * s);
     small.height = Math.round(img.height * s);
@@ -3819,14 +3901,23 @@ async function enhancePhoto(){
     st.textContent = '⏳ Loading AI engine...';
     const ai = await ensureEnhanceLibs();
     if(ai){
+      const upscaler = new Upscaler();
+      const runUp = dataUrl => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = dataUrl; });
       try {
-        st.textContent = '⏳ AI is upscaling to HD (2×)... first use downloads the model';
-        const upscaler = new Upscaler();
-        const upDataUrl = await upscaler.upscale(small);
-        const upImg = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = upDataUrl; });
+        st.textContent = '⏳ AI pass 1 of ' + (fhd ? '2' : '1') + ' — upscaling to HD...';
+        const up1 = await upscaler.upscale(small);
+        let baseImg = await runUp(up1);
+        if(fhd){
+          st.textContent = '⏳ AI pass 2 of 2 — boosting to Full HD (4×)...';
+          const mid = document.createElement('canvas');
+          mid.width = baseImg.width; mid.height = baseImg.height;
+          mid.getContext('2d').drawImage(baseImg, 0, 0);
+          const up2 = await upscaler.upscale(mid);
+          baseImg = await runUp(up2);
+        }
         enBase = document.createElement('canvas');
-        enBase.width = upImg.width; enBase.height = upImg.height;
-        enBase.getContext('2d').drawImage(upImg, 0, 0);
+        enBase.width = baseImg.width; enBase.height = baseImg.height;
+        enBase.getContext('2d').drawImage(baseImg, 0, 0);
       } catch(upErr) {
         enBase = small;
         st.textContent = '⏳ AI model unavailable — applying smart enhancement instead';
