@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ToolBox — 51 Free Online Tools: CV Maker, Image Compressor, Currency, Prayer Times, Calculators</title>
-<meta name="description" content="51 free online tools: free CV maker PDF, compress image to KB, image to PDF, currency converter USD to PKR, prayer times, zakat calculator, QR generator, fancy text, typing test, crop image, photo filters, voice recorder, invoice PDF and more.">
+<title>ToolBox – 53 Free Online Tools</title>
+<meta name="description" content="53 free online tools: CV maker, image compressor, background remover, document scanner, PDF tools, calculators and converters. No signup, works on mobile.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%236c5ce7'/><text x='50' y='70' font-size='55' text-anchor='middle'>🛠</text></svg>">
 <style>
   :root{
@@ -154,6 +154,8 @@
   .chip{display:inline-flex;align-items:center;gap:6px;background:rgba(0,206,201,.12);border:1px solid rgba(0,206,201,.4);
     color:var(--accent2);border-radius:999px;padding:5px 12px;font-size:.8rem;margin:0 6px 6px 0;cursor:pointer}
   .cv-page{background:#fff;color:#1a1a2e;border-radius:8px;padding:24px;font-size:.78rem;line-height:1.5;overflow:hidden}
+  .cur-sel{background:var(--card2);border:1px solid #2c3149;color:var(--text);
+    border-radius:999px;padding:8px 6px;font-size:.78rem;margin-left:8px;max-width:92px}
   .theme-btn{background:var(--card2);border:1px solid #2c3149;border-radius:50%;
     width:38px;height:38px;font-size:1.05rem;cursor:pointer;flex-shrink:0;margin-left:10px}
   body.light{--bg:#f3f5fa;--card:#ffffff;--card2:#edf0f7;--text:#171a26;--muted:#5d6478}
@@ -185,6 +187,13 @@
 <header>
   <div class="logo">Tool<span>Box</span></div>
   <input type="text" class="hdr-search" id="navSearch" placeholder="🔍 Search tools..." oninput="filterTabs(this.value)">
+  <select id="curSel" class="cur-sel" onchange="setCur(this.value)" title="Currency">
+    <option value="Rs ">Rs · PKR</option>
+    <option value="$">$ · USD</option>
+    <option value="€">€ · EUR</option>
+    <option value="£">£ · GBP</option>
+    <option value="₹">₹ · INR</option>
+  </select>
   <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Light / Dark mode">🌙</button>
 </header>
 
@@ -241,6 +250,7 @@
   <button class="tab" data-panel="symbols">😀 Symbols</button>
   <button class="tab" data-panel="enhance">✨ Enhancer</button>
   <button class="tab" data-panel="letter">✉️ Letter</button>
+  <button class="tab" data-panel="iptrack">🌐 IP Tracker</button>
 </nav>
 
 <main>
@@ -248,9 +258,23 @@
 <!-- ============ MENU / ALL TOOLS ============ -->
 <section class="panel active" id="menu">
   <div class="card">
-    <h2>All 51 Tools — one tap away</h2>
+    <h2>All 53 Tools — one tap away</h2>
     <p class="sub">Tap any tool to open it, or type to search (e.g. "invoice", "photo", "tax").</p>
-    <input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)">
+    <div class="row">
+      <div style="flex:1"><input type="text" id="menuSearch" placeholder="🔍 Search all tools..." oninput="filterMenu(this.value)"></div>
+      <div>
+        <select id="menuCat" onchange="filterMenu(document.getElementById('menuSearch').value)">
+          <option value="all">All categories</option>
+          <option value="image">🖼️ Images</option>
+          <option value="pdf">📄 PDF &amp; Docs</option>
+          <option value="money">💰 Calculators</option>
+          <option value="islamic">🕌 Islamic</option>
+          <option value="text">🔤 Text</option>
+          <option value="dev">💻 Developer</option>
+          <option value="utility">🛠️ Utility &amp; Fun</option>
+        </select>
+      </div>
+    </div>
     <label style="margin-top:8px">🔥 Popular tools</label>
     <div class="tools-grid" style="margin-top:2px">
       <div class="tool-card" onclick="document.querySelector('.tab[data-panel=compress]').click()"><div style="font-size:1.7rem">🗜️</div><div style="font-size:.8rem;font-weight:600;margin-top:6px">Image Compressor</div></div>
@@ -1427,72 +1451,61 @@ Kindly process this request at your earliest convenience. Thank you for your coo
   </div>
 </section>
 
-<footer>51 free tools · © 2026 ToolBox</footer><!-- ============ LETTERHEAD MAKER ============ -->
-<section class="panel" id="letter">
+<!-- ============ IP LOCATION TRACKER ============ -->
+<section class="panel" id="iptrack">
   <div class="card">
-    <h2>Business Letterhead Maker</h2>
-    <p class="sub">Design a professional letterhead with your logo and brand color, write your letter, and download a polished PDF — ready for banks, offices and clients.</p>
-    <div class="cv-block">
-      <h4>🏢 Letterhead</h4>
-      <div class="row">
-        <div><label>Business name</label><input type="text" id="ltBiz" value="Bilal Enterprises" oninput="ltPreview()"></div>
-        <div><label>Tagline (optional)</label><input type="text" id="ltTag" placeholder="Quality you can trust" oninput="ltPreview()"></div>
-      </div>
-      <div class="row">
-        <div><label>Address</label><input type="text" id="ltAddr" value="Main Bazaar, Lahore" oninput="ltPreview()"></div>
-        <div><label>Phone</label><input type="text" id="ltPhone" value="+92 300 1234567" oninput="ltPreview()"></div>
-      </div>
-      <div class="row">
-        <div><label>Email</label><input type="text" id="ltEmail" value="info@email.com" oninput="ltPreview()"></div>
-        <div><label>Website (optional)</label><input type="text" id="ltWeb" placeholder="www.example.com" oninput="ltPreview()"></div>
-      </div>
-      <div class="row">
-        <div><label>Logo (optional)</label><input type="file" id="ltLogo" accept="image/*"></div>
-        <div><label>Style</label>
-          <select id="ltStyle" onchange="ltPreview()">
-            <option value="classic">Classic — colored header band</option>
-            <option value="minimal">Minimal — clean &amp; modern</option>
-          </select>
-        </div>
-        <div><label>Brand color</label><input type="color" id="ltColor" value="#1a4d8f" oninput="ltPreview()"></div>
-      </div>
+    <h2>IP Location Tracker</h2>
+    <p class="sub">Find your public IP address and its approximate location on a live map — or look up any IP address in the world.</p>
+    <div class="result show">
+      <div class="big" id="ipMine">📍 Tap below to load</div>
+      <small id="ipMineSub">Your public IP and location appear here</small>
     </div>
-    <div class="cv-block">
-      <h4>✉️ Letter</h4>
-      <label>PDF type</label>
-      <select id="ltType" onchange="ltPreview()">
-        <option value="filled">📝 Full letter with content</option>
-        <option value="blank">✍️ Blank letterhead — header + footer only, empty A4 center (print &amp; write)</option>
-      </select>
-      <div class="row">
-        <div><label>Date</label><input type="text" id="ltDate" oninput="ltPreview()"></div>
-        <div><label>Recipient name</label><input type="text" id="ltToName" value="The Branch Manager" oninput="ltPreview()"></div>
-      </div>
-      <div class="row">
-        <div><label>Recipient address</label><input type="text" id="ltToAddr" value="National Bank, Main Branch, Lahore" oninput="ltPreview()"></div>
-        <div><label>Subject</label><input type="text" id="ltSubject" value="Request for Bank Statement" oninput="ltPreview()"></div>
-      </div>
-      <div class="row">
-        <div><label>Salutation</label><input type="text" id="ltSalut" value="Dear Sir/Madam," oninput="ltPreview()"></div>
-        <div><label>Closing</label><input type="text" id="ltClosing" value="Sincerely," oninput="ltPreview()"></div>
-      </div>
-      <label>Letter body (blank line between paragraphs)</label>
-      <textarea id="ltBody" rows="6" oninput="ltPreview()">I am writing to request a bank statement for my account for the last six months. The account details are mentioned below.
-
-Kindly process this request at your earliest convenience. Thank you for your cooperation.</textarea>
-      <div class="row">
-        <div><label>Your name</label><input type="text" id="ltSender" value="Muhammad Bilal" oninput="ltPreview()"></div>
-        <div><label>Designation</label><input type="text" id="ltDesig" value="Proprietor" oninput="ltPreview()"></div>
-        <div><label>Signature (optional — draw it in the Signature Maker first)</label><input type="file" id="ltSig" accept="image/*"></div>
-      </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="ipMy()">📍 Show My IP &amp; Location</button>
+      <button class="btn btn-ghost" onclick="copyIp()">📋 Copy IP</button>
     </div>
-    <label>Live preview</label>
-    <div id="ltPrev"></div>
-    <button class="btn" style="margin-top:14px" onclick="ltPDF()">📄 Download Letter PDF</button>
+    <div class="row" style="margin-top:16px">
+      <div style="flex:3"><input type="text" id="ipInput" placeholder="Enter any IP to track (e.g. 8.8.8.8)"></div>
+      <div><button class="btn" onclick="ipTrack()">🌐 Track IP</button></div>
+    </div>
+    <div id="ipResult" style="display:none;margin-top:16px"></div>
+    <p class="sub" style="margin-top:14px">💡 IP locations are approximate — city/town level only. An IP address cannot reveal anyone&rsquo;s exact house or GPS position, and it changes when you switch networks.</p>
   </div>
 </section>
 
-<footer>51 free tools · © 2026 ToolBox</footer>
+<footer>53 free tools · © 2026 ToolBox<br>
+  <a href="privacy.html" style="color:var(--muted)">Privacy Policy</a> ·
+  <a href="about.html" style="color:var(--muted)">About</a> ·
+  <a href="contact.html" style="color:var(--muted)">Contact</a>
+</footer>
+
+<!-- ============ IP LOCATION TRACKER ============ -->
+<section class="panel" id="iptrack">
+  <div class="card">
+    <h2>IP Location Tracker</h2>
+    <p class="sub">Find your public IP address and its approximate location on a live map — or look up any IP address in the world.</p>
+    <div class="result show">
+      <div class="big" id="ipMine">📍 Tap below to load</div>
+      <small id="ipMineSub">Your public IP and location appear here</small>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" onclick="ipMy()">📍 Show My IP &amp; Location</button>
+      <button class="btn btn-ghost" onclick="copyIp()">📋 Copy IP</button>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div style="flex:3"><input type="text" id="ipInput" placeholder="Enter any IP to track (e.g. 8.8.8.8)"></div>
+      <div><button class="btn" onclick="ipTrack()">🌐 Track IP</button></div>
+    </div>
+    <div id="ipResult" style="display:none;margin-top:16px"></div>
+    <p class="sub" style="margin-top:14px">💡 IP locations are approximate — city/town level only. An IP address cannot reveal anyone&rsquo;s exact house or GPS position, and it changes when you switch networks.</p>
+  </div>
+</section>
+
+<footer>53 free tools · © 2026 ToolBox<br>
+  <a href="privacy.html" style="color:var(--muted)">Privacy Policy</a> ·
+  <a href="about.html" style="color:var(--muted)">About</a> ·
+  <a href="contact.html" style="color:var(--muted)">Contact</a>
+</footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -1502,12 +1515,14 @@ if(localStorage.getItem('tb_theme') === '1'){
   document.body.classList.add('light');
   document.getElementById('themeBtn').textContent = '☀️';
 }
+try{ document.getElementById('curSel').value = curSym(); }catch(e){}
 /* ---------- tabs ---------- */
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
   t.classList.add('active');
   document.getElementById(t.dataset.panel).classList.add('active');
+  if(t.dataset.panel === 'iptrack' && !window._ipAuto){ window._ipAuto = true; ipMy(); }
   t.scrollIntoView({ inline: 'center', block: 'nearest' });
 }));
 
@@ -1957,8 +1972,8 @@ function calcDiscount(){
   const d = +document.getElementById('dcOff').value;
   if(!p){ toast('Enter a price 🏷️'); return; }
   const save = p * d / 100, final = p - save;
-  showResult('dcResult', `You pay $${final.toFixed(2)}`,
-    `You save $${save.toFixed(2)} (${d}% off $${p.toFixed(2)})`);
+  showResult('dcResult', `You pay ${curSym()}${final.toFixed(2)}`,
+    `You save ${curSym()}${save.toFixed(2)} (${d}% off ${curSym()}${p.toFixed(2)})`);
 }
 
 /* ---------- EMI ---------- */
@@ -1970,8 +1985,8 @@ function calcEMI(){
   const r = annual / 1200;
   const emi = r > 0 ? P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) : P / n;
   const total = emi * n;
-  showResult('emResult', `Monthly payment: $${emi.toFixed(2)}`,
-    `Total paid: $${total.toFixed(2)} · Total interest: $${(total - P).toFixed(2)}`);
+  showResult('emResult', `Monthly payment: ${curSym()}${emi.toFixed(2)}`,
+    `Total paid: ${curSym()}${total.toFixed(2)} · Total interest: ${curSym()}${(total - P).toFixed(2)}`);
 }
 
 /* ---------- GST ---------- */
@@ -1985,12 +2000,12 @@ function calcGST(){
   const rate = rv === 'custom' ? (+document.getElementById('gstCustom').value || 0) : +rv;
   if(document.getElementById('gstMode').value === 'add'){
     const tax = amt * rate / 100;
-    showResult('gstResult', `Total: $${(amt + tax).toFixed(2)}`,
-      `Base price: $${amt.toFixed(2)} + Tax (${rate}%): $${tax.toFixed(2)}`);
+    showResult('gstResult', `Total: ${curSym()}${(amt + tax).toFixed(2)}`,
+      `Base price: ${curSym()}${amt.toFixed(2)} + Tax (${rate}%): ${curSym()}${tax.toFixed(2)}`);
   } else {
     const base = amt / (1 + rate / 100);
-    showResult('gstResult', `Base price: $${base.toFixed(2)}`,
-      `Tax (${rate}%): $${(amt - base).toFixed(2)} · You paid total: $${amt.toFixed(2)}`);
+    showResult('gstResult', `Base price: ${curSym()}${base.toFixed(2)}`,
+      `Tax (${rate}%): ${curSym()}${(amt - base).toFixed(2)} · You paid total: ${curSym()}${amt.toFixed(2)}`);
   }
 }
 
@@ -2001,8 +2016,8 @@ function calcTip(){
   const people = Math.max(1, +document.getElementById('tpPeople').value || 1);
   if(!bill){ toast('Enter the bill amount 🍽️'); return; }
   const tip = bill * pct / 100, total = bill + tip;
-  showResult('tpResult', `$${(total / people).toFixed(2)} each`,
-    `Tip: $${tip.toFixed(2)} · Total: $${total.toFixed(2)} · Split ${people} way(s)`);
+  showResult('tpResult', `${curSym()}${(total / people).toFixed(2)} each`,
+    `Tip: ${curSym()}${tip.toFixed(2)} · Total: ${curSym()}${total.toFixed(2)} · Split ${people} way(s)`);
 }
 
 /* ---------- word counter ---------- */
@@ -2458,7 +2473,7 @@ function calcZakat(){
   const net = Math.max(0, total - debts);
   const nisab = Math.min(87.48 * goldR, 612.36 * silR);
   if(net >= nisab){
-    showResult('zkResult', `Zakat due: PKR ${fmtN(net * 0.025)}`,
+    showResult('zkResult', `Zakat due: ${curSym()}${fmtN(net * 0.025)}`,
       `Net wealth: ${fmtN(net)} · Nisab: ${fmtN(nisab)} · Rate: 2.5%`);
   } else {
     showResult('zkResult', 'No Zakat due ✅',
@@ -2674,7 +2689,7 @@ function invAddRow(){
   row.className = 'inv-row';
   row.innerHTML = `<input type="text" placeholder="Item description" style="flex:3" oninput="invPreview()">
     <input type="number" placeholder="Qty" min="0" style="flex:1" oninput="invPreview()">
-    <input type="number" placeholder="Price (Rs)" min="0" style="flex:1" oninput="invPreview()">
+    <input type="number" placeholder="Price" min="0" style="flex:1" oninput="invPreview()">
     <button class="btn btn-ghost" style="padding:8px 14px" onclick="this.parentElement.remove();invPreview()">✕</button>`;
   document.getElementById('invRows').appendChild(row);
   invPreview();
@@ -2683,7 +2698,7 @@ function invAddRow(){
 function invPreview(){
   const t = invTotals();
   document.getElementById('invTotal').textContent =
-    `Subtotal: Rs ${t.sub.toFixed(2)}${t.tax ? ` · With tax: Rs ${t.total.toFixed(2)}` : ''}`;
+    `Subtotal: ${curSym()}${t.sub.toFixed(2)}${t.tax ? ` · With tax: ${curSym()}${t.total.toFixed(2)}` : ''}`;
   const biz = document.getElementById('invFrom').value || 'Your Business';
   const client = document.getElementById('invTo').value || 'Client';
   const no = document.getElementById('invNo').value || '';
@@ -2701,12 +2716,12 @@ function invPreview(){
       <div style="color:#555">Bill To: <b>${client}</b></div>
       <div style="color:#888;margin-top:6px">${items} item(s)</div>
       <div style="display:flex;justify-content:space-between;margin-top:8px;color:#555">
-        <span>Subtotal</span><b>Rs ${t.sub.toFixed(2)}</b></div>
+        <span>Subtotal</span><b>${curSym()}${t.sub.toFixed(2)}</b></div>
       ${t.tax ? `<div style="display:flex;justify-content:space-between;color:#555">
-        <span>Tax</span><b>Rs ${t.tax.toFixed(2)}</b></div>` : ''}
+        <span>Tax</span><b>${curSym()}${t.tax.toFixed(2)}</b></div>` : ''}
       <div style="display:flex;justify-content:space-between;margin-top:6px;
         font-size:1rem;font-weight:800;color:${c}">
-        <span>TOTAL</span><span>Rs ${t.total.toFixed(2)}</span></div>
+        <span>TOTAL</span><span>${curSym()}${t.total.toFixed(2)}</span></div>
     </div>`;
 }
 
@@ -2774,24 +2789,24 @@ async function invPDF(){
   rows.forEach(r => {
     doc.text(String(r[0]).slice(0, 55), 18, y);
     doc.text(String(r[1]), 130, y, { align: 'right' });
-    doc.text('Rs ' + r[2].toFixed(2), 160, y, { align: 'right' });
-    doc.text('Rs ' + r[3].toFixed(2), 192, y, { align: 'right' });
+    doc.text(curSym() + r[2].toFixed(2), 160, y, { align: 'right' });
+    doc.text(curSym() + r[3].toFixed(2), 192, y, { align: 'right' });
     y += 8;
   });
   doc.setDrawColor(200);
   doc.setLineWidth(0.3);
   doc.line(120, y - 2, 195, y - 2);
   y += 6;
-  doc.text('Subtotal: Rs ' + sub.toFixed(2), 192, y, { align: 'right' });
+  doc.text('Subtotal: ' + curSym() + ' ' + sub.toFixed(2), 192, y, { align: 'right' });
   y += 7;
   if(tax){
-    doc.text('Tax: Rs ' + tax.toFixed(2), 192, y, { align: 'right' });
+    doc.text('Tax: ' + curSym() + ' ' + tax.toFixed(2), 192, y, { align: 'right' });
     y += 7;
   }
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
   doc.setTextColor(R, G, B);
-  doc.text('TOTAL: Rs ' + total.toFixed(2), 192, y + 2, { align: 'right' });
+  doc.text('TOTAL: ' + curSym() + ' ' + total.toFixed(2), 192, y + 2, { align: 'right' });
 
   // Notes
   const notes = document.getElementById('invNotes').value.trim();
@@ -4210,6 +4225,73 @@ async function ltPDF(){
   toast('Letter downloaded! 📄');
 }
 
+/* ---------- IP location tracker ---------- */
+let ipCurrent = '';
+function ipField(label, val){
+  return '<div class="color-line"><code style="flex:1">' + label + '</code><span style="color:var(--text);font-size:.9rem">' + val + '</span></div>';
+}
+function ipRender(d){
+  ipCurrent = d.ip;
+  document.getElementById('ipMine').textContent = d.ip;
+  document.getElementById('ipMineSub').textContent =
+    [d.flag && d.flag.emoji, d.city, d.country].filter(Boolean).join('  ');
+  const isp = (d.connection && (d.connection.isp || d.connection.org)) || '—';
+  const asn = d.connection && d.connection.asn ? 'AS' + d.connection.asn : '—';
+  const tz = d.timezone ? d.timezone.id + ' (UTC' + d.timezone.utc + ')' : '—';
+  const coords = d.latitude + ', ' + d.longitude;
+  document.getElementById('ipResult').innerHTML =
+    ipField('🌍 IP Address', '<b>' + d.ip + '</b>') +
+    ipField('🏳️ Country', (d.flag ? d.flag.emoji + ' ' : '') + d.country + (d.country_code ? ' (' + d.country_code + ')' : '')) +
+    ipField('🏙️ City / Region', [d.city, d.region].filter(Boolean).join(', ') || '—') +
+    ipField('🏢 ISP / Organization', isp + ' · ' + asn) +
+    ipField('🕐 Timezone', tz) +
+    ipField('🧭 Coordinates', coords) +
+    ipField('📮 Postal Code', d.postal || '—') +
+    (d.latitude ? '<iframe title="map" style="width:100%;height:230px;border:0;border-radius:10px;margin-top:10px" loading="lazy" src="https://www.openstreetmap.org/export/embed.html?bbox=' +
+      (d.longitude - 0.08) + '%2C' + (d.latitude - 0.06) + '%2C' + (d.longitude + 0.08) + '%2C' + (d.latitude + 0.06) +
+      '&layer=mapnik&marker=' + d.latitude + '%2C' + d.longitude + '"></iframe>' : '');
+  document.getElementById('ipResult').style.display = 'block';
+}
+async function ipFetch(ip){
+  const url = ip ? 'https://ipwho.is/' + encodeURIComponent(ip.trim()) : 'https://ipwho.is/';
+  const r = await fetch(url);
+  const d = await r.json();
+  if(d.success === false) throw new Error(d.message || 'Invalid or private IP address');
+  return d;
+}
+async function ipMy(){
+  toast('Loading your IP... 🌐');
+  try {
+    ipRender(await ipFetch());
+    toast('Location found ✔');
+  } catch(e) {
+    toast('Could not load — check internet');
+  }
+}
+async function ipTrack(){
+  const v = document.getElementById('ipInput').value.trim();
+  if(!v){ toast('Enter an IP address first'); return; }
+  toast('Tracking ' + v + '... 🌐');
+  try {
+    ipRender(await ipFetch(v));
+    toast('IP tracked ✔');
+  } catch(e) {
+    toast('❌ ' + (e.message || 'Lookup failed'));
+  }
+}
+document.getElementById('ipInput').addEventListener('keydown', e => { if(e.key === 'Enter') ipTrack(); });
+function copyIp(){
+  if(!ipCurrent){ toast('Load an IP first'); return; }
+  navigator.clipboard.writeText(ipCurrent).then(() => toast('IP copied! 📋'));
+}
+
+function curSym(){ return localStorage.getItem('tb_cur') || 'Rs '; }
+function setCur(v){
+  localStorage.setItem('tb_cur', v);
+  toast('Currency: ' + v.trim() + ' — tap any calculate button to update 💱');
+  try { invPreview(); } catch(e){}
+}
+
 function saveBlob(blob, name, mime){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -4219,6 +4301,18 @@ function saveBlob(blob, name, mime){
 }
 
 /* ---------- tools menu & search ---------- */
+const PANEL_CAT = {
+  resize:'image', compress:'image', bgremove:'image', thumb:'image', textimg:'image',
+  convert:'image', crop:'image', filters:'image', enhance:'image', collage:'image', passport:'image',
+  img2pdf:'pdf', pdfsuite:'pdf', pdfmerge:'pdf', letter:'pdf', scanner:'pdf',
+  calc:'money', units:'money', percent:'money', discount:'money', emi:'money', gst:'money', tip:'money', currency:'money',
+  prayer:'islamic', zakat:'islamic',
+  words:'text', fancy:'text', typing:'text',
+  encoders:'dev', json:'dev',
+  password:'utility', qr:'utility', age:'utility', bmi:'utility', timer:'utility', pomodoro:'utility',
+  sign:'utility', random:'utility', date:'utility', recorder:'utility', invoice:'utility', cvmaker:'utility',
+  result:'utility', picker:'utility', wa:'utility', ytthumb:'utility', iptrack:'utility', cgpa:'utility', symbols:'utility'
+};
 function buildMenu(){
   const grid = document.getElementById('menuGrid');
   grid.innerHTML = '';
@@ -4229,6 +4323,7 @@ function buildMenu(){
     const card = document.createElement('div');
     card.className = 'tool-card';
     card.dataset.name = label.toLowerCase();
+    card.dataset.cat = PANEL_CAT[t.dataset.panel] || 'utility';
     card.innerHTML = `<div style="font-size:1.7rem">${parts[0]}</div>
       <div style="font-size:.8rem;font-weight:600;margin-top:6px;line-height:1.3">${parts.slice(1).join(' ')}</div>`;
     card.onclick = () => {
@@ -4240,8 +4335,10 @@ function buildMenu(){
 }
 function filterMenu(q){
   q = q.toLowerCase().trim();
+  const cat = document.getElementById('menuCat').value;
   document.querySelectorAll('#menuGrid .tool-card').forEach(c => {
-    c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+    const ok = c.dataset.name.includes(q) && (cat === 'all' || c.dataset.cat === cat);
+    c.style.display = ok ? '' : 'none';
   });
 }
 function filterTabs(q){
@@ -4266,7 +4363,7 @@ function welcomeCheck(){
   const b = document.createElement('div');
   b.id = 'welcomeBar';
   b.style.cssText = 'position:fixed;bottom:16px;left:16px;right:16px;z-index:150;background:linear-gradient(90deg,#6c5ce7,#00cec9);color:#fff;border-radius:14px;padding:14px 16px;font-size:.88rem;display:flex;gap:10px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.45)';
-  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 51 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
+  b.innerHTML = '<span style="flex:1">👋 <b>Welcome to ToolBox!</b> 53 free tools — no signup, nothing uploaded. Tap any tool or use search.</span><button onclick="dismissWelcome()" style="background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:8px;padding:7px 13px;cursor:pointer;font-weight:700;white-space:nowrap">Got it ✕</button>';
   document.body.appendChild(b);
 }
 welcomeCheck();
