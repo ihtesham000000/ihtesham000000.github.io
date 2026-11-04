@@ -1549,19 +1549,10 @@ Kindly process this request at your earliest convenience. Thank you for your coo
 
   <div class="card">
     <h2>🤖 Buy or Sell Analyzer</h2>
-    <p class="sub">6 technical indicators vote on real 90-day price data and give a simple answer. Educational tool — <b>not financial advice</b>.</p>
+    <p class="sub"><b>100 strategy configurations</b> are backtested on 180 days of real price data, then vote on a simple answer. Educational tool — <b>not financial advice</b>.</p>
     <div class="row">
-      <div><label>Coin</label>
-        <select id="anCoin">
-          <option value="bitcoin">Bitcoin (BTC)</option>
-          <option value="ethereum">Ethereum (ETH)</option>
-          <option value="binancecoin">BNB</option>
-          <option value="solana">Solana (SOL)</option>
-          <option value="ripple">XRP</option>
-          <option value="cardano">Cardano (ADA)</option>
-          <option value="dogecoin">Dogecoin (DOGE)</option>
-          <option value="litecoin">Litecoin (LTC)</option>
-        </select></div>
+      <div style="flex:2"><label>Coin (top 100 by market cap)</label>
+        <select id="anCoin"><option value="bitcoin">Bitcoin (BTC)</option></select></div>
       <div style="display:flex;align-items:flex-end"><button class="btn" onclick="analyzeCoin()">🔍 Analyze</button></div>
     </div>
     <p class="sub" id="anStatus" style="display:none;margin-top:10px"></p>
@@ -4405,7 +4396,7 @@ async function loadCrypto(){
     const ids = COINS.map(c => c[0]).join(',');
     const res = await Promise.all([
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&sparkline=true&price_change_percentage=24h').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h').then(r => r.json()),
       fetch('https://api.coingecko.com/api/v3/global').then(r => r.json()).catch(() => null)
     ]);
     cryptoCache = res[0] || {};
@@ -4420,6 +4411,13 @@ async function loadCrypto(){
       const el = document.getElementById('mchVal');
       el.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%';
       el.style.color = ch >= 0 ? '#55efc4' : '#ff6b6b';
+    }
+    const anSel = document.getElementById('anCoin');
+    if(anSel && Object.keys(marketCache).length > 1){
+      anSel.innerHTML = Object.values(marketCache)
+        .sort((a, b) => a.market_cap_rank - b.market_cap_rank)
+        .map(m => '<option value="' + m.id + '"' + (m.id === 'bitcoin' ? ' selected' : '') + '>' + m.name + ' (' + m.symbol.toUpperCase() + ')</option>')
+        .join('');
     }
     renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender();
   } catch(e) { toast('Could not load prices — check internet'); }
@@ -4596,79 +4594,145 @@ function calcPL(){
     'Invested: $' + invested.toLocaleString() + ' → Final: $' + (gross - gross * feePct).toLocaleString() + (win ? ' · Nice trade! 🎉' : ' · Better luck next time 💪'));
 }
 
-/* ---------- buy/sell analyzer ---------- */
-function anSma(arr, p, end){
-  let s = 0, c = 0;
-  for(let i = Math.max(0, end - p + 1); i <= end; i++){ s += arr[i]; c++; }
-  return c ? s / c : arr[end];
+/* ---------- buy/sell analyzer (100 strategies) ---------- */
+function anPrefix(P){ const pre = [0]; for(const v of P) pre.push(pre[pre.length - 1] + v); return pre; }
+function anSmaFast(pre, p, i){
+  if(i < p - 1) return null;
+  return (pre[i + 1] - pre[i - p + 1]) / p;
 }
-function anStd(arr, p, end, mean){
-  let s = 0, c = 0;
-  for(let i = Math.max(0, end - p + 1); i <= end; i++){ s += (arr[i] - mean) * (arr[i] - mean); c++; }
-  return c ? Math.sqrt(s / c) : 0;
-}
-function anEma(arr, p){
+function anEmaArr(P, p){
   const k = 2 / (p + 1);
-  const out = new Array(arr.length);
-  let e = arr[0];
-  for(let i = 0; i < arr.length; i++){ e = i === 0 ? arr[0] : arr[i] * k + e * (1 - k); out[i] = e; }
+  const out = new Array(P.length);
+  let e = P[0];
+  for(let i = 0; i < P.length; i++){ e = i === 0 ? P[0] : P[i] * k + e * (1 - k); out[i] = e; }
   return out;
 }
-function anRsi(P, i, p){
-  if(i < p) return 50;
-  let g = 0, l = 0;
-  for(let j = i - p + 1; j <= i; j++){
-    const d = P[j] - P[j - 1];
-    if(d > 0) g += d; else l -= d;
+function anRsiArr(P, p){
+  const out = new Array(P.length).fill(50);
+  for(let i = 1; i < P.length; i++){
+    let gg = 0, ll = 0;
+    for(let j = Math.max(1, i - p + 1); j <= i; j++){
+      const dd = P[j] - P[j - 1];
+      if(dd > 0) gg += dd; else ll -= dd;
+    }
+    out[i] = ll === 0 ? 100 : 100 - 100 / (1 + gg / ll);
   }
-  if(l === 0) return 100;
-  return 100 - 100 / (1 + g / l);
+  return out;
 }
-function anScoreAt(P, ema12, ema26, sig, i){
-  const det = [];
-  const r = anRsi(P, i, 14);
-  det.push(['RSI (14)', r.toFixed(1), r < 32 ? 1 : r > 68 ? -1 : 0, r < 32 ? 'oversold' : r > 68 ? 'overbought' : 'normal']);
-  const s20 = anSma(P, 20, i), s50 = anSma(P, 50, i);
-  det.push(['SMA 20 vs 50', '$' + fmtPrice(s20) + ' / $' + fmtPrice(s50), s20 > s50 ? 1 : -1, s20 > s50 ? 'uptrend' : 'downtrend']);
-  const e12 = ema12[i], e26 = ema26[i];
-  det.push(['EMA 12 vs 26', fmtPrice(e12) + ' / ' + fmtPrice(e26), e12 > e26 ? 1 : -1, e12 > e26 ? 'bullish' : 'bearish']);
-  const hist = (e12 - e26) - sig[i];
-  det.push(['MACD', (hist >= 0 ? '+' : '') + hist.toFixed(2), hist > 0 ? 1 : -1, hist > 0 ? 'momentum up' : 'momentum down']);
-  const sd = anStd(P, 20, i, s20);
-  const pctB = sd > 0 ? (P[i] - (s20 - 2 * sd)) / (4 * sd) : 0.5;
-  det.push(['Bollinger %B', pctB.toFixed(2), pctB > 1 ? -1 : pctB < 0 ? 1 : 0, pctB > 1 ? 'stretched high' : pctB < 0 ? 'stretched low' : 'in range']);
-  if(i >= 10){
-    const roc = (P[i] - P[i - 10]) / P[i - 10] * 100;
-    det.push(['Momentum (10d)', (roc >= 0 ? '+' : '') + roc.toFixed(1) + '%', roc > 0 ? 1 : -1, roc > 0 ? 'gaining' : 'losing']);
-  } else {
-    det.push(['Momentum (10d)', '—', 0, '—']);
+function anStd(P, p, end, mean){
+  let s = 0, c = 0;
+  for(let i = Math.max(0, end - p + 1); i <= end; i++){ s += (P[i] - mean) * (P[i] - mean); c++; }
+  return c ? Math.sqrt(s / c) : 0;
+}
+function buildStrategies(){
+  const S = [];
+  for(const p of [7, 14, 21, 28]) for(const lo of [20, 25, 30, 35])
+    S.push({ name: 'RSI(' + p + ') momentum', type: 'rsi', p });
+  for(const [f, s] of [[5,20],[5,30],[5,40],[5,50],[5,60],[10,30],[10,40],[10,50],[10,75],[15,40],[15,60],[20,50],[20,75],[25,50],[25,100]])
+    S.push({ name: 'SMA ' + f + '/' + s, type: 'smacross', f, s });
+  for(const [f, s] of [[5,13],[8,21],[12,26],[9,30],[10,50],[20,50],[25,100],[5,35],[8,55],[13,34]])
+    S.push({ name: 'EMA ' + f + '/' + s, type: 'emacross', f, s });
+  for(const [a, b, c] of [[12,26,9],[8,17,9],[5,35,5],[24,52,9]])
+    S.push({ name: 'MACD(' + a + ',' + b + ',' + c + ')', type: 'macd', a, b, c });
+  for(const per of [15, 20, 25]) for(const mode of ['half', 'break'])
+    S.push({ name: 'Bollinger(' + per + ') ' + mode, type: 'bb', per, mode });
+  for(const p of [5, 10, 14, 20]) for(const th of [0, 1, 2])
+    S.push({ name: 'ROC(' + p + ')>' + th + '%', type: 'roc', p, th });
+  for(const p of [10, 20, 30, 50, 75, 100])
+    S.push({ name: 'Price vs SMA' + p, type: 'psma', p });
+  for(const p of [10, 14, 21]) for(const lvl of [20, 15])
+    S.push({ name: 'Stoch(' + p + ') ' + lvl, type: 'stoch', p, lvl });
+  for(const p of [7, 14, 21]) for(const [f, s] of [[5,20],[10,50],[20,50],[10,30]])
+    S.push({ name: 'RSI' + p + ' + SMA' + f + '/' + s, type: 'dual', p, f, s });
+  S.push({ name: 'Triple confirm', type: 'triple' });
+  S.push({ name: 'Buy & Hold', type: 'hold' });
+  return S.slice(0, 100);
+}
+function runStrategies(P){
+  const pre = anPrefix(P);
+  const emaCache = {}, rsiCache = {}, macdCache = {};
+  const E = p => emaCache[p] || (emaCache[p] = anEmaArr(P, p));
+  const R = p => rsiCache[p] || (rsiCache[p] = anRsiArr(P, p));
+  const MACD = (a, b, c) => {
+    const key = a + '-' + b + '-' + c;
+    if(!macdCache[key]){
+      const line = P.map((_, i) => E(a)[i] - E(b)[i]);
+      macdCache[key] = { line, sig: anEmaArr(line, c) };
+    }
+    return macdCache[key];
+  };
+  const start = 110;
+  const ens = new Array(P.length).fill(0);
+  const results = [];
+  for(const st of buildStrategies()){
+    const sig = new Array(P.length).fill(0);
+    for(let i = 0; i < P.length; i++){
+      switch(st.type){
+        case 'rsi': sig[i] = R(st.p)[i] >= 50 ? 1 : 0; break;
+        case 'smacross': {
+          const f = anSmaFast(pre, st.f, i), s = anSmaFast(pre, st.s, i);
+          sig[i] = (f != null && s != null && f > s) ? 1 : 0; break;
+        }
+        case 'emacross': sig[i] = E(st.f)[i] > E(st.s)[i] ? 1 : 0; break;
+        case 'macd': { const m = MACD(st.a, st.b, st.c); sig[i] = m.line[i] > m.sig[i] ? 1 : 0; break; }
+        case 'bb': {
+          const mid = anSmaFast(pre, st.per, i);
+          if(mid == null){ sig[i] = 0; break; }
+          const sd = anStd(P, st.per, i, mid);
+          const pctB = sd > 0 ? (P[i] - (mid - 2 * sd)) / (4 * sd) : 0.5;
+          sig[i] = st.mode === 'break' ? (pctB > 1 ? 1 : 0) : (pctB > 0.5 ? 1 : 0);
+          break;
+        }
+        case 'roc': {
+          if(i < st.p){ sig[i] = 0; break; }
+          sig[i] = ((P[i] - P[i - st.p]) / P[i - st.p] * 100) > st.th ? 1 : 0; break;
+        }
+        case 'psma': { const m = anSmaFast(pre, st.p, i); sig[i] = (m != null && P[i] > m) ? 1 : 0; break; }
+        case 'stoch': {
+          if(i < st.p){ sig[i] = 0; break; }
+          let hh = -Infinity, ll = Infinity;
+          for(let j = i - st.p + 1; j <= i; j++){ if(P[j] > hh) hh = P[j]; if(P[j] < ll) ll = P[j]; }
+          sig[i] = (hh > ll && (P[i] - ll) / (hh - ll) * 100 > 50) ? 1 : 0; break;
+        }
+        case 'dual': {
+          const f = anSmaFast(pre, st.f, i), s = anSmaFast(pre, st.s, i);
+          sig[i] = (R(st.p)[i] > 50 && f != null && s != null && f > s) ? 1 : 0; break;
+        }
+        case 'triple': {
+          const mid = anSmaFast(pre, 20, i);
+          sig[i] = (R(14)[i] > 50 && E(12)[i] > E(26)[i] && mid != null && P[i] > mid) ? 1 : 0; break;
+        }
+        case 'hold': sig[i] = 1; break;
+      }
+      ens[i] += sig[i];
+    }
+    let cash = 1000, coin = 0, inM = false, trades = 0;
+    for(let i = start; i < P.length; i++){
+      if(!inM && sig[i]){ coin = cash / P[i]; cash = 0; inM = true; trades++; }
+      else if(inM && !sig[i]){ cash = coin * P[i]; coin = 0; inM = false; trades++; }
+    }
+    const final = inM ? coin * P[P.length - 1] : cash;
+    results.push({ name: st.name, ret: (final / 1000 - 1) * 100, trades, bull: !!sig[P.length - 1] });
   }
-  const score = det.reduce((a, d) => a + d[2], 0);
-  return { score, det };
+  return { results, ens, start };
 }
 async function analyzeCoin(){
   const id = document.getElementById('anCoin').value;
   const st = document.getElementById('anStatus');
   st.style.display = 'block';
-  st.textContent = '⏳ Downloading 90 days of ' + id + ' price data...';
+  st.textContent = '⏳ Downloading 180 days of ' + id + ' price data...';
   document.getElementById('anResult').style.display = 'none';
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=90');
+    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=180');
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
-    if(P.length < 55){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Running 6-indicator analysis...';
+    if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
+    st.textContent = '⏳ Backtesting 100 strategy configurations...';
     setTimeout(() => {
-      const ema12 = anEma(P, 12), ema26 = anEma(P, 26);
-      const macd = P.map((_, i) => ema12[i] - ema26[i]);
-      const sig = anEma(macd, 9);
-      const scores = new Array(P.length).fill(0);
-      for(let i = 50; i < P.length; i++) scores[i] = anScoreAt(P, ema12, ema26, sig, i).score;
-      const cur = anScoreAt(P, ema12, ema26, sig, P.length - 1);
-      renderVerdict(id, cur);
-      renderAnTable(cur.det);
-      renderBacktest(P, scores);
-      drawAnChart(P, scores);
+      const { results, ens, start } = runStrategies(P);
+      renderConsensus(id, results);
+      const ensScores = ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
+      drawAnChart(P, ensScores);
       st.style.display = 'none';
       document.getElementById('anResult').style.display = 'block';
     }, 30);
@@ -4676,52 +4740,37 @@ async function analyzeCoin(){
     st.textContent = '❌ Could not load price data — check internet';
   }
 }
-function renderVerdict(id, cur){
-  const s = cur.score;
+function renderConsensus(id, results){
+  const bulls = results.filter(r => r.bull).length;
+  const n = results.length;
+  const pct = bulls / n * 100;
+  const rets = results.map(r => r.ret).sort((a, b) => a - b);
+  const avg = rets.reduce((a, b) => a + b, 0) / n;
+  const median = rets[Math.floor(n / 2)];
+  const bh = results.find(r => r.name === 'Buy & Hold');
+  const bhRet = bh ? bh.ret : 0;
+  const beaters = results.filter(r => r.ret > bhRet).length;
   let txt, col, why;
-  if(s >= 4){ txt = '🟢 STRONG BUY'; col = '#00cec9'; why = 'Most indicators are positive — momentum, trend and RSI all point UP right now.'; }
-  else if(s >= 1){ txt = '🟩 LEANING BUY'; col = '#55efc4'; why = 'More indicators are positive than negative, but not everything agrees.'; }
-  else if(s === 0){ txt = '⚪ WAIT / HOLD'; col = '#9aa0b5'; why = 'Indicators are mixed — no clear edge either way right now.'; }
-  else if(s >= -3){ txt = '🟥 LEANING SELL'; col = '#f9ca24'; why = 'More indicators are negative — signs of weakness. Caution advised.'; }
-  else { txt = '🔴 STRONG SELL'; col = '#ff6b6b'; why = 'Most indicators are negative — momentum, trend and RSI all point DOWN.'; }
+  if(pct >= 70){ txt = '🟢 STRONG BUY'; col = '#00cec9'; why = pct.toFixed(0) + '% of strategies are in buy mode — strong agreement across indicators.'; }
+  else if(pct >= 55){ txt = '🟩 LEANING BUY'; col = '#55efc4'; why = 'More strategies are bullish than bearish, but the crowd is not unanimous.'; }
+  else if(pct > 45){ txt = '⚪ WAIT / HOLD'; col = '#9aa0b5'; why = 'The strategies disagree — no clear edge right now.'; }
+  else if(pct > 30){ txt = '🟥 LEANING SELL'; col = '#f9ca24'; why = 'More strategies are bearish — signs of weakness. Caution advised.'; }
+  else { txt = '🔴 STRONG SELL'; col = '#ff6b6b'; why = pct.toFixed(0) + '% of strategies are in buy mode — most indicators point DOWN.'; }
   const v = document.getElementById('anVerdict');
-  v.textContent = txt + '  (' + (s > 0 ? '+' : '') + s + '/6)';
+  v.textContent = txt;
   v.style.color = col;
-  const buys = cur.det.filter(d => d[2] > 0).length;
-  const sells = cur.det.filter(d => d[2] < 0).length;
-  document.getElementById('anWhy').textContent = why + ' · ' + buys + ' buy votes, ' + sells + ' sell votes. Educational analysis — not financial advice.';
-}
-function renderAnTable(det){
-  document.getElementById('anTable').innerHTML = det.map(([name, val, vote, note]) => {
-    const c = vote > 0 ? '#55efc4' : vote < 0 ? '#ff6b6b' : '#9aa0b5';
-    return '<div class="color-line" style="justify-content:space-between">' +
-      '<span style="flex:1;text-align:left;color:var(--text)"><b>' + name + '</b> <small style="color:var(--muted)">' + note + '</small></span>' +
-      '<span style="color:var(--text);font-size:.88rem;margin-right:10px">' + val + '</span>' +
-      '<span style="color:' + c + ';font-weight:700;min-width:44px;text-align:right">' + (vote > 0 ? 'BUY' : vote < 0 ? 'SELL' : '—') + '</span></div>';
-  }).join('');
-}
-function renderBacktest(P, scores){
-  let cash = 1000, coins = 0, inM = false, trades = 0;
-  for(let i = 50; i < P.length; i++){
-    if(!inM && scores[i] >= 2){ coins = cash / P[i]; cash = 0; inM = true; trades++; }
-    else if(inM && scores[i] <= -2){ cash = coins * P[i]; coins = 0; inM = false; trades++; }
-  }
-  const final = inM ? coins * P[P.length - 1] : cash;
-  const strat = (final / 1000 - 1) * 100;
-  const bh = (P[P.length - 1] / P[50] - 1) * 100;
-  const win = strat >= bh;
+  document.getElementById('anWhy').textContent = why + ' · Educational analysis of ' + n + ' configurations — not financial advice.';
   document.getElementById('anBt').innerHTML =
-    '90-day test: signals <b style="color:' + (strat >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (strat >= 0 ? '+' : '') + strat.toFixed(1) + '%</b>' +
-    ' vs buy &amp; hold <b style="color:' + (bh >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (bh >= 0 ? '+' : '') + bh.toFixed(1) + '%</b>';
+    '🗳️ ' + bulls + '/' + n + ' strategies in BUY mode · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
   document.getElementById('anBtSub').textContent =
-    trades + ' trades in 90 days · Currently ' + (inM ? 'IN the market (signal: hold/buy mode)' : 'OUT of the market (signal: wait/sell mode)') + ' · Past performance ≠ future results';
+    'Buy & hold: ' + (bhRet >= 0 ? '+' : '') + bhRet.toFixed(1) + '% over the same 180 days · ' + beaters + '/' + n + ' strategies beat buy & hold · Past performance ≠ future results';
 }
 function drawAnChart(P, scores){
   const cv = document.getElementById('anChart');
   const ctx = cv.getContext('2d');
   cv.width = 720; cv.height = 200;
   ctx.clearRect(0, 0, 720, 200);
-  const start = 50;
+  const start = 110;
   const seg = P.slice(start);
   const min = Math.min(...seg), max = Math.max(...seg), range = (max - min) || 1;
   const L = 12, T = 12, W = 720 - 24, H = 200 - 40;
@@ -4738,14 +4787,14 @@ function drawAnChart(P, scores){
   ctx.strokeStyle = up ? '#55efc4' : '#ff6b6b'; ctx.lineWidth = 2; ctx.stroke();
   let wasIn = false;
   for(let i = 1; i < seg.length; i++){
-    const s = scores[start + i];
+    const s = scores[start + i] || 0;
     if(!wasIn && s >= 2){
       ctx.fillStyle = '#00cec9';
-      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) - 14); ctx.lineTo(X(i) - 6, Y(seg[i]) - 24); ctx.lineTo(X(i) + 6, Y(seg[i]) - 24); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) - 12); ctx.lineTo(X(i) - 6, Y(seg[i]) - 22); ctx.lineTo(X(i) + 6, Y(seg[i]) - 22); ctx.closePath(); ctx.fill();
       wasIn = true;
     } else if(wasIn && s <= -2){
       ctx.fillStyle = '#ff6b6b';
-      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) + 14); ctx.lineTo(X(i) - 6, Y(seg[i]) + 24); ctx.lineTo(X(i) + 6, Y(seg[i]) + 24); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) + 12); ctx.lineTo(X(i) - 6, Y(seg[i]) + 22); ctx.lineTo(X(i) + 6, Y(seg[i]) + 22); ctx.closePath(); ctx.fill();
       wasIn = false;
     }
   }
