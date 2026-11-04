@@ -1490,6 +1490,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
       <small id="fngSub">Fear &amp; Greed Index</small>
     </div>
     <p class="sub" id="moversLine" style="margin-top:10px;font-size:.8rem">—</p>
+    <div id="notifBar" style="margin-top:10px;background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--muted);line-height:1.5"></div>
     <button class="btn btn-ghost" style="margin-top:8px" onclick="loadCrypto()">↻ Refresh prices</button>
     <div id="coinList" style="margin-top:12px"></div>
     <div id="chartCard" style="display:none;margin-top:12px;background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:12px">
@@ -4424,7 +4425,7 @@ async function loadCrypto(){
         .map(m => '<option value="' + m.id + '"' + (m.id === 'bitcoin' ? ' selected' : '') + '>' + m.name + ' (' + m.symbol.toUpperCase() + ')</option>')
         .join('');
     }
-    renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender();
+    renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender(); notifInit();
   } catch(e) { toast('Could not load prices — check internet'); }
 }
 function coinChange(id){
@@ -4910,13 +4911,14 @@ async function analyzeCoin(){
   st.textContent = '⏳ Downloading 180 days of ' + id + ' price data...';
   document.getElementById('anResult').style.display = 'none';
   try {
-    const newsP = fetchCryptoNews().catch(() => null);
+    const coinName = (marketCache[id] && marketCache[id].name) || id;
+    const newsP = fetchCryptoNews(coinName).catch(() => null);
     const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365');
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
     const V = (d.total_volumes || []).map(x => x[1]);
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Backtesting 100+ strategies × 3 timeframes + scanning news...';
+    st.textContent = '⏳ Backtesting 130+ strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
     const newsItems = await newsP;
     setTimeout(() => {
       const full = runStrategies(P, V);
@@ -4925,7 +4927,7 @@ async function analyzeCoin(){
       renderConsensus(id, full, w30, w90, newsItems, P, V);
       const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
       drawAnChart(P, ensScores);
-      renderNewsBox(newsItems);
+      renderNewsBox(newsItems, coinName);
       st.style.display = 'none';
       document.getElementById('anResult').style.display = 'block';
     }, 30);
@@ -4934,8 +4936,8 @@ async function analyzeCoin(){
   }
 }
 /* organic blend: news + sentiment */
-const NEWS_POS = ['surge','soar','soars','rally','record','gain','gains','bull','bullish','adopt','approv','etf inflow','jump','jumps','rise','rises','climb','breakout','all-time','partnership','upgrade','accumulate','inflow','green','recover','boost',' ATH ','milestone','soaring','rebound'];
-const NEWS_NEG = ['crash','plunge','hack','hacked','exploit','ban','banned','lawsuit','sue','sec','collapse','fall','falls','drop','drops','dump','bear','bearish','liquidat','fear','fine','fined','delist','outflow','red','plummet','crisis','fraud','scam','bankrupt','selloff','warning','panic','crackdown'];
+const NEWS_POS = ['surge','soar','soars','rally','record','gain','gains','bull','bullish','adopt','approv','etf inflow','jump','jumps','rise','rises','climb','breakout','all-time','partnership','upgrade','accumulate','inflow','green','recover','boost','ath','milestone','soaring','rebound','airdrop','mainnet','staking','integration','record tvl','tvl growth','institutional','etf approved','etf approval','milestone','momentum','expansion','launch success','alliance'];
+const NEWS_NEG = ['crash','plunge','hack','hacked','exploit','ban','banned','lawsuit','sue','sec','collapse','fall','falls','drop','drops','dump','bear','bearish','liquidat','fear','fine','fined','delist','outflow','red','plummet','crisis','fraud','scam','bankrupt','selloff','warning','panic','crackdown','outage','congestion','halt','halted','delayed','bridge','drain','vulnerability','insolvency','fud','investigation','arrest','exploit','freeze','frozen','down','suspend','suspension','bug','glitch','slump','tumble','correction'];
 function scoreHeadline(t){
   t = ' ' + t.toLowerCase() + ' ';
   let s = 0;
@@ -4943,11 +4945,25 @@ function scoreHeadline(t){
   NEWS_NEG.forEach(k => { if(t.includes(k)) s--; });
   return s;
 }
-async function fetchCryptoNews(){
-  const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://cointelegraph.com/rss'));
-  const d = await r.json();
-  if(d.status !== 'ok' || !d.items) throw 0;
-  return d.items.slice(0, 8).map(it => ({ title: it.title, link: it.link }));
+async function fetchCryptoNews(coinName){
+  const gNews = 'https://news.google.com/rss/search?q=' + encodeURIComponent('"' + coinName + '" (crypto OR blockchain)') + '&hl=en-US&gl=US&ceid=US:en';
+  const feeds = ['https://cointelegraph.com/rss', gNews];
+  const all = [];
+  for(const u of feeds){
+    try {
+      const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u));
+      const d = await r.json();
+      if(d.status === 'ok' && d.items)
+        all.push(...d.items.slice(0, 6).map(it => ({ title: it.title, link: it.link })));
+    } catch(e){}
+  }
+  const seen = new Set();
+  return all.filter(it => {
+    const k = it.title.slice(0, 42).toLowerCase();
+    if(seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  }).slice(0, 8);
 }
 function compRow(label, val, extra){
   return '<div style="margin-bottom:10px">' +
@@ -4956,19 +4972,91 @@ function compRow(label, val, extra){
     '<div style="height:8px;background:var(--card2);border-radius:99px;margin-top:4px">' +
     '<div style="height:100%;width:' + Math.max(2, Math.min(100, Math.round(val))) + '%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>';
 }
-function renderNewsBox(newsItems){
+function renderNewsBox(newsItems, coinName){
   const box = document.getElementById('newsBox');
   if(!newsItems || !newsItems.length){
     box.innerHTML = '<p class="sub" style="font-size:.78rem">📰 News feed unavailable right now — verdict based on technicals + sentiment.</p>';
     return;
   }
-  box.innerHTML = '<b style="font-size:.85rem">📰 International crypto headlines</b>' + newsItems.slice(0, 6).map(it => {
+  box.innerHTML = '<b style="font-size:.85rem">📰 ' + (coinName || 'Crypto') + ' & crypto headlines</b>' + newsItems.slice(0, 6).map(it => {
     const s = scoreHeadline(it.title);
     const c = s > 0 ? '#55efc4' : s < 0 ? '#ff6b6b' : '#9aa0b5';
     return '<a href="' + it.link + '" target="_blank" rel="noopener" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;text-decoration:none">' +
       '<span style="color:' + c + ';font-size:1rem;line-height:1.3">●</span>' +
       '<span style="color:#c6cad8;font-size:.82rem;line-height:1.4">' + it.title + '</span></a>';
   }).join('');
+}
+/* ---------- crypto alerts (browser notifications) ---------- */
+function notifInit(){
+  const bar = document.getElementById('notifBar');
+  if(!bar) return;
+  if(!('Notification' in window)){
+    bar.innerHTML = '🔔 This browser does not support notifications — alerts unavailable.';
+    return;
+  }
+  const perm = Notification.permission;
+  if(perm === 'granted'){
+    bar.innerHTML = '🔔 <b style="color:#55efc4">Alerts ON</b> — we notify you about BTC signal flips, 6%+ pumps/dumps and extreme Fear & Greed while this tab is open.';
+    startNotifEngine();
+  } else if(perm === 'denied'){
+    bar.innerHTML = '🔔 Notifications blocked by the browser — enable them in site settings to get crypto alerts.';
+  } else {
+    bar.innerHTML = '🔔 <b style="color:var(--text)">Turn on crypto alerts</b> — signal flips, big pumps/dumps and extreme market fear or greed. <button class="btn" style="padding:5px 14px;font-size:.78rem;margin-left:6px" onclick="notifEnable()">Enable</button>';
+  }
+}
+async function notifEnable(){
+  try { await Notification.requestPermission(); } catch(e){}
+  notifInit();
+  if(Notification.permission === 'granted') toast('Crypto alerts enabled 🔔');
+}
+let notifTimer = null;
+function startNotifEngine(){
+  if(notifTimer || Notification.permission !== 'granted') return;
+  setTimeout(checkAlerts, 4000);
+  notifTimer = setInterval(checkAlerts, 10 * 60 * 1000);
+}
+function notifyUser(title, body){
+  try { new Notification(title, { body: body }); } catch(e){}
+}
+async function checkAlerts(){
+  try {
+    let state = {};
+    try { state = JSON.parse(localStorage.getItem('tb_alertstate') || '{}'); } catch(e){}
+    /* big movers */
+    const ids = 'bitcoin,ethereum,solana,binancecoin,ripple,dogecoin,litecoin,chainlink,polkadot,avalanche-2';
+    const p = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd&include_24hr_change=true').then(r => r.json());
+    Object.entries(p).forEach(([id, d]) => {
+      const ch = d.usd_24h_change;
+      if(ch != null && Math.abs(ch) >= 6 && state['mv_' + id] !== Math.sign(ch)){
+        notifyUser((ch >= 0 ? '🚨 ' : '🔻 ') + id.toUpperCase() + ' ' + (ch >= 0 ? 'PUMPING +' : 'DUMPING ') + ch.toFixed(1) + '% in 24h', 'Open the ToolBox crypto tab for the full organic analysis');
+        state['mv_' + id] = Math.sign(ch);
+      } else if(ch != null && Math.abs(ch) < 4){ state['mv_' + id] = 0; }
+    });
+    /* BTC signal flip */
+    const mc = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=90').then(r => r.json());
+    const P = mc.prices.map(x => x[1]);
+    let V = (mc.total_volumes || []).map(x => x[1]);
+    if(V.length !== P.length) V = null;
+    const { results } = runStrategies(P, V);
+    const bullPct = results.filter(r => r.bull).length / results.length * 100;
+    const sig = bullPct >= 55 ? 'buy' : bullPct <= 45 ? 'sell' : 'wait';
+    if(state.btcSig && state.btcSig !== sig){
+      notifyUser(sig === 'buy' ? '🟢 BTC signal flipped to BUY' : sig === 'sell' ? '🔴 BTC signal flipped to SELL' : '⚪ BTC signal now WAIT',
+        bullPct.toFixed(0) + '% of ' + results.length + ' strategies bullish · ToolBox analyzer');
+    }
+    state.btcSig = sig;
+    /* Fear & Greed extremes */
+    const f = await fetch('https://api.alternative.me/fng/?limit=1').then(r => r.json());
+    const fv = +f.data[0].value;
+    if(fv <= 20 && state.fngX !== 'fear'){
+      notifyUser('😱 EXTREME FEAR: ' + fv + '/100', 'Panic zones have historically been opportunities. Not financial advice.');
+      state.fngX = 'fear';
+    } else if(fv >= 80 && state.fngX !== 'greed'){
+      notifyUser('🤑 EXTREME GREED: ' + fv + '/100', 'Markets look overheated — consider protecting profits. Not financial advice.');
+      state.fngX = 'greed';
+    } else if(fv > 25 && fv < 75){ state.fngX = ''; }
+    localStorage.setItem('tb_alertstate', JSON.stringify(state));
+  } catch(e){}
 }
 function anTotalRow(combined, col, label){
   return '<div style="background:linear-gradient(90deg,rgba(108,92,231,.18),rgba(0,206,201,.18));border:1px solid var(--accent);border-radius:10px;padding:10px 12px;margin-bottom:10px">' +
