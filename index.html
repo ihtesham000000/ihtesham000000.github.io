@@ -1477,14 +1477,25 @@ Kindly process this request at your earliest convenience. Thank you for your coo
 <!-- ============ CRYPTO TOOLS ============ -->
 <section class="panel" id="crypto">
   <div class="card">
-    <h2>🪙 Crypto Prices — Live</h2>
-    <p class="sub">Top coins with 24h change. Prices are indicative (short delay) · Not financial advice.</p>
-    <div class="result show">
+    <h2>🪙 Crypto Market Overview</h2>
+    <p class="sub">Live data · prices indicative (short delay) · Not financial advice.</p>
+    <div class="prayer-grid" style="margin-top:4px">
+      <div class="pr-card"><small>Market Cap</small><b id="mcapVal">—</b></div>
+      <div class="pr-card"><small>BTC Dominance</small><b id="domVal">—</b></div>
+      <div class="pr-card"><small>24h Volume</small><b id="volVal">—</b></div>
+      <div class="pr-card"><small>24h Change</small><b id="mchVal">—</b></div>
+    </div>
+    <div class="result show" style="margin-top:12px">
       <div class="big" id="fngVal">Market mood: loading…</div>
       <small id="fngSub">Fear &amp; Greed Index</small>
     </div>
-    <button class="btn btn-ghost" style="margin-top:10px" onclick="loadCrypto()">↻ Refresh prices</button>
+    <p class="sub" id="moversLine" style="margin-top:10px;font-size:.8rem">—</p>
+    <button class="btn btn-ghost" style="margin-top:8px" onclick="loadCrypto()">↻ Refresh prices</button>
     <div id="coinList" style="margin-top:12px"></div>
+    <div id="chartCard" style="display:none;margin-top:12px;background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:12px">
+      <b id="chartInfo" style="font-size:.85rem"></b>
+      <canvas id="crChart" style="width:100%;height:220px;display:block;margin-top:6px"></canvas>
+    </div>
   </div>
 
   <div class="card">
@@ -1514,6 +1525,56 @@ Kindly process this request at your earliest convenience. Thank you for your coo
   </div>
 
   <div class="card">
+    <h2>📁 My Portfolio</h2>
+    <p class="sub">Track the live value of coins you own — saved only on your device.</p>
+    <div class="row">
+      <div><label>Coin</label>
+        <select id="pfCoin">
+          <option value="bitcoin">Bitcoin</option><option value="ethereum">Ethereum</option>
+          <option value="tether">Tether</option><option value="binancecoin">BNB</option>
+          <option value="solana">Solana</option><option value="ripple">XRP</option>
+          <option value="cardano">Cardano</option><option value="dogecoin">Dogecoin</option>
+          <option value="tron">Tron</option><option value="litecoin">Litecoin</option>
+        </select></div>
+      <div><label>Amount you own</label><input type="number" id="pfQty" placeholder="e.g. 0.05" min="0"></div>
+      <div><label>Buy price $ (optional)</label><input type="number" id="pfBuy" placeholder="current price"></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn" onclick="pfAdd()">+ Add</button></div>
+    </div>
+    <div id="pfList" style="margin-top:12px"></div>
+    <div class="result show" style="margin-top:12px">
+      <div class="big" id="pfTotal">Portfolio: —</div>
+      <small id="pfPl"></small>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🤖 Buy or Sell Analyzer</h2>
+    <p class="sub">6 technical indicators vote on real 90-day price data and give a simple answer. Educational tool — <b>not financial advice</b>.</p>
+    <div class="row">
+      <div><label>Coin</label>
+        <select id="anCoin">
+          <option value="bitcoin">Bitcoin (BTC)</option>
+          <option value="ethereum">Ethereum (ETH)</option>
+          <option value="binancecoin">BNB</option>
+          <option value="solana">Solana (SOL)</option>
+          <option value="ripple">XRP</option>
+          <option value="cardano">Cardano (ADA)</option>
+          <option value="dogecoin">Dogecoin (DOGE)</option>
+          <option value="litecoin">Litecoin (LTC)</option>
+        </select></div>
+      <div style="display:flex;align-items:flex-end"><button class="btn" onclick="analyzeCoin()">🔍 Analyze</button></div>
+    </div>
+    <p class="sub" id="anStatus" style="display:none;margin-top:10px"></p>
+    <div id="anResult" style="display:none;margin-top:14px">
+      <div class="result show"><div class="big" id="anVerdict" style="font-size:1.6rem">—</div><small id="anWhy"></small></div>
+      <div id="anTable" style="margin-top:12px"></div>
+      <div class="result show" style="margin-top:12px"><div class="big" id="anBt" style="font-size:1.05rem"></div><small id="anBtSub"></small></div>
+      <canvas id="anChart" style="width:100%;height:200px;display:block;margin-top:12px;background:var(--card2);border-radius:10px"></canvas>
+      <p class="sub" style="margin-top:8px;font-size:.75rem">▲ green = past BUY signal · ▼ red = past SELL signal (90 days)</p>
+    </div>
+  </div>
+
+<div class="card">
     <h2>Crypto Profit / Loss Calculator</h2>
     <p class="sub">Did your trade win or lose? Find out instantly.</p>
     <div class="row">
@@ -4321,57 +4382,137 @@ function setCur(v){
   try { invPreview(); } catch(e){}
 }
 
-/* ---------- crypto tools ---------- */
+/* ---------- crypto tools (advanced) ---------- */
 const COINS = [
   ['bitcoin','BTC','Bitcoin','🟠'], ['ethereum','ETH','Ethereum','🟣'], ['tether','USDT','Tether','💵'],
   ['binancecoin','BNB','BNB','🟡'], ['solana','SOL','Solana','🟩'], ['ripple','XRP','XRP','⚪'],
   ['cardano','ADA','Cardano','🔵'], ['dogecoin','DOGE','Dogecoin','🐶'], ['tron','TRX','Tron','🔴'],
   ['litecoin','LTC','Litecoin','⚡'], ['chainlink','LINK','Chainlink','🔗'], ['polkadot','DOT','Polkadot','●']
 ];
-let cryptoCache = {};
+let cryptoCache = {}, marketCache = {}, selCoin = 'bitcoin';
 function fmtPrice(p){
+  if(p == null || isNaN(p)) return '—';
   if(p >= 1000) return p.toLocaleString(undefined, {maximumFractionDigits: 0});
   if(p >= 1) return p.toLocaleString(undefined, {maximumFractionDigits: 2});
   return p.toLocaleString(undefined, {maximumFractionDigits: 6});
 }
+function fmtB(v){
+  if(v == null) return '—';
+  return v >= 1e12 ? (v/1e12).toFixed(2) + 'T' : v >= 1e9 ? (v/1e9).toFixed(1) + 'B' : (v/1e6).toFixed(0) + 'M';
+}
 async function loadCrypto(){
   try {
     const ids = COINS.map(c => c[0]).join(',');
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true');
-    const d = await r.json();
-    cryptoCache = d;
-    renderCoins(d);
-    loadFNG();
-    cvConvert();
-  } catch(e) {
-    toast('Could not load prices — check internet');
-  }
+    const res = await Promise.all([
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids + '&sparkline=true&price_change_percentage=24h').then(r => r.json()),
+      fetch('https://api.coingecko.com/api/v3/global').then(r => r.json()).catch(() => null)
+    ]);
+    cryptoCache = res[0] || {};
+    marketCache = {};
+    (res[1] || []).forEach(m => { marketCache[m.id] = m; });
+    const g = res[2] && res[2].data;
+    if(g){
+      document.getElementById('mcapVal').textContent = '$' + fmtB(g.total_market_cap.usd);
+      document.getElementById('domVal').textContent = g.market_cap_percentage.btc.toFixed(1) + '%';
+      document.getElementById('volVal').textContent = '$' + fmtB(g.total_volume.usd);
+      const ch = g.market_cap_change_percentage_24h_usd;
+      const el = document.getElementById('mchVal');
+      el.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%';
+      el.style.color = ch >= 0 ? '#55efc4' : '#ff6b6b';
+    }
+    renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender();
+  } catch(e) { toast('Could not load prices — check internet'); }
 }
-function renderCoins(d){
-  const list = document.getElementById('coinList');
-  list.innerHTML = COINS.map(([id, sym, name, icon]) => {
-    const c = d[id];
-    if(!c) return '';
-    const ch = c.usd_24h_change;
+function coinChange(id){
+  const m = marketCache[id];
+  if(m && m.price_change_percentage_24h != null) return m.price_change_percentage_24h;
+  return cryptoCache[id] ? cryptoCache[id].usd_24h_change : null;
+}
+function coinPrice(id){
+  return (marketCache[id] && marketCache[id].current_price) || (cryptoCache[id] && cryptoCache[id].usd);
+}
+function renderCoins(){
+  document.getElementById('coinList').innerHTML = COINS.map(([id, sym, name, icon]) => {
+    const p = coinPrice(id), ch = coinChange(id);
+    if(p == null) return '';
     const col = ch >= 0 ? '#55efc4' : '#ff6b6b';
-    const arrow = ch >= 0 ? '▲' : '▼';
-    return '<div class="color-line" style="justify-content:space-between">' +
+    const sel = id === selCoin ? 'border-color:var(--accent);' : '';
+    return '<div class="color-line" style="justify-content:space-between;cursor:pointer;' + sel + '" onclick="selectCoin(\'' + id + '\')">' +
       '<span style="flex:1;text-align:left;color:var(--text)">' + icon + ' <b>' + sym + '</b> <small style="color:var(--muted)">' + name + '</small></span>' +
-      '<span style="color:var(--text);font-size:.92rem;margin-right:12px">$' + fmtPrice(c.usd) + '</span>' +
-      '<span style="color:' + col + ';font-size:.85rem;min-width:70px;text-align:right">' + arrow + ' ' + Math.abs(ch).toFixed(1) + '%</span>' +
+      '<span style="color:var(--text);font-size:.92rem;margin-right:12px">$' + fmtPrice(p) + '</span>' +
+      (ch != null ? '<span style="color:' + col + ';font-size:.85rem;min-width:70px;text-align:right">' + (ch >= 0 ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(1) + '%</span>' : '') +
       '</div>';
   }).join('');
+}
+function selectCoin(id){
+  selCoin = id;
+  document.getElementById('chartCard').style.display = 'block';
+  renderCoins();
+  drawChart();
+}
+function renderMovers(){
+  const arr = COINS.map(c => [c, coinChange(c[0])]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]);
+  if(!arr.length){ document.getElementById('moversLine').textContent = ''; return; }
+  const top = arr.slice(0, 3), bot = arr.slice(-3).reverse();
+  document.getElementById('moversLine').innerHTML =
+    '🔥 ' + top.map(([c, v]) => c[1] + ' <b style="color:#55efc4">+' + v.toFixed(1) + '%</b>').join(' · ') +
+    ' &nbsp; 💧 ' + bot.map(([c, v]) => c[1] + ' <b style="color:#ff6b6b">' + v.toFixed(1) + '%</b>').join(' · ');
+}
+function drawChart(){
+  const cv = document.getElementById('crChart');
+  const ctx = cv.getContext('2d');
+  cv.width = 720; cv.height = 260;
+  ctx.clearRect(0, 0, 720, 260);
+  const m = marketCache[selCoin];
+  if(!m || !m.sparkline_in_7d || !m.sparkline_in_7d.price.length){
+    ctx.fillStyle = '#9aa0b5'; ctx.font = '18px Arial';
+    ctx.fillText('Chart loads with market data — tap Refresh', 20, 60);
+    return;
+  }
+  const pts = m.sparkline_in_7d.price;
+  const min = Math.min(...pts), max = Math.max(...pts), range = (max - min) || 1;
+  const up = pts[pts.length - 1] >= pts[0];
+  const col = up ? '#55efc4' : '#ff6b6b';
+  const L = 12, T = 16, W = 720 - 24, H = 260 - T - 40;
+  const X = i => L + W * i / (pts.length - 1);
+  const Y = v => T + H * (1 - (v - min) / range);
+  ctx.strokeStyle = 'rgba(128,128,128,.15)'; ctx.lineWidth = 1;
+  ctx.font = '12px Arial';
+  for(let g = 0; g <= 4; g++){
+    const y = T + H * g / 4;
+    ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + W, y); ctx.stroke();
+    ctx.fillStyle = '#9aa0b5';
+    ctx.fillText(fmtPrice(max - range * g / 4), L + 4, y - 4);
+  }
+  const grad = ctx.createLinearGradient(0, T, 0, T + H);
+  grad.addColorStop(0, up ? 'rgba(85,239,196,.25)' : 'rgba(255,107,107,.25)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.beginPath(); ctx.moveTo(X(0), Y(pts[0]));
+  pts.forEach((v, i) => ctx.lineTo(X(i), Y(v)));
+  ctx.lineTo(X(pts.length - 1), T + H); ctx.lineTo(X(0), T + H); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(X(0), Y(pts[0]));
+  pts.forEach((v, i) => ctx.lineTo(X(i), Y(v)));
+  ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(X(pts.length - 1), Y(pts[pts.length - 1]), 5, 0, 7);
+  ctx.fillStyle = col; ctx.fill();
+  ctx.fillStyle = '#9aa0b5'; ctx.font = '12px Arial';
+  ctx.fillText('7 days ago', L, 250); ctx.fillText('now', L + W - 30, 250);
+  const ch = coinChange(selCoin);
+  document.getElementById('chartInfo').innerHTML = m.name + ' · $' + fmtPrice(m.current_price) +
+    ' · 24h: <span style="color:' + (ch >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (ch >= 0 ? '+' : '') + (ch != null ? ch.toFixed(1) : '0') + '%</span>' +
+    ' · Market Cap $' + fmtB(m.market_cap);
 }
 function loadFNG(){
   fetch('https://api.alternative.me/fng/?limit=1')
     .then(r => r.json())
     .then(d => {
-      const v = +d.data[0].value;
-      const cls = d.data[0].value_classification;
+      const v = +d.data[0].value, cls = d.data[0].value_classification;
       const col = v < 25 ? '#ff6b6b' : v < 45 ? '#f9ca24' : v < 55 ? '#9aa0b5' : v < 75 ? '#55efc4' : '#00cec9';
       document.getElementById('fngVal').textContent = v + '/100 — ' + cls;
       document.getElementById('fngVal').style.color = col;
-      document.getElementById('fngSub').textContent = 'Fear & Greed Index · ' + (v < 45 ? 'buying opportunity mood 😰' : v > 55 ? 'market is greedy 🤑' : 'neutral market 😐');
+      document.getElementById('fngSub').textContent = 'Fear & Greed Index · ' + (v < 45 ? 'fear in the market 😰' : v > 55 ? 'greed in the market 🤑' : 'neutral market 😐');
     })
     .catch(() => {});
 }
@@ -4381,10 +4522,63 @@ function cvConvert(){
   const fiat = document.getElementById('cvFiat').value;
   const d = cryptoCache[id];
   if(!d || !d[fiat]){ document.getElementById('cvOut').textContent = 'Tap Refresh prices first'; return; }
-  const v = d[fiat] * amt;
-  const sym = fiat === 'pkr' ? 'Rs ' : '$';
   document.getElementById('cvOut').textContent =
-    amt + ' ' + id.toUpperCase().slice(0, 4) + ' = ' + sym + v.toLocaleString(undefined, {maximumFractionDigits: 2});
+    amt + ' ' + id.toUpperCase().slice(0, 4) + ' = ' + (fiat === 'pkr' ? 'Rs ' : '$') +
+    (d[fiat] * amt).toLocaleString(undefined, {maximumFractionDigits: 2});
+}
+/* portfolio tracker */
+function pfLoad(){ try { return JSON.parse(localStorage.getItem('tb_portfolio') || '[]'); } catch(e) { return []; } }
+function pfSave(p){ localStorage.setItem('tb_portfolio', JSON.stringify(p)); }
+function pfAdd(){
+  const id = document.getElementById('pfCoin').value;
+  const qty = +document.getElementById('pfQty').value;
+  const buyIn = parseFloat(document.getElementById('pfBuy').value);
+  if(!qty || qty <= 0){ toast('Enter the amount you own'); return; }
+  const buy = (!isNaN(buyIn) && buyIn > 0) ? buyIn : (coinPrice(id) || 0);
+  if(!buy){ toast('Load prices first'); return; }
+  const p = pfLoad();
+  const ex = p.find(x => x.id === id);
+  const sym = (COINS.find(c => c[0] === id) || ['', id])[1];
+  if(ex){ ex.qty = +(ex.qty + qty).toFixed(8); if(!isNaN(buyIn) && buyIn > 0) ex.buy = buyIn; }
+  else p.push({ id, sym, qty, buy });
+  pfSave(p);
+  document.getElementById('pfQty').value = '';
+  document.getElementById('pfBuy').value = '';
+  pfRender();
+  toast('Added to portfolio 📁');
+}
+function pfRemove(id){ pfSave(pfLoad().filter(x => x.id !== id)); pfRender(); }
+function pfRender(){
+  const p = pfLoad();
+  const list = document.getElementById('pfList');
+  if(!p.length){
+    list.innerHTML = '<p class="sub">Add coins you own to track their live value here.</p>';
+    document.getElementById('pfTotal').textContent = 'Portfolio: —';
+    document.getElementById('pfPl').textContent = '';
+    return;
+  }
+  let tot = 0, cost = 0;
+  list.innerHTML = p.map(x => {
+    const price = coinPrice(x.id);
+    if(price == null) return '';
+    const val = price * x.qty;
+    tot += val; cost += x.buy * x.qty;
+    const pl = price - x.buy;
+    const plc = pl >= 0 ? '#55efc4' : '#ff6b6b';
+    return '<div class="color-line" style="justify-content:space-between">' +
+      '<span style="flex:1;text-align:left;color:var(--text)"><b>' + x.sym + '</b> <small style="color:var(--muted)">' + x.qty + ' @ $' + fmtPrice(x.buy) + '</small></span>' +
+      '<span style="color:var(--text);font-size:.9rem;margin-right:10px">$' + fmtPrice(val) + '</span>' +
+      '<span style="color:' + plc + ';font-size:.82rem;margin-right:10px">' + (pl >= 0 ? '+' : '') + ((pl / x.buy) * 100).toFixed(1) + '%</span>' +
+      '<button class="btn btn-ghost" style="padding:3px 10px;font-size:.75rem" onclick="pfRemove(\'' + x.id + '\')">✕</button></div>';
+  }).join('');
+  const pkr = (cryptoCache.bitcoin && cryptoCache.bitcoin.usd) ? cryptoCache.bitcoin.pkr / cryptoCache.bitcoin.usd : 0;
+  document.getElementById('pfTotal').textContent = 'Portfolio: $' + fmtPrice(tot) + (pkr ? '  ·  Rs ' + fmtPrice(tot * pkr) : '');
+  const net = tot - cost;
+  const netPct = cost ? (net / cost) * 100 : 0;
+  const win = net >= 0;
+  document.getElementById('pfPl').innerHTML = 'Invested $' + fmtPrice(cost) + ' → ' +
+    '<span style="color:' + (win ? '#55efc4' : '#ff6b6b') + '">' + (win ? '+' : '') + '$' + fmtPrice(Math.abs(net)) +
+    ' (' + (win ? '+' : '') + netPct.toFixed(1) + '%)</span>';
 }
 function calcPL(){
   const buy = +document.getElementById('plBuy').value || 0;
@@ -4393,16 +4587,170 @@ function calcPL(){
   const feePct = (+document.getElementById('plFee').value || 0) / 100;
   if(!buy || !qty){ toast('Enter buy price and quantity'); return; }
   const invested = buy * qty;
-  const feeCost = invested * feePct;
   const gross = sell * qty;
-  const feeOut = gross * feePct;
-  const net = gross - feeOut - invested - feeCost;
-  const pct = (net / (invested + feeCost)) * 100;
+  const net = gross - gross * feePct - invested - invested * feePct;
+  const pct = (net / (invested * (1 + feePct))) * 100;
   const win = net >= 0;
   showResult('plResult',
     (win ? '📈 +' : '📉 ') + '$' + Math.abs(net).toLocaleString(undefined, {maximumFractionDigits: 2}) + ' (' + (win ? '+' : '') + pct.toFixed(1) + '%)',
-    'Invested: $' + invested.toLocaleString() + ' → Final: $' + (gross - feeOut).toLocaleString() + (win ? ' · Nice trade! 🎉' : ' · Better luck next time 💪'));
+    'Invested: $' + invested.toLocaleString() + ' → Final: $' + (gross - gross * feePct).toLocaleString() + (win ? ' · Nice trade! 🎉' : ' · Better luck next time 💪'));
 }
+
+/* ---------- buy/sell analyzer ---------- */
+function anSma(arr, p, end){
+  let s = 0, c = 0;
+  for(let i = Math.max(0, end - p + 1); i <= end; i++){ s += arr[i]; c++; }
+  return c ? s / c : arr[end];
+}
+function anStd(arr, p, end, mean){
+  let s = 0, c = 0;
+  for(let i = Math.max(0, end - p + 1); i <= end; i++){ s += (arr[i] - mean) * (arr[i] - mean); c++; }
+  return c ? Math.sqrt(s / c) : 0;
+}
+function anEma(arr, p){
+  const k = 2 / (p + 1);
+  const out = new Array(arr.length);
+  let e = arr[0];
+  for(let i = 0; i < arr.length; i++){ e = i === 0 ? arr[0] : arr[i] * k + e * (1 - k); out[i] = e; }
+  return out;
+}
+function anRsi(P, i, p){
+  if(i < p) return 50;
+  let g = 0, l = 0;
+  for(let j = i - p + 1; j <= i; j++){
+    const d = P[j] - P[j - 1];
+    if(d > 0) g += d; else l -= d;
+  }
+  if(l === 0) return 100;
+  return 100 - 100 / (1 + g / l);
+}
+function anScoreAt(P, ema12, ema26, sig, i){
+  const det = [];
+  const r = anRsi(P, i, 14);
+  det.push(['RSI (14)', r.toFixed(1), r < 32 ? 1 : r > 68 ? -1 : 0, r < 32 ? 'oversold' : r > 68 ? 'overbought' : 'normal']);
+  const s20 = anSma(P, 20, i), s50 = anSma(P, 50, i);
+  det.push(['SMA 20 vs 50', '$' + fmtPrice(s20) + ' / $' + fmtPrice(s50), s20 > s50 ? 1 : -1, s20 > s50 ? 'uptrend' : 'downtrend']);
+  const e12 = ema12[i], e26 = ema26[i];
+  det.push(['EMA 12 vs 26', fmtPrice(e12) + ' / ' + fmtPrice(e26), e12 > e26 ? 1 : -1, e12 > e26 ? 'bullish' : 'bearish']);
+  const hist = (e12 - e26) - sig[i];
+  det.push(['MACD', (hist >= 0 ? '+' : '') + hist.toFixed(2), hist > 0 ? 1 : -1, hist > 0 ? 'momentum up' : 'momentum down']);
+  const sd = anStd(P, 20, i, s20);
+  const pctB = sd > 0 ? (P[i] - (s20 - 2 * sd)) / (4 * sd) : 0.5;
+  det.push(['Bollinger %B', pctB.toFixed(2), pctB > 1 ? -1 : pctB < 0 ? 1 : 0, pctB > 1 ? 'stretched high' : pctB < 0 ? 'stretched low' : 'in range']);
+  if(i >= 10){
+    const roc = (P[i] - P[i - 10]) / P[i - 10] * 100;
+    det.push(['Momentum (10d)', (roc >= 0 ? '+' : '') + roc.toFixed(1) + '%', roc > 0 ? 1 : -1, roc > 0 ? 'gaining' : 'losing']);
+  } else {
+    det.push(['Momentum (10d)', '—', 0, '—']);
+  }
+  const score = det.reduce((a, d) => a + d[2], 0);
+  return { score, det };
+}
+async function analyzeCoin(){
+  const id = document.getElementById('anCoin').value;
+  const st = document.getElementById('anStatus');
+  st.style.display = 'block';
+  st.textContent = '⏳ Downloading 90 days of ' + id + ' price data...';
+  document.getElementById('anResult').style.display = 'none';
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=90');
+    const d = await r.json();
+    const P = d.prices.map(x => x[1]);
+    if(P.length < 55){ st.textContent = 'Not enough price history'; return; }
+    st.textContent = '⏳ Running 6-indicator analysis...';
+    setTimeout(() => {
+      const ema12 = anEma(P, 12), ema26 = anEma(P, 26);
+      const macd = P.map((_, i) => ema12[i] - ema26[i]);
+      const sig = anEma(macd, 9);
+      const scores = new Array(P.length).fill(0);
+      for(let i = 50; i < P.length; i++) scores[i] = anScoreAt(P, ema12, ema26, sig, i).score;
+      const cur = anScoreAt(P, ema12, ema26, sig, P.length - 1);
+      renderVerdict(id, cur);
+      renderAnTable(cur.det);
+      renderBacktest(P, scores);
+      drawAnChart(P, scores);
+      st.style.display = 'none';
+      document.getElementById('anResult').style.display = 'block';
+    }, 30);
+  } catch(e) {
+    st.textContent = '❌ Could not load price data — check internet';
+  }
+}
+function renderVerdict(id, cur){
+  const s = cur.score;
+  let txt, col, why;
+  if(s >= 4){ txt = '🟢 STRONG BUY'; col = '#00cec9'; why = 'Most indicators are positive — momentum, trend and RSI all point UP right now.'; }
+  else if(s >= 1){ txt = '🟩 LEANING BUY'; col = '#55efc4'; why = 'More indicators are positive than negative, but not everything agrees.'; }
+  else if(s === 0){ txt = '⚪ WAIT / HOLD'; col = '#9aa0b5'; why = 'Indicators are mixed — no clear edge either way right now.'; }
+  else if(s >= -3){ txt = '🟥 LEANING SELL'; col = '#f9ca24'; why = 'More indicators are negative — signs of weakness. Caution advised.'; }
+  else { txt = '🔴 STRONG SELL'; col = '#ff6b6b'; why = 'Most indicators are negative — momentum, trend and RSI all point DOWN.'; }
+  const v = document.getElementById('anVerdict');
+  v.textContent = txt + '  (' + (s > 0 ? '+' : '') + s + '/6)';
+  v.style.color = col;
+  const buys = cur.det.filter(d => d[2] > 0).length;
+  const sells = cur.det.filter(d => d[2] < 0).length;
+  document.getElementById('anWhy').textContent = why + ' · ' + buys + ' buy votes, ' + sells + ' sell votes. Educational analysis — not financial advice.';
+}
+function renderAnTable(det){
+  document.getElementById('anTable').innerHTML = det.map(([name, val, vote, note]) => {
+    const c = vote > 0 ? '#55efc4' : vote < 0 ? '#ff6b6b' : '#9aa0b5';
+    return '<div class="color-line" style="justify-content:space-between">' +
+      '<span style="flex:1;text-align:left;color:var(--text)"><b>' + name + '</b> <small style="color:var(--muted)">' + note + '</small></span>' +
+      '<span style="color:var(--text);font-size:.88rem;margin-right:10px">' + val + '</span>' +
+      '<span style="color:' + c + ';font-weight:700;min-width:44px;text-align:right">' + (vote > 0 ? 'BUY' : vote < 0 ? 'SELL' : '—') + '</span></div>';
+  }).join('');
+}
+function renderBacktest(P, scores){
+  let cash = 1000, coins = 0, inM = false, trades = 0;
+  for(let i = 50; i < P.length; i++){
+    if(!inM && scores[i] >= 2){ coins = cash / P[i]; cash = 0; inM = true; trades++; }
+    else if(inM && scores[i] <= -2){ cash = coins * P[i]; coins = 0; inM = false; trades++; }
+  }
+  const final = inM ? coins * P[P.length - 1] : cash;
+  const strat = (final / 1000 - 1) * 100;
+  const bh = (P[P.length - 1] / P[50] - 1) * 100;
+  const win = strat >= bh;
+  document.getElementById('anBt').innerHTML =
+    '90-day test: signals <b style="color:' + (strat >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (strat >= 0 ? '+' : '') + strat.toFixed(1) + '%</b>' +
+    ' vs buy &amp; hold <b style="color:' + (bh >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (bh >= 0 ? '+' : '') + bh.toFixed(1) + '%</b>';
+  document.getElementById('anBtSub').textContent =
+    trades + ' trades in 90 days · Currently ' + (inM ? 'IN the market (signal: hold/buy mode)' : 'OUT of the market (signal: wait/sell mode)') + ' · Past performance ≠ future results';
+}
+function drawAnChart(P, scores){
+  const cv = document.getElementById('anChart');
+  const ctx = cv.getContext('2d');
+  cv.width = 720; cv.height = 200;
+  ctx.clearRect(0, 0, 720, 200);
+  const start = 50;
+  const seg = P.slice(start);
+  const min = Math.min(...seg), max = Math.max(...seg), range = (max - min) || 1;
+  const L = 12, T = 12, W = 720 - 24, H = 200 - 40;
+  const X = i => L + W * i / (seg.length - 1);
+  const Y = v => T + H * (1 - (v - min) / range);
+  ctx.strokeStyle = 'rgba(128,128,128,.12)';
+  for(let g = 0; g <= 3; g++){
+    const y = T + H * g / 3;
+    ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + W, y); ctx.stroke();
+  }
+  const up = seg[seg.length - 1] >= seg[0];
+  ctx.beginPath(); ctx.moveTo(X(0), Y(seg[0]));
+  seg.forEach((v, i) => ctx.lineTo(X(i), Y(v)));
+  ctx.strokeStyle = up ? '#55efc4' : '#ff6b6b'; ctx.lineWidth = 2; ctx.stroke();
+  let wasIn = false;
+  for(let i = 1; i < seg.length; i++){
+    const s = scores[start + i];
+    if(!wasIn && s >= 2){
+      ctx.fillStyle = '#00cec9';
+      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) - 14); ctx.lineTo(X(i) - 6, Y(seg[i]) - 24); ctx.lineTo(X(i) + 6, Y(seg[i]) - 24); ctx.closePath(); ctx.fill();
+      wasIn = true;
+    } else if(wasIn && s <= -2){
+      ctx.fillStyle = '#ff6b6b';
+      ctx.beginPath(); ctx.moveTo(X(i), Y(seg[i]) + 14); ctx.lineTo(X(i) - 6, Y(seg[i]) + 24); ctx.lineTo(X(i) + 6, Y(seg[i]) + 24); ctx.closePath(); ctx.fill();
+      wasIn = false;
+    }
+  }
+}
+/* end analyzer */
 
 function saveBlob(blob, name, mime){
   const url = URL.createObjectURL(blob);
