@@ -173,6 +173,8 @@
   body.light footer{color:#8a90a5}
   body.light .toast{background:#fff;border-color:#d8ddeb;color:#171a26}
   body.light .qr-wrap img{background:#fff}
+  .live-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff6b6b;margin-right:5px;animation:lp 1.1s infinite}
+  @keyframes lp{0%,100%{opacity:1}50%{opacity:.2}}
   .toast{
     position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
     background:var(--card2);border:1px solid #2c3149;padding:12px 22px;border-radius:999px;
@@ -1478,7 +1480,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
 <section class="panel" id="crypto">
   <div class="card">
     <h2>🪙 Crypto Market Overview</h2>
-    <p class="sub">Live data · prices indicative (short delay) · Not financial advice.</p>
+    <p class="sub"><span class="live-dot"></span><b style="color:#ff6b6b;font-size:.75rem">LIVE real-time prices</b> <span id="liveStatus" style="color:#55efc4;font-size:.72rem"></span> · 150-strategy analyzer · Not financial advice.</p>
     <div class="prayer-grid" style="margin-top:4px">
       <div class="pr-card"><small>Market Cap</small><b id="mcapVal">—</b></div>
       <div class="pr-card"><small>BTC Dominance</small><b id="domVal">—</b></div>
@@ -1550,7 +1552,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
 
   <div class="card">
     <h2>🤖 Buy or Sell Analyzer</h2>
-    <p class="sub"><b>100+ strategy configurations</b> are backtested on 365 days of real price data, then vote on a simple answer. Educational tool — <b>not financial advice</b>.</p>
+    <p class="sub"><b>150 strategy configurations</b> are backtested on 365 days of real price data, then vote on a simple answer. Educational tool — <b>not financial advice</b>.</p>
     <div class="row">
       <div style="flex:2"><label>Coin (top 100 by market cap)</label>
         <select id="anCoin"><option value="bitcoin">Bitcoin (BTC)</option></select></div>
@@ -4385,7 +4387,8 @@ const COINS = [
   ['cardano','ADA','Cardano','🔵'], ['dogecoin','DOGE','Dogecoin','🐶'], ['tron','TRX','Tron','🔴'],
   ['litecoin','LTC','Litecoin','⚡'], ['chainlink','LINK','Chainlink','🔗'], ['polkadot','DOT','Polkadot','●']
 ];
-let cryptoCache = {}, marketCache = {}, selCoin = 'bitcoin';
+let cryptoCache = {}, marketCache = {}, selCoin = 'bitcoin', livePrices = {};
+let priceWs = null, pfThrottle = 0;
 function fmtPrice(p){
   if(p == null || isNaN(p)) return '—';
   if(p >= 1000) return p.toLocaleString(undefined, {maximumFractionDigits: 0});
@@ -4425,7 +4428,7 @@ async function loadCrypto(){
         .map(m => '<option value="' + m.id + '"' + (m.id === 'bitcoin' ? ' selected' : '') + '>' + m.name + ' (' + m.symbol.toUpperCase() + ')</option>')
         .join('');
     }
-    renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender(); notifInit();
+    renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender(); notifInit(); startPriceStream();
   } catch(e) { toast('Could not load prices — check internet'); }
 }
 function coinChange(id){
@@ -4442,10 +4445,10 @@ function renderCoins(){
     if(p == null) return '';
     const col = ch >= 0 ? '#55efc4' : '#ff6b6b';
     const sel = id === selCoin ? 'border-color:var(--accent);' : '';
-    return '<div class="color-line" style="justify-content:space-between;cursor:pointer;' + sel + '" onclick="selectCoin(\'' + id + '\')">' +
+    return '<div class="color-line" id="crow-' + sym + '" style="justify-content:space-between;cursor:pointer;' + sel + '" onclick="selectCoin(\'' + id + '\')">' +
       '<span style="flex:1;text-align:left;color:var(--text)">' + icon + ' <b>' + sym + '</b> <small style="color:var(--muted)">' + name + '</small></span>' +
-      '<span style="color:var(--text);font-size:.92rem;margin-right:12px">$' + fmtPrice(p) + '</span>' +
-      (ch != null ? '<span style="color:' + col + ';font-size:.85rem;min-width:70px;text-align:right">' + (ch >= 0 ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(1) + '%</span>' : '') +
+      '<span id="cprice-' + sym + '" data-v="' + p + '" style="color:var(--text);font-size:.92rem;margin-right:12px">$' + fmtPrice(p) + '</span>' +
+      (ch != null ? '<span class="chg" style="color:' + col + ';font-size:.85rem;min-width:70px;text-align:right">' + (ch >= 0 ? '▲' : '▼') + ' ' + Math.abs(ch).toFixed(1) + '%</span>' : '') +
       '</div>';
   }).join('');
 }
@@ -4710,6 +4713,32 @@ function anMax(P, i, p){
   for(let j = Math.max(0, i - p + 1); j <= i; j++) if(P[j] > hh) hh = P[j];
   return hh;
 }
+function anMinP(P, i, p){
+  let ll = Infinity;
+  for(let j = Math.max(0, i - p + 1); j <= i; j++) if(P[j] < ll) ll = P[j];
+  return ll;
+}
+function anLinSlope(P, i, p){
+  const n = Math.min(p, i + 1);
+  if(n < 5) return 0;
+  const x0 = i - n + 1;
+  let sx = 0, sy = 0, sxy = 0, sxx = 0;
+  for(let k = 0; k < n; k++){
+    const x = k, y = P[x0 + k];
+    sx += x; sy += y; sxy += x * y; sxx += x * x;
+  }
+  const slope = (n * sxy - sx * sy) / (n * sxx - sx * sx || 1);
+  return slope / (sy / n || 1) * 100;
+}
+function anCmo(P, p, i){
+  if(i < p) return 0;
+  let g = 0, l = 0;
+  for(let j = i - p + 1; j <= i; j++){
+    const d = P[j] - P[j - 1];
+    if(d > 0) g += d; else l -= d;
+  }
+  return (g + l) ? (g - l) / (g + l) * 100 : 0;
+}
 function buildStrategies(){
   const S = [];
   for(const p of [7, 14, 21, 28]) for(const lo of [20, 25, 30, 35])
@@ -4754,6 +4783,20 @@ function buildStrategies(){
   S.push({ name: 'RSI<35 in uptrend', type: 'dip', mode: 'rsi' });
   S.push({ name: 'Pullback to EMA20', type: 'dip', mode: 'ema' });
   S.push({ name: 'Price vs EMA200', type: 'psma', p: 200 });
+  for(const p of [20, 55]) S.push({ name: 'Donchian ' + p + ' high', type: 'donch', p });
+  S.push({ name: 'BB squeeze up', type: 'sqz', mode: 'up' });
+  S.push({ name: 'BB expansion', type: 'sqz', mode: 'exp' });
+  for(const p of [20, 50]) S.push({ name: 'LinReg slope ' + p, type: 'linreg', p });
+  S.push({ name: 'CMO14 momentum', type: 'cmo', mode: 'mom' });
+  S.push({ name: 'CMO deep bounce', type: 'cmo', mode: 'bounce' });
+  for(const mode of ['above', 'r1']) S.push({ name: 'Pivot ' + mode, type: 'pivot', mode });
+  S.push({ name: 'Coppock > 0', type: 'coppock' });
+  S.push({ name: 'MACD+RSI agree', type: 'macdrsi' });
+  S.push({ name: 'EMA 21/55', type: 'emacross', f: 21, s: 55 });
+  S.push({ name: 'Ride to +2σ', type: 'zscore', mode: 'short' });
+  S.push({ name: 'Z<−2 dip buy', type: 'zscore', mode: 'long' });
+  S.push({ name: 'Aroon bull', type: 'aroon' });
+  S.push({ name: 'Chandelier 15', type: 'chand', mult: 2.5, win: 15 });
   S.push({ name: 'Buy & Hold', type: 'hold' });
   return S.slice(0, 150);
 }
@@ -4761,6 +4804,15 @@ function runStrategies(P, V){
   const pre = anPrefix(P);
   const preV = V ? anPrefix(V) : pre;
   const OBV = anObv(P, V);
+  const COP = (() => {
+    const s = new Array(P.length).fill(0);
+    for(let k = 0; k < P.length; k++){
+      const r1 = k >= 14 ? (P[k] - P[k - 14]) / P[k - 14] : 0;
+      const r2 = k >= 11 ? (P[k] - P[k - 11]) / P[k - 11] : 0;
+      s[k] = r1 + r2;
+    }
+    return anEmaArr(s, 10);
+  })();
   const emaCache = {}, rsiCache = {}, macdCache = {};
   const E = p => emaCache[p] || (emaCache[p] = anEmaArr(P, p));
   const R = p => rsiCache[p] || (rsiCache[p] = anRsiArr(P, p));
@@ -4866,7 +4918,54 @@ function runStrategies(P, V){
           break;
         }
         case 'chand': {
-          sig[i] = P[i] > anMax(P, i, 22) - st.mult * anAtr(P, 14, i) ? 1 : 0;
+          sig[i] = P[i] > anMax(P, i, st.win || 22) - st.mult * anAtr(P, 14, i) ? 1 : 0;
+          break;
+        }
+        case 'donch': sig[i] = P[i] >= anMax(P, i, st.p) * 0.995 ? 1 : 0; break;
+        case 'sqz': {
+          const mid = anSmaFast(pre, 20, i);
+          if(mid == null){ sig[i] = 0; break; }
+          const sd = anStd(P, 20, i, mid);
+          const bw = mid ? (4 * sd) / mid : 0;
+          const pctB = sd > 0 ? (P[i] - (mid - 2 * sd)) / (4 * sd) : 0.5;
+          sig[i] = st.mode === 'up' ? (bw < 0.08 && pctB > 0.5 ? 1 : 0)
+            : (bw > 0.06 && pctB > 0.5 && P[i] > P[i - 1] ? 1 : 0);
+          break;
+        }
+        case 'linreg': sig[i] = anLinSlope(P, i, st.p) > 0 ? 1 : 0; break;
+        case 'cmo': {
+          const c = anCmo(P, 14, i);
+          sig[i] = st.mode === 'mom' ? (c > 0 ? 1 : 0) : (c < -50 ? 1 : 0);
+          break;
+        }
+        case 'pivot': {
+          const pv = (anMax(P, i, 20) + anMinP(P, i, 20) + P[i]) / 3;
+          sig[i] = st.mode === 'above' ? (P[i] > pv ? 1 : 0) : (P[i] > pv * 1.02 ? 1 : 0);
+          break;
+        }
+        case 'coppock': sig[i] = COP[i] > 0 ? 1 : 0; break;
+        case 'macdrsi': {
+          const m = MACD(12, 26, 9);
+          sig[i] = (m.line[i] > m.sig[i] && R(14)[i] > 55) ? 1 : 0;
+          break;
+        }
+        case 'zscore': {
+          const mid = anSmaFast(pre, 20, i);
+          const sd = anStd(P, 20, i, mid);
+          const z = sd > 0 ? (P[i] - mid) / sd : 0;
+          sig[i] = st.mode === 'short' ? (z <= 2 ? 1 : 0) : (z < -1 ? 1 : 0);
+          break;
+        }
+        case 'aroon': {
+          const p = 25;
+          if(i < p){ sig[i] = 0; break; }
+          let hh = -Infinity, ll = Infinity, hiI = i, loI = i;
+          for(let j = i - p + 1; j <= i; j++){
+            if(P[j] > hh){ hh = P[j]; hiI = j; }
+            if(P[j] < ll){ ll = P[j]; loI = j; }
+          }
+          const up = (p - (i - hiI)) / p * 100, dn = (p - (i - loI)) / p * 100;
+          sig[i] = up > dn ? 1 : 0;
           break;
         }
         case 'kelt': {
@@ -4918,7 +5017,7 @@ async function analyzeCoin(){
     const P = d.prices.map(x => x[1]);
     const V = (d.total_volumes || []).map(x => x[1]);
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Backtesting 130+ strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
+    st.textContent = '⏳ Backtesting 150 strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
     const newsItems = await newsP;
     setTimeout(() => {
       const full = runStrategies(P, V);
@@ -4954,7 +5053,7 @@ async function fetchCryptoNews(coinName){
       const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u));
       const d = await r.json();
       if(d.status === 'ok' && d.items)
-        all.push(...d.items.slice(0, 6).map(it => ({ title: it.title, link: it.link })));
+        all.push(...d.items.slice(0, 6).map(it => ({ title: it.title, link: it.link, pub: it.pubDate })));
     } catch(e){}
   }
   const seen = new Set();
@@ -4972,6 +5071,14 @@ function compRow(label, val, extra){
     '<div style="height:8px;background:var(--card2);border-radius:99px;margin-top:4px">' +
     '<div style="height:100%;width:' + Math.max(2, Math.min(100, Math.round(val))) + '%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>';
 }
+function newsAge(pub){
+  if(!pub) return '';
+  const s = (Date.now() - new Date(pub).getTime()) / 1000;
+  if(s < 90) return 'just now';
+  if(s < 3600) return Math.floor(s / 60) + 'm ago';
+  if(s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
 function renderNewsBox(newsItems, coinName){
   const box = document.getElementById('newsBox');
   if(!newsItems || !newsItems.length){
@@ -4983,8 +5090,63 @@ function renderNewsBox(newsItems, coinName){
     const c = s > 0 ? '#55efc4' : s < 0 ? '#ff6b6b' : '#9aa0b5';
     return '<a href="' + it.link + '" target="_blank" rel="noopener" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;text-decoration:none">' +
       '<span style="color:' + c + ';font-size:1rem;line-height:1.3">●</span>' +
-      '<span style="color:#c6cad8;font-size:.82rem;line-height:1.4">' + it.title + '</span></a>';
+      '<span style="color:#c6cad8;font-size:.82rem;line-height:1.4">' + it.title + ' <small style="color:var(--muted);font-size:.68rem">· ' + newsAge(it.pub) + '</small></span></a>';
   }).join('');
+}
+/* ---------- real-time price stream (Binance public WebSocket) ---------- */
+function startPriceStream(){
+  if(priceWs) return;
+  let ws;
+  try {
+    const streams = COINS.filter(c => c[1] !== 'USDT').map(c => c[1].toLowerCase() + 'usdt@miniTicker').join('/');
+    ws = new WebSocket('wss://stream.binance.com:9443/stream?streams=' + streams);
+  } catch(e) { return; }
+  priceWs = ws;
+  ws.onmessage = ev => {
+    try {
+      const d = JSON.parse(ev.data).data;
+      if(!d || !d.s) return;
+      const sym = d.s.replace('USDT', '');
+      const price = +d.c;
+      const pct = d.o ? (price - +d.o) / +d.o * 100 : null;
+      livePrices[sym] = price;
+      const entry = COINS.find(c => c[1] === sym);
+      if(entry){
+        if(!cryptoCache[entry[0]]) cryptoCache[entry[0]] = { usd: price, pkr: null };
+        cryptoCache[entry[0]].usd = price;
+        if(pct != null) cryptoCache[entry[0]].usd_24h_change = pct;
+      }
+      updateCoinRow(sym, price, pct);
+      if(Date.now() - pfThrottle > 2000){
+        pfThrottle = Date.now();
+        try { pfRender(); } catch(e){}
+        const ls = document.getElementById('liveStatus');
+        if(ls) ls.textContent = '· updated ' + new Date().toLocaleTimeString();
+      }
+    } catch(e){}
+  };
+  ws.onclose = () => { priceWs = null; setTimeout(startPriceStream, 15000); };
+  ws.onerror = () => { try { ws.close(); } catch(e){} };
+}
+function updateCoinRow(sym, price, pct){
+  const rowEl = document.getElementById('crow-' + sym);
+  if(!rowEl) return;
+  const pe = document.getElementById('cprice-' + sym);
+  if(pe){
+    const old = parseFloat(pe.dataset.v || '0');
+    pe.textContent = '$' + fmtPrice(price);
+    pe.dataset.v = price;
+    if(old && Math.abs(price - old) > 1e-12){
+      rowEl.style.transition = 'none';
+      rowEl.style.background = price > old ? 'rgba(85,239,196,.18)' : 'rgba(255,107,107,.18)';
+      setTimeout(() => { rowEl.style.transition = 'background .7s'; rowEl.style.background = ''; }, 50);
+    }
+  }
+  const ce = rowEl.querySelector('.chg');
+  if(ce && pct != null){
+    ce.textContent = (pct >= 0 ? '▲ ' : '▼ ') + Math.abs(pct).toFixed(1) + '%';
+    ce.style.color = pct >= 0 ? '#55efc4' : '#ff6b6b';
+  }
 }
 /* ---------- crypto alerts (browser notifications) ---------- */
 function notifInit(){
@@ -5133,7 +5295,11 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V){
   let newsScore = null;
   if(newsItems && newsItems.length){
     newsScore = 0;
-    newsItems.forEach(it => { it.s = scoreHeadline(it.title); newsScore += it.s; });
+    newsItems.forEach(it => {
+      it.s = scoreHeadline(it.title);
+      const ageH = it.pub ? (Date.now() - new Date(it.pub).getTime()) / 36e5 : 24;
+      newsScore += it.s * (ageH < 12 ? 1.6 : ageH < 48 ? 1 : 0.7);
+    });
     newsScore = Math.max(0, Math.min(100, 50 + newsScore * 7));
   }
   const news = newsScore == null ? 50 : newsScore;
