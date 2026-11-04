@@ -1560,6 +1560,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
       <div class="result show"><div class="big" id="anVerdict" style="font-size:1.6rem">—</div><small id="anWhy"></small></div>
       <div id="anTable" style="margin-top:12px"></div>
       <div id="anComponents" style="margin-top:14px"></div>
+      <div id="anActionBox" style="margin-top:12px"></div>
       <div class="result show" style="margin-top:12px"><div class="big" id="anBt" style="font-size:1.05rem"></div><small id="anBtSub"></small></div>
       <canvas id="anChart" style="width:100%;height:200px;display:block;margin-top:12px;background:var(--card2);border-radius:10px"></canvas>
       <p class="sub" style="margin-top:8px;font-size:.75rem">▲ green = past BUY signal · ▼ red = past SELL signal (180 days)</p>
@@ -4736,7 +4737,7 @@ async function analyzeCoin(){
     const newsItems = await newsP;
     setTimeout(() => {
       const { results, ens, start } = runStrategies(P);
-      renderConsensus(id, results, newsItems);
+      renderConsensus(id, results, newsItems, P);
       const ensScores = ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
       drawAnChart(P, ensScores);
       renderNewsBox(newsItems);
@@ -4784,7 +4785,65 @@ function renderNewsBox(newsItems){
       '<span style="color:#c6cad8;font-size:.82rem;line-height:1.4">' + it.title + '</span></a>';
   }).join('');
 }
-function renderConsensus(id, results, newsItems){
+function anTotalRow(combined, col, label){
+  return '<div style="background:linear-gradient(90deg,rgba(108,92,231,.18),rgba(0,206,201,.18));border:1px solid var(--accent);border-radius:10px;padding:10px 12px;margin-bottom:10px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:.85rem;font-weight:700;color:var(--text)"><span>🧪 TOTAL ORGANIC SCORE</span><span style="color:' + col + '">' + Math.round(combined) + '/100 · ' + label + '</span></div>' +
+    '<div style="height:10px;background:var(--card2);border-radius:99px;margin-top:6px">' +
+    '<div style="height:100%;width:' + Math.max(2, Math.min(100, Math.round(combined))) + '%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>';
+}
+function anActionBox(P, results, info){
+  const price = P[P.length - 1];
+  const sup = Math.min(...P.slice(-30));
+  const res = Math.max(...P.slice(-30));
+  const posPct = res > sup ? (price - sup) / (res - sup) * 100 : 50;
+  const longPct = res > price ? (res - price) / price * 100 : 0;
+  const shortPct = price > sup ? (price - sup) / price * 100 : 0;
+  const rets = [];
+  for(let i = P.length - 30; i < P.length; i++) rets.push((P[i] - P[i - 1]) / P[i - 1]);
+  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+  const vol = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / rets.length) * 100;
+  const risk = vol > 4 ? 'HIGH 🔥' : vol > 2 ? 'MED ⚖️' : 'LOW 😴';
+  const conf = Math.max(info.bulls, info.n - info.bulls) / info.n * 100;
+  const buyish = info.combined >= 55, sellish = info.combined <= 45;
+  let zoneTxt, zoneCol;
+  if(buyish){
+    zoneTxt = posPct < 35 ? '✅ ENTRY ZONE — price is near support, historically a good buying area'
+      : posPct > 75 ? '⚠️ LATE ENTRY — price is near resistance, better to wait for a dip'
+      : '➖ MID-RANGE — price is neither cheap nor stretched';
+    zoneCol = posPct < 35 ? '#55efc4' : posPct > 75 ? '#f9ca24' : '#9aa0b5';
+  } else if(sellish){
+    zoneTxt = posPct > 65 ? '✅ EXIT ZONE — price is near resistance, historically a good profit-taking area'
+      : '➖ NOT AT EXIT YET — price still has room to move';
+    zoneCol = posPct > 65 ? '#ff6b6b' : '#9aa0b5';
+  } else {
+    zoneTxt = '⏸️ WAIT — mixed signals, no clear entry or exit zone right now';
+    zoneCol = '#9aa0b5';
+  }
+  const best = results.slice().sort((a, b) => b.ret - a.ret).filter(r => r.name !== 'Buy & Hold').slice(0, 3);
+  const bestTxt = best.map(r => r.name + ' ' + (r.ret >= 0 ? '+' : '') + r.ret.toFixed(1) + '%').join(' · ');
+  const best1 = best[0];
+  const summary = 'Price <b>$' + fmtPrice(price) + '</b> sits <b>' + posPct.toFixed(0) + '%</b> up from the 30-day low ($' + fmtPrice(sup) + '). ' +
+    (buyish ? info.bulls + '/' + info.n + ' strategies are bullish — momentum favors buyers.'
+      : sellish ? (info.n - info.bulls) + '/' + info.n + ' strategies are bearish — momentum favors sellers.'
+      : 'Strategy votes are split — patience wins here.') +
+    (longPct >= shortPct ? ' Next target: resistance <b>$' + fmtPrice(res) + '</b> (+' + longPct.toFixed(1) + '% long potential).'
+      : ' Nearest safety: support <b>$' + fmtPrice(sup) + '</b> (−' + shortPct.toFixed(1) + '% short potential).') +
+    (best1 ? ' Top backtest: <b>' + best1.name + '</b> (' + (best1.ret >= 0 ? '+' : '') + best1.ret.toFixed(1) + '%).' : '');
+  document.getElementById('anActionBox').innerHTML =
+    '<div style="background:var(--card2);border:1px solid #2c3149;border-radius:10px;padding:14px">' +
+    '<div style="font-size:.78rem;color:var(--muted);letter-spacing:.5px">🎯 ENTRY / EXIT LEVEL (real 30-day support &amp; resistance)</div>' +
+    '<div style="color:' + zoneCol + ';font-weight:700;font-size:.92rem;margin-top:4px">' + zoneTxt + '</div>' +
+    '<div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap">' +
+    '<div style="flex:1;min-width:140px"><div style="font-size:.72rem;color:var(--muted)">📈 LONG potential → resistance $' + fmtPrice(res) + '</div><div style="color:#55efc4;font-weight:800;font-size:1.1rem">+' + longPct.toFixed(1) + '%</div></div>' +
+    '<div style="flex:1;min-width:140px"><div style="font-size:.72rem;color:var(--muted)">📉 SHORT potential → support $' + fmtPrice(sup) + '</div><div style="color:#ff6b6b;font-weight:800;font-size:1.1rem">−' + shortPct.toFixed(1) + '%</div></div>' +
+    '<div style="flex:1;min-width:110px"><div style="font-size:.72rem;color:var(--muted)">🎲 Risk (30d volatility)</div><div style="font-weight:800;font-size:1.1rem">' + risk + '</div></div>' +
+    '<div style="flex:1;min-width:110px"><div style="font-size:.72rem;color:var(--muted)">🎯 Signal confidence</div><div style="font-weight:800;font-size:1.1rem;color:' + (conf >= 70 ? '#55efc4' : conf >= 55 ? '#f9ca24' : '#9aa0b5') + '">' + conf.toFixed(0) + '%</div></div>' +
+    '</div>' +
+    '<div style="margin-top:10px;font-size:.75rem;color:var(--muted)">🏆 Best 180-day strategies: ' + bestTxt + '</div>' +
+    '<div style="margin-top:10px;padding:10px 12px;background:var(--card);border-radius:8px;font-size:.84rem;color:var(--text);line-height:1.55">' + summary + '</div>' +
+    '</div>';
+}
+function renderConsensus(id, results, newsItems, P){
   const bulls = results.filter(r => r.bull).length;
   const n = results.length;
   const tech = bulls / n * 100;
@@ -4820,7 +4879,9 @@ function renderConsensus(id, results, newsItems){
     compRow('🤖 100 strategies vote', tech, bulls + '/' + n + ' bullish') +
     compRow('📰 International news mood', news, newsScore == null ? 'unavailable' : Math.round(news) + '/100') +
     compRow('😱 Fear & Greed Index', fng, (window._fng != null ? window._fng + '/100' : '—')) +
-    compRow('🌊 Total market 24h', mkt, (mktRaw >= 0 ? '+' : '') + mktRaw.toFixed(1) + '%');
+    compRow('🌊 Total market 24h', mkt, (mktRaw >= 0 ? '+' : '') + mktRaw.toFixed(1) + '%') +
+    anTotalRow(combined, col, txt);
+  anActionBox(P, results, { bulls: bulls, n: n, combined: combined, txt: txt });
   document.getElementById('anBt').innerHTML =
     '🗳️ ' + bulls + '/' + n + ' strategies in BUY mode · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
   document.getElementById('anBtSub').textContent =
