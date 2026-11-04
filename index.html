@@ -1559,9 +1559,11 @@ Kindly process this request at your earliest convenience. Thank you for your coo
     <div id="anResult" style="display:none;margin-top:14px">
       <div class="result show"><div class="big" id="anVerdict" style="font-size:1.6rem">—</div><small id="anWhy"></small></div>
       <div id="anTable" style="margin-top:12px"></div>
+      <div id="anComponents" style="margin-top:14px"></div>
       <div class="result show" style="margin-top:12px"><div class="big" id="anBt" style="font-size:1.05rem"></div><small id="anBtSub"></small></div>
       <canvas id="anChart" style="width:100%;height:200px;display:block;margin-top:12px;background:var(--card2);border-radius:10px"></canvas>
-      <p class="sub" style="margin-top:8px;font-size:.75rem">▲ green = past BUY signal · ▼ red = past SELL signal (90 days)</p>
+      <p class="sub" style="margin-top:8px;font-size:.75rem">▲ green = past BUY signal · ▼ red = past SELL signal (180 days)</p>
+      <div id="newsBox" style="margin-top:12px"></div>
     </div>
   </div>
 
@@ -4408,6 +4410,7 @@ async function loadCrypto(){
       document.getElementById('domVal').textContent = g.market_cap_percentage.btc.toFixed(1) + '%';
       document.getElementById('volVal').textContent = '$' + fmtB(g.total_volume.usd);
       const ch = g.market_cap_change_percentage_24h_usd;
+      window._mktChg = ch;
       const el = document.getElementById('mchVal');
       el.textContent = (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%';
       el.style.color = ch >= 0 ? '#55efc4' : '#ff6b6b';
@@ -4507,6 +4510,7 @@ function loadFNG(){
     .then(r => r.json())
     .then(d => {
       const v = +d.data[0].value, cls = d.data[0].value_classification;
+      window._fng = v;
       const col = v < 25 ? '#ff6b6b' : v < 45 ? '#f9ca24' : v < 55 ? '#9aa0b5' : v < 75 ? '#55efc4' : '#00cec9';
       document.getElementById('fngVal').textContent = v + '/100 — ' + cls;
       document.getElementById('fngVal').style.color = col;
@@ -4723,16 +4727,19 @@ async function analyzeCoin(){
   st.textContent = '⏳ Downloading 180 days of ' + id + ' price data...';
   document.getElementById('anResult').style.display = 'none';
   try {
+    const newsP = fetchCryptoNews().catch(() => null);
     const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=180');
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Backtesting 100 strategy configurations...';
+    st.textContent = '⏳ Backtesting 100 strategies + scanning international news...';
+    const newsItems = await newsP;
     setTimeout(() => {
       const { results, ens, start } = runStrategies(P);
-      renderConsensus(id, results);
+      renderConsensus(id, results, newsItems);
       const ensScores = ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
       drawAnChart(P, ensScores);
+      renderNewsBox(newsItems);
       st.style.display = 'none';
       document.getElementById('anResult').style.display = 'block';
     }, 30);
@@ -4740,10 +4747,59 @@ async function analyzeCoin(){
     st.textContent = '❌ Could not load price data — check internet';
   }
 }
-function renderConsensus(id, results){
+/* organic blend: news + sentiment */
+const NEWS_POS = ['surge','soar','soars','rally','record','gain','gains','bull','bullish','adopt','approv','etf inflow','jump','jumps','rise','rises','climb','breakout','all-time','partnership','upgrade','accumulate','inflow','green','recover','boost',' ATH ','milestone','soaring','rebound'];
+const NEWS_NEG = ['crash','plunge','hack','hacked','exploit','ban','banned','lawsuit','sue','sec','collapse','fall','falls','drop','drops','dump','bear','bearish','liquidat','fear','fine','fined','delist','outflow','red','plummet','crisis','fraud','scam','bankrupt','selloff','warning','panic','crackdown'];
+function scoreHeadline(t){
+  t = ' ' + t.toLowerCase() + ' ';
+  let s = 0;
+  NEWS_POS.forEach(k => { if(t.includes(k)) s++; });
+  NEWS_NEG.forEach(k => { if(t.includes(k)) s--; });
+  return s;
+}
+async function fetchCryptoNews(){
+  const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://cointelegraph.com/rss'));
+  const d = await r.json();
+  if(d.status !== 'ok' || !d.items) throw 0;
+  return d.items.slice(0, 8).map(it => ({ title: it.title, link: it.link }));
+}
+function compRow(label, val, extra){
+  return '<div style="margin-bottom:10px">' +
+    '<div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)">' +
+    '<span>' + label + '</span><span>' + (extra != null ? extra : Math.round(val) + '/100') + '</span></div>' +
+    '<div style="height:8px;background:var(--card2);border-radius:99px;margin-top:4px">' +
+    '<div style="height:100%;width:' + Math.max(2, Math.min(100, Math.round(val))) + '%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div></div>';
+}
+function renderNewsBox(newsItems){
+  const box = document.getElementById('newsBox');
+  if(!newsItems || !newsItems.length){
+    box.innerHTML = '<p class="sub" style="font-size:.78rem">📰 News feed unavailable right now — verdict based on technicals + sentiment.</p>';
+    return;
+  }
+  box.innerHTML = '<b style="font-size:.85rem">📰 International crypto headlines</b>' + newsItems.slice(0, 6).map(it => {
+    const s = scoreHeadline(it.title);
+    const c = s > 0 ? '#55efc4' : s < 0 ? '#ff6b6b' : '#9aa0b5';
+    return '<a href="' + it.link + '" target="_blank" rel="noopener" style="display:flex;gap:8px;align-items:flex-start;margin-top:8px;text-decoration:none">' +
+      '<span style="color:' + c + ';font-size:1rem;line-height:1.3">●</span>' +
+      '<span style="color:#c6cad8;font-size:.82rem;line-height:1.4">' + it.title + '</span></a>';
+  }).join('');
+}
+function renderConsensus(id, results, newsItems){
   const bulls = results.filter(r => r.bull).length;
   const n = results.length;
-  const pct = bulls / n * 100;
+  const tech = bulls / n * 100;
+  let newsScore = null;
+  if(newsItems && newsItems.length){
+    newsScore = 0;
+    newsItems.forEach(it => { it.s = scoreHeadline(it.title); newsScore += it.s; });
+    newsScore = Math.max(0, Math.min(100, 50 + newsScore * 7));
+  }
+  const news = newsScore == null ? 50 : newsScore;
+  const fng = window._fng != null ? window._fng : 50;
+  const mktRaw = window._mktChg || 0;
+  const mkt = Math.max(0, Math.min(100, 50 + mktRaw * 5));
+  const combined = 0.6 * tech + 0.15 * news + 0.15 * fng + 0.1 * mkt;
+  const pct = combined;
   const rets = results.map(r => r.ret).sort((a, b) => a - b);
   const avg = rets.reduce((a, b) => a + b, 0) / n;
   const median = rets[Math.floor(n / 2)];
@@ -4757,9 +4813,14 @@ function renderConsensus(id, results){
   else if(pct > 30){ txt = '🟥 LEANING SELL'; col = '#f9ca24'; why = 'More strategies are bearish — signs of weakness. Caution advised.'; }
   else { txt = '🔴 STRONG SELL'; col = '#ff6b6b'; why = pct.toFixed(0) + '% of strategies are in buy mode — most indicators point DOWN.'; }
   const v = document.getElementById('anVerdict');
-  v.textContent = txt;
+  v.textContent = txt + '  ·  ' + Math.round(combined) + '/100';
   v.style.color = col;
-  document.getElementById('anWhy').textContent = why + ' · Educational analysis of ' + n + ' configurations — not financial advice.';
+  document.getElementById('anWhy').textContent = why + ' · Organic mix: strategies 60% + news 15% + Fear & Greed 15% + market momentum 10% · Not financial advice.';
+  document.getElementById('anComponents').innerHTML =
+    compRow('🤖 100 strategies vote', tech, bulls + '/' + n + ' bullish') +
+    compRow('📰 International news mood', news, newsScore == null ? 'unavailable' : Math.round(news) + '/100') +
+    compRow('😱 Fear & Greed Index', fng, (window._fng != null ? window._fng + '/100' : '—')) +
+    compRow('🌊 Total market 24h', mkt, (mktRaw >= 0 ? '+' : '') + mktRaw.toFixed(1) + '%');
   document.getElementById('anBt').innerHTML =
     '🗳️ ' + bulls + '/' + n + ' strategies in BUY mode · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
   document.getElementById('anBtSub').textContent =
