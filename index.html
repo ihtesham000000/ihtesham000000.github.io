@@ -1557,6 +1557,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
     </div>
     <p class="sub" id="anStatus" style="display:none;margin-top:10px"></p>
     <div id="anResult" style="display:none;margin-top:14px">
+      <div id="decisionBanner" style="margin-bottom:12px"></div>
       <div class="result show"><div class="big" id="anVerdict" style="font-size:1.6rem">—</div><small id="anWhy"></small></div>
       <div id="anTable" style="margin-top:12px"></div>
       <div id="anComponents" style="margin-top:14px"></div>
@@ -4500,7 +4501,7 @@ function drawChart(){
   ctx.beginPath(); ctx.arc(X(pts.length - 1), Y(pts[pts.length - 1]), 5, 0, 7);
   ctx.fillStyle = col; ctx.fill();
   ctx.fillStyle = '#9aa0b5'; ctx.font = '12px Arial';
-  ctx.fillText('7 days ago', L, 250); ctx.fillText('now', L + W - 30, 250);
+  ctx.fillText('~9 months ago', L, 250); ctx.fillText('now', L + W - 30, 250);
   const ch = coinChange(selCoin);
   document.getElementById('chartInfo').innerHTML = m.name + ' · $' + fmtPrice(m.current_price) +
     ' · 24h: <span style="color:' + (ch >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (ch >= 0 ? '+' : '') + (ch != null ? ch.toFixed(1) : '0') + '%</span>' +
@@ -4729,16 +4730,19 @@ async function analyzeCoin(){
   document.getElementById('anResult').style.display = 'none';
   try {
     const newsP = fetchCryptoNews().catch(() => null);
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=180');
+    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365');
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
+    const V = (d.total_volumes || []).map(x => x[1]);
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Backtesting 100 strategies + scanning international news...';
+    st.textContent = '⏳ Backtesting 100 strategies × 3 timeframes + scanning news...';
     const newsItems = await newsP;
     setTimeout(() => {
-      const { results, ens, start } = runStrategies(P);
-      renderConsensus(id, results, newsItems, P);
-      const ensScores = ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
+      const full = runStrategies(P);
+      const w30 = runStrategies(P.slice(-30));
+      const w90 = runStrategies(P.slice(-90));
+      renderConsensus(id, full, w30, w90, newsItems, P, V);
+      const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
       drawAnChart(P, ensScores);
       renderNewsBox(newsItems);
       st.style.display = 'none';
@@ -4843,10 +4847,20 @@ function anActionBox(P, results, info){
     '<div style="margin-top:10px;padding:10px 12px;background:var(--card);border-radius:8px;font-size:.84rem;color:var(--text);line-height:1.55">' + summary + '</div>' +
     '</div>';
 }
-function renderConsensus(id, results, newsItems, P){
-  const bulls = results.filter(r => r.bull).length;
-  const n = results.length;
-  const tech = bulls / n * 100;
+function renderConsensus(id, fullR, w30, w90, newsItems, P, V){
+  const res = fullR.results, n = res.length;
+  const bulls = res.filter(r => r.bull).length;
+  /* performance-weighted technical score */
+  let wSum = 0, wBull = 0;
+  res.forEach(r => {
+    const w = 1 + Math.max(0, Math.min(3, r.ret / 10));
+    wSum += w; if(r.bull) wBull += w;
+  });
+  const techW = wBull / wSum * 100;
+  const tf30 = w30.results.filter(r => r.bull).length / w30.results.length * 100;
+  const tf90 = w90.results.filter(r => r.bull).length / w90.results.length * 100;
+  const tech = Math.round((techW + tf30 + tf90) / 3);
+  /* news */
   let newsScore = null;
   if(newsItems && newsItems.length){
     newsScore = 0;
@@ -4857,35 +4871,74 @@ function renderConsensus(id, results, newsItems, P){
   const fng = window._fng != null ? window._fng : 50;
   const mktRaw = window._mktChg || 0;
   const mkt = Math.max(0, Math.min(100, 50 + mktRaw * 5));
-  const combined = 0.6 * tech + 0.15 * news + 0.15 * fng + 0.1 * mkt;
-  const pct = combined;
-  const rets = results.map(r => r.ret).sort((a, b) => a - b);
-  const avg = rets.reduce((a, b) => a + b, 0) / n;
-  const median = rets[Math.floor(n / 2)];
-  const bh = results.find(r => r.name === 'Buy & Hold');
-  const bhRet = bh ? bh.ret : 0;
-  const beaters = results.filter(r => r.ret > bhRet).length;
-  let txt, col, why;
-  if(pct >= 70){ txt = '🟢 STRONG BUY'; col = '#00cec9'; why = pct.toFixed(0) + '% of strategies are in buy mode — strong agreement across indicators.'; }
-  else if(pct >= 55){ txt = '🟩 LEANING BUY'; col = '#55efc4'; why = 'More strategies are bullish than bearish, but the crowd is not unanimous.'; }
-  else if(pct > 45){ txt = '⚪ WAIT / HOLD'; col = '#9aa0b5'; why = 'The strategies disagree — no clear edge right now.'; }
-  else if(pct > 30){ txt = '🟥 LEANING SELL'; col = '#f9ca24'; why = 'More strategies are bearish — signs of weakness. Caution advised.'; }
-  else { txt = '🔴 STRONG SELL'; col = '#ff6b6b'; why = pct.toFixed(0) + '% of strategies are in buy mode — most indicators point DOWN.'; }
+  /* volume confirmation (catches fake rallies) */
+  let volNote = 'volume data unavailable', volAdj = 0;
+  if(V && V.length > 40){
+    const avg = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const now = avg(V.slice(-7));
+    const prev = avg(V.slice(-37, -7));
+    const ratio = prev > 0 ? now / prev : 1;
+    const priceUp = P[P.length - 1] >= P[P.length - 30];
+    const confirming = (priceUp && ratio > 1.05) || (!priceUp && ratio < 0.95);
+    volNote = (confirming ? '✅ volume confirms the move' : '⚠️ volume diverges — weak move') +
+      ' (' + (ratio >= 1 ? '+' : '') + ((ratio - 1) * 100).toFixed(0) + '% vs prior month)';
+    volAdj = confirming ? 4 : -4;
+  }
+  const combined = Math.max(0, Math.min(100, 0.6 * tech + 0.15 * news + 0.15 * fng + 0.1 * mkt + volAdj));
+  /* decision */
+  let decision, dCol;
+  if(combined >= 62){ decision = '🟢 BUY'; dCol = '#00cec9'; }
+  else if(combined >= 55){ decision = '🟩 WEAK BUY'; dCol = '#55efc4'; }
+  else if(combined <= 38){ decision = '🔴 SELL'; dCol = '#ff6b6b'; }
+  else if(combined <= 45){ decision = '🟥 WEAK SELL'; dCol = '#f9ca24'; }
+  else { decision = '⚪ NO TRADE — WAIT'; dCol = '#9aa0b5'; }
+  const tfBull = [tf30, tf90, techW].map(v => v >= 55);
+  const tfBear = [tf30, tf90, techW].map(v => v <= 45);
+  const alignTF = tfBull.every(Boolean) || tfBear.every(Boolean);
+  const conv = Math.min(97, Math.max(8, Math.abs(combined - 50) * 2 + (alignTF ? 9 : 0)));
+  const convLabel = conv >= 75 ? 'HIGH CONVICTION 🔥' : conv >= 55 ? 'MEDIUM CONVICTION' : 'LOW CONFIDENCE';
+  const sup = Math.min(...P.slice(-30));
+  const resi = Math.max(...P.slice(-30));
+  const buyish = combined >= 55, sellish = combined <= 45;
+  const invLine = buyish ? '🔄 Invalidation: a close below $' + fmtPrice(sup) + ' flips this to SELL'
+    : sellish ? '🔄 Invalidation: a close above $' + fmtPrice(resi) + ' flips this to BUY'
+    : '🔄 Wait for a decisive move above $' + fmtPrice(resi) + ' or below $' + fmtPrice(sup);
+  /* decision banner */
+  document.getElementById('decisionBanner').innerHTML =
+    '<div style="border:2px solid ' + dCol + ';border-radius:12px;padding:14px;text-align:center;background:linear-gradient(180deg,' + dCol + '22,transparent)">' +
+    '<div style="font-size:.72rem;color:var(--muted);letter-spacing:1.5px">TRADER DECISION</div>' +
+    '<div style="font-size:1.8rem;font-weight:800;color:' + dCol + ';margin-top:2px">' + decision + '</div>' +
+    '<div style="font-size:.85rem;color:' + dCol + ';font-weight:700">' + convLabel + ' · ' + Math.round(conv) + '% conviction · score ' + Math.round(combined) + '/100</div>' +
+    '<div style="font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.5">' + invLine + '<br>' + volNote + ' · ⏱ horizon: swing (days–weeks)</div></div>';
+  /* verdict line */
   const v = document.getElementById('anVerdict');
-  v.textContent = txt + '  ·  ' + Math.round(combined) + '/100';
-  v.style.color = col;
-  document.getElementById('anWhy').textContent = why + ' · Organic mix: strategies 60% + news 15% + Fear & Greed 15% + market momentum 10% · Not financial advice.';
+  v.textContent = decision + ' · ' + Math.round(combined) + '/100';
+  v.style.color = dCol;
+  document.getElementById('anWhy').textContent =
+    (alignTF ? 'All 3 timeframes agree. ' : 'Timeframes are mixed. ') +
+    'Mix: strategies ' + Math.round(tech) + '% (weighted, 3 timeframes) + news + Fear & Greed + market + volume. Not financial advice.';
+  /* components rows: 4 factors + 3 timeframes + total */
   document.getElementById('anComponents').innerHTML =
-    compRow('🤖 100 strategies vote', tech, bulls + '/' + n + ' bullish') +
+    compRow('🤖 100 strategies (performance-weighted, 365d)', techW, Math.round(techW) + '/100') +
     compRow('📰 International news mood', news, newsScore == null ? 'unavailable' : Math.round(news) + '/100') +
     compRow('😱 Fear & Greed Index', fng, (window._fng != null ? window._fng + '/100' : '—')) +
     compRow('🌊 Total market 24h', mkt, (mktRaw >= 0 ? '+' : '') + mktRaw.toFixed(1) + '%') +
-    anTotalRow(combined, col, txt);
-  anActionBox(P, results, { bulls: bulls, n: n, combined: combined, txt: txt });
+    compRow('📅 Short-term (30-day) vote', tf30, Math.round(tf30) + '% bullish') +
+    compRow('📅 Mid-term (90-day) vote', tf90, Math.round(tf90) + '% bullish') +
+    anTotalRow(combined, dCol, decision) +
+    '<div style="font-size:.75rem;color:var(--muted);margin:-4px 0 8px">' + volNote + '</div>';
+  anActionBox(P, res, { bulls: bulls, n: n, combined: combined, txt: decision });
+  /* stats */
+  const rets = res.map(r => r.ret).sort((a, b) => a - b);
+  const avg = rets.reduce((a, b) => a + b, 0) / n;
+  const median = rets[Math.floor(n / 2)];
+  const bh = res.find(r => r.name === 'Buy & Hold');
+  const bhRet = bh ? bh.ret : 0;
+  const beaters = res.filter(r => r.ret > bhRet).length;
   document.getElementById('anBt').innerHTML =
-    '🗳️ ' + bulls + '/' + n + ' strategies in BUY mode · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
+    '🗳️ ' + bulls + '/' + n + ' strategies bullish · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
   document.getElementById('anBtSub').textContent =
-    'Buy & hold: ' + (bhRet >= 0 ? '+' : '') + bhRet.toFixed(1) + '% over the same 180 days · ' + beaters + '/' + n + ' strategies beat buy & hold · Past performance ≠ future results';
+    'Buy & hold: ' + (bhRet >= 0 ? '+' : '') + bhRet.toFixed(1) + '% over 365 days · ' + beaters + '/' + n + ' strategies beat buy & hold · Past performance ≠ future results';
 }
 function drawAnChart(P, scores){
   const cv = document.getElementById('anChart');
