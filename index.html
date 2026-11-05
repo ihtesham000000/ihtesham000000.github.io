@@ -4797,6 +4797,15 @@ function buildStrategies(){
   S.push({ name: 'Z<−2 dip buy', type: 'zscore', mode: 'long' });
   S.push({ name: 'Aroon bull', type: 'aroon' });
   S.push({ name: 'Chandelier 15', type: 'chand', mult: 2.5, win: 15 });
+  for(const [f, s] of [[30,60],[40,80]]) S.push({ name: 'SMA ' + f + '/' + s, type: 'smacross', f, s });
+  S.push({ name: 'EMA 50/100', type: 'emacross', f: 50, s: 100 });
+  S.push({ name: 'MACD(19,39,9)', type: 'macd', a: 19, b: 39, c: 9 });
+  S.push({ name: 'ROC(7)>1%', type: 'roc', p: 7, th: 1 });
+  S.push({ name: 'Price vs SMA40', type: 'psma', p: 40 });
+  S.push({ name: 'Stoch(7)', type: 'stoch', p: 7, lvl: 20 });
+  S.push({ name: 'Bollinger(30) half', type: 'bb', per: 30, mode: 'half' });
+  S.push({ name: 'Donchian 10 high', type: 'donch', p: 10 });
+  S.push({ name: 'LinReg slope 100', type: 'linreg', p: 100 });
   S.push({ name: 'Buy & Hold', type: 'hold' });
   return S.slice(0, 150);
 }
@@ -5012,6 +5021,8 @@ async function analyzeCoin(){
   try {
     const coinName = (marketCache[id] && marketCache[id].name) || id;
     const newsP = fetchCryptoNews(coinName).catch(() => null);
+    const sym = ((COINS.find(c => c[0] === id) || [])[1]) || (((marketCache[id] || {}).symbol) || '').toUpperCase();
+    const derivP = sym ? fetchDerivatives(sym + 'USDT').catch(() => null) : Promise.resolve(null);
     const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365');
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
@@ -5019,11 +5030,13 @@ async function analyzeCoin(){
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
     st.textContent = '⏳ Backtesting 150 strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
     const newsItems = await newsP;
-    setTimeout(() => {
+    setTimeout(async () => {
       const full = runStrategies(P, V);
       const w30 = runStrategies(P.slice(-30), V.slice(-30));
       const w90 = runStrategies(P.slice(-90), V.slice(-90));
-      renderConsensus(id, full, w30, w90, newsItems, P, V);
+      const deriv = await derivP;
+      const pat = findPatterns(P);
+      renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
       const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
       drawAnChart(P, ensScores);
       renderNewsBox(newsItems, coinName);
@@ -5275,10 +5288,47 @@ function anActionBox(P, results, info){
     '<div style="flex:1;min-width:110px"><div style="font-size:.72rem;color:var(--muted)">🎯 Signal confidence</div><div style="font-weight:800;font-size:1.1rem;color:' + (conf >= 70 ? '#55efc4' : conf >= 55 ? '#f9ca24' : '#9aa0b5') + '">' + conf.toFixed(0) + '%</div></div>' +
     '</div>' +
     '<div style="margin-top:10px;font-size:.75rem;color:var(--muted)">🏆 Best 180-day strategies: ' + bestTxt + '</div>' +
+    '<div style="margin-top:10px;font-size:.75rem;color:var(--muted)">💸 Derivatives: ' + dNote + '</div>' +
+    patHtml +
     '<div style="margin-top:10px;padding:10px 12px;background:var(--card);border-radius:8px;font-size:.84rem;color:var(--text);line-height:1.55">' + summary + '</div>' +
     '</div>';
 }
-function renderConsensus(id, fullR, w30, w90, newsItems, P, V){
+/* derivatives sentiment + pattern matching */
+async function fetchDerivatives(symbol){
+  try {
+    const pi = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=' + symbol).then(r => r.json());
+    let lsRatio = null;
+    try {
+      const ls = await fetch('https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=' + symbol + '&period=1d&limit=1').then(r => r.json());
+      if(Array.isArray(ls) && ls.length) lsRatio = +ls[0].longShortRatio;
+    } catch(e){}
+    return { fr: +pi.lastFundingRate * 100, lsRatio };
+  } catch(e) { return null; }
+}
+function findPatterns(P){
+  const win = 30;
+  const cur = P.slice(-win);
+  const mean = cur.reduce((a, b) => a + b, 0) / win;
+  const sd = Math.sqrt(cur.reduce((a, v) => a + (v - mean) * (v - mean), 0) / win) || 1;
+  const norm = cur.map(v => (v - mean) / sd);
+  const matches = [];
+  for(let i = win + 5; i < P.length - 30 && matches.length < 60; i++){
+    const seg = P.slice(i - win, i);
+    const m2 = seg.reduce((a, b) => a + b, 0) / win;
+    const s2 = Math.sqrt(seg.reduce((a, v) => a + (v - m2) * (v - m2), 0) / win) || 1;
+    let c = 0;
+    for(let k = 0; k < win; k++) c += norm[k] * (seg[k] - m2) / s2;
+    if(c / win > 0.88) matches.push(i);
+  }
+  const stats = [7, 14, 30].map(h => {
+    const rs = matches.filter(i => i + h < P.length).map(i => (P[i + h] - P[i]) / P[i] * 100);
+    if(!rs.length) return null;
+    return { h, avg: rs.reduce((a, b) => a + b, 0) / rs.length,
+      up: rs.filter(r => r > 0).length / rs.length * 100, n: rs.length };
+  });
+  return { count: matches.length, stats };
+}
+function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
   const res = fullR.results, n = res.length;
   const bulls = res.filter(r => r.bull).length;
   /* performance-weighted technical score */
@@ -5319,7 +5369,33 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V){
       ' (' + (ratio >= 1 ? '+' : '') + ((ratio - 1) * 100).toFixed(0) + '% vs prior month)';
     volAdj = confirming ? 4 : -4;
   }
-  const combined = Math.max(0, Math.min(100, 0.6 * tech + 0.15 * news + 0.15 * fng + 0.1 * mkt + volAdj));
+  /* derivatives sentiment (contrarian): high funding / retail-long-heavy = bearish */
+  let dScore = 50, dNote = 'unavailable';
+  if(deriv && deriv.fr != null && !isNaN(deriv.fr)){
+    let s = 50 - Math.max(-20, Math.min(20, deriv.fr * 500));
+    let lsTxt = '';
+    if(deriv.lsRatio != null){
+      s -= Math.max(-10, Math.min(10, (deriv.lsRatio - 1.5) * 8));
+      lsTxt = ' · long/short ' + deriv.lsRatio.toFixed(2);
+    }
+    dScore = Math.max(0, Math.min(100, s));
+    dNote = 'funding ' + (deriv.fr >= 0 ? '+' : '') + deriv.fr.toFixed(4) + '%' + lsTxt +
+      (deriv.fr > 0.05 ? ' 🔥 overcrowded longs (bearish)' : deriv.fr < -0.05 ? ' 🥶 crowded shorts (bullish)' : '');
+  }
+  /* pattern match nudge */
+  let patAdj = 0, patHtml = '';
+  if(pat && pat.count >= 3 && pat.stats[1]){
+    const st = pat.stats[1];
+    if(st.avg > 1 && st.up >= 60) patAdj = 3;
+    else if(st.avg < -1 && st.up <= 40) patAdj = -3;
+    const cells = pat.stats.filter(Boolean).map(s2 =>
+      s2.h + 'd: <b>' + (s2.avg >= 0 ? '+' : '') + s2.avg.toFixed(1) + '%</b> (' + Math.round(s2.up) + '% up)'
+    ).join(' · ');
+    patHtml = '<div style="margin-top:10px;padding:10px 12px;background:var(--card);border-radius:8px;font-size:.78rem;color:var(--text);line-height:1.5">' +
+      '🔮 <b>Pattern match:</b> found <b>' + pat.count + '</b> similar 30-day setups in the past year. After them: ' + cells +
+      '. <span style="color:var(--muted)">Small sample — informational only.</span></div>';
+  }
+  const combined = Math.max(0, Math.min(100, 0.55 * tech + 0.12 * news + 0.12 * fng + 0.08 * mkt + 0.1 * dScore + volAdj + patAdj));
   /* decision */
   let decision, dCol;
   if(combined >= 62){ decision = '🟢 BUY'; dCol = '#00cec9'; }
@@ -5351,13 +5427,14 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V){
   v.style.color = dCol;
   document.getElementById('anWhy').textContent =
     (alignTF ? 'All 3 timeframes agree. ' : 'Timeframes are mixed. ') +
-    'Mix: strategies ' + Math.round(tech) + '% (weighted, 3 timeframes) + news + Fear & Greed + market + volume. Not financial advice.';
+    'Mix: strategies 55% + news 12% + Fear & Greed 12% + market 8% + derivatives 10% + volume/pattern nudge. Not financial advice.';
   /* components rows: 4 factors + 3 timeframes + total */
   document.getElementById('anComponents').innerHTML =
-    compRow('🤖 ' + n + ' strategies (performance-weighted, 365d)', techW, Math.round(techW) + '/100') +
+    compRow('🤖 ' + n + ' strategies × 3 timeframes (weighted)', techW, Math.round(techW) + '/100') +
     compRow('📰 International news mood', news, newsScore == null ? 'unavailable' : Math.round(news) + '/100') +
     compRow('😱 Fear & Greed Index', fng, (window._fng != null ? window._fng + '/100' : '—')) +
     compRow('🌊 Total market 24h', mkt, (mktRaw >= 0 ? '+' : '') + mktRaw.toFixed(1) + '%') +
+    compRow('💸 Derivatives (funding + L/S)', dScore, Math.round(dScore) + '/100') +
     compRow('📅 Short-term (30-day) vote', tf30, Math.round(tf30) + '% bullish') +
     compRow('📅 Mid-term (90-day) vote', tf90, Math.round(tf90) + '% bullish') +
     anTotalRow(combined, dCol, decision) +
