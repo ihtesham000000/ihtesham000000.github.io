@@ -5023,25 +5023,32 @@ async function analyzeCoin(){
     const newsP = fetchCryptoNews(coinName).catch(() => null);
     const sym = ((COINS.find(c => c[0] === id) || [])[1]) || (((marketCache[id] || {}).symbol) || '').toUpperCase();
     const derivP = sym ? fetchDerivatives(sym + 'USDT').catch(() => null) : Promise.resolve(null);
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365');
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365', 15000);
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
     const V = (d.total_volumes || []).map(x => x[1]);
     if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
     st.textContent = '⏳ Backtesting 150 strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
-    const newsItems = await newsP;
+    const newsItems = await Promise.race([newsP, new Promise(r => setTimeout(() => r(null), 8000))]);
     setTimeout(async () => {
-      const full = runStrategies(P, V);
-      const w30 = runStrategies(P.slice(-30), V.slice(-30));
-      const w90 = runStrategies(P.slice(-90), V.slice(-90));
-      const deriv = await derivP;
-      const pat = findPatterns(P);
-      renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
-      const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
-      drawAnChart(P, ensScores);
-      renderNewsBox(newsItems, coinName);
-      st.style.display = 'none';
-      document.getElementById('anResult').style.display = 'block';
+      try {
+        st.textContent = '⏳ Computing 150 strategies on 365 days of data...';
+        const full = runStrategies(P, V);
+        const w30 = runStrategies(P.slice(-30), V.slice(-30));
+        const w90 = runStrategies(P.slice(-90), V.slice(-90));
+        const deriv = await Promise.race([derivP, new Promise(r => setTimeout(() => r(null), 6000))]);
+        const pat = findPatterns(P);
+        st.textContent = '⏳ Building your verdict...';
+        renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
+        const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
+        drawAnChart(P, ensScores);
+        renderNewsBox(newsItems, coinName);
+        st.style.display = 'none';
+        document.getElementById('anResult').style.display = 'block';
+      } catch(err){
+        st.style.display = 'block';
+        st.textContent = '❌ ' + (err && err.message ? err.message : err) + ' — please try again in a minute';
+      }
     }, 30);
   } catch(e) {
     st.textContent = '❌ Could not load price data — check internet';
@@ -5057,13 +5064,18 @@ function scoreHeadline(t){
   NEWS_NEG.forEach(k => { if(t.includes(k)) s--; });
   return s;
 }
+function fetchT(url, ms){
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), ms || 12000);
+  return fetch(url, { signal: c.signal }).finally(() => clearTimeout(t));
+}
 async function fetchCryptoNews(coinName){
   const gNews = 'https://news.google.com/rss/search?q=' + encodeURIComponent('"' + coinName + '" (crypto OR blockchain)') + '&hl=en-US&gl=US&ceid=US:en';
   const feeds = ['https://cointelegraph.com/rss', gNews];
   const all = [];
   for(const u of feeds){
     try {
-      const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u));
+      const r = await fetchT('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u), 8000);
       const d = await r.json();
       if(d.status === 'ok' && d.items)
         all.push(...d.items.slice(0, 6).map(it => ({ title: it.title, link: it.link, pub: it.pubDate })));
@@ -5138,8 +5150,25 @@ function startPriceStream(){
       }
     } catch(e){}
   };
-  ws.onclose = () => { priceWs = null; setTimeout(startPriceStream, 15000); };
+  ws.onclose = () => {
+    priceWs = null;
+    window._wsFails = (window._wsFails || 0) + 1;
+    if(window._wsFails >= 2){
+      const ls = document.getElementById('liveStatus');
+      if(ls) ls.textContent = '· live stream blocked here — auto-refreshing every 60s';
+      startCgAutoRefresh();
+    } else {
+      setTimeout(startPriceStream, 15000);
+    }
+  };
   ws.onerror = () => { try { ws.close(); } catch(e){} };
+}
+function startCgAutoRefresh(){
+  if(window._cgTimer) return;
+  window._cgTimer = setInterval(() => {
+    const panel = document.getElementById('crypto');
+    if(panel && panel.classList.contains('active')) loadCrypto();
+  }, 60000);
 }
 function updateCoinRow(sym, price, pct){
   const rowEl = document.getElementById('crow-' + sym);
@@ -5296,10 +5325,10 @@ function anActionBox(P, results, info){
 /* derivatives sentiment + pattern matching */
 async function fetchDerivatives(symbol){
   try {
-    const pi = await fetch('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=' + symbol).then(r => r.json());
+    const pi = await fetchT('https://fapi.binance.com/fapi/v1/premiumIndex?symbol=' + symbol, 6000).then(r => r.json());
     let lsRatio = null;
     try {
-      const ls = await fetch('https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=' + symbol + '&period=1d&limit=1').then(r => r.json());
+      const ls = await fetchT('https://fapi.binance.com/futures/data/globalLongShortAccountRatio?symbol=' + symbol + '&period=1d&limit=1', 6000).then(r => r.json());
       if(Array.isArray(ls) && ls.length) lsRatio = +ls[0].longShortRatio;
     } catch(e){}
     return { fr: +pi.lastFundingRate * 100, lsRatio };
