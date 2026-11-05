@@ -5012,46 +5012,67 @@ function runStrategies(P, V){
   }
   return { results, ens, start };
 }
+let anCache = {};
+function showAnalysis(id, full, w30, w90, newsItems, P, V, deriv, pat, coinName, st){
+  try {
+    st.textContent = '⏳ Computing 150 strategies on 365 days of data...';
+    renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
+    const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
+    drawAnChart(P, ensScores);
+    renderNewsBox(newsItems, coinName);
+    st.style.display = 'none';
+    document.getElementById('anResult').style.display = 'block';
+  } catch(err){
+    st.style.display = 'block';
+    st.textContent = '❌ ' + (err && err.message ? err.message : err) + ' — please try again';
+  }
+}
 async function analyzeCoin(){
   const id = document.getElementById('anCoin').value;
   const st = document.getElementById('anStatus');
+  if(!id){ toast('Pick a coin first'); return; }
   st.style.display = 'block';
-  st.textContent = '⏳ Downloading 180 days of ' + id + ' price data...';
   document.getElementById('anResult').style.display = 'none';
+  const hit = anCache[id];
+  if(hit && Date.now() - hit.t < 300000){
+    st.textContent = '✅ Fresh analysis found — loading instantly...';
+    setTimeout(() => showAnalysis(id, hit.full, hit.w30, hit.w90, hit.news, hit.P, hit.V, hit.deriv, hit.pat, hit.coinName, st), 30);
+    return;
+  }
+  const coinName = (marketCache[id] && marketCache[id].name) || id;
+  const newsP = fetchCryptoNews(coinName).catch(() => null);
+  const sym = ((COINS.find(c => c[0] === id) || [])[1]) || (((marketCache[id] || {}).symbol) || '').toUpperCase();
+  const derivP = sym ? fetchDerivatives(sym + 'USDT').catch(() => null) : Promise.resolve(null);
+  st.textContent = '⏳ Downloading 365 days of ' + coinName + ' data...';
   try {
-    const coinName = (marketCache[id] && marketCache[id].name) || id;
-    const newsP = fetchCryptoNews(coinName).catch(() => null);
-    const sym = ((COINS.find(c => c[0] === id) || [])[1]) || (((marketCache[id] || {}).symbol) || '').toUpperCase();
-    const derivP = sym ? fetchDerivatives(sym + 'USDT').catch(() => null) : Promise.resolve(null);
-    const r = await fetchT('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365', 15000);
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/' + id + '/market_chart?vs_currency=usd&days=365', 25000);
+    if(!r.ok){
+      if(r.status === 429) throw new Error('Free API limit reached (too many requests) — please wait 60 seconds');
+      throw new Error('price service error ' + r.status);
+    }
     const d = await r.json();
     const P = d.prices.map(x => x[1]);
     const V = (d.total_volumes || []).map(x => x[1]);
-    if(P.length < 120){ st.textContent = 'Not enough price history'; return; }
-    st.textContent = '⏳ Backtesting 150 strategies × 3 timeframes + scanning ' + coinName + ' & crypto news...';
+    if(!P.length || P.length < 120){ st.textContent = 'Not enough price history for this coin'; return; }
+    st.textContent = '⏳ Backtesting 150 strategies x 3 timeframes + scanning ' + coinName + ' news...';
     const newsItems = await Promise.race([newsP, new Promise(r => setTimeout(() => r(null), 8000))]);
     setTimeout(async () => {
       try {
-        st.textContent = '⏳ Computing 150 strategies on 365 days of data...';
         const full = runStrategies(P, V);
         const w30 = runStrategies(P.slice(-30), V.slice(-30));
         const w90 = runStrategies(P.slice(-90), V.slice(-90));
         const deriv = await Promise.race([derivP, new Promise(r => setTimeout(() => r(null), 6000))]);
         const pat = findPatterns(P);
-        st.textContent = '⏳ Building your verdict...';
-        renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
-        const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
-        drawAnChart(P, ensScores);
-        renderNewsBox(newsItems, coinName);
-        st.style.display = 'none';
-        document.getElementById('anResult').style.display = 'block';
+        anCache[id] = { t: Date.now(), full, w30, w90, news: newsItems, P, V, deriv, pat, coinName };
+        showAnalysis(id, full, w30, w90, newsItems, P, V, deriv, pat, coinName, st);
       } catch(err){
         st.style.display = 'block';
-        st.textContent = '❌ ' + (err && err.message ? err.message : err) + ' — please try again in a minute';
+        st.textContent = '❌ ' + (err && err.message ? err.message : err) + ' — please try again';
       }
     }, 30);
-  } catch(e) {
-    st.textContent = '❌ Could not load price data — check internet';
+  } catch(e2) {
+    const msg = (e2 && e2.name === 'AbortError') ? 'connection too slow for the big download' : (e2 && e2.message ? e2.message : 'network error');
+    st.textContent = '❌ ' + msg + ' — please try again in a minute';
   }
 }
 /* organic blend: news + sentiment */
@@ -5167,8 +5188,24 @@ function startCgAutoRefresh(){
   if(window._cgTimer) return;
   window._cgTimer = setInterval(() => {
     const panel = document.getElementById('crypto');
-    if(panel && panel.classList.contains('active')) loadCrypto();
-  }, 60000);
+    if(panel && panel.classList.contains('active') && document.visibilityState === 'visible') lightPriceRefresh();
+  }, 90000);
+}
+async function lightPriceRefresh(){
+  try {
+    const ids = COINS.map(c => c[0]).join(',');
+    const d = await fetchT('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true', 12000).then(r => r.json());
+    if(!d || d.error) return;
+    Object.keys(d).forEach(k => {
+      if(!cryptoCache[k]) cryptoCache[k] = { usd: 0, pkr: null };
+      cryptoCache[k].usd = d[k].usd;
+      cryptoCache[k].pkr = d[k].pkr;
+      if(d[k].usd_24h_change != null) cryptoCache[k].usd_24h_change = d[k].usd_24h_change;
+    });
+    renderCoins(); renderMovers(); pfRender();
+    const ls = document.getElementById('liveStatus');
+    if(ls) ls.textContent = '· refreshed ' + new Date().toLocaleTimeString();
+  } catch(e){}
 }
 function updateCoinRow(sym, price, pct){
   const rowEl = document.getElementById('crow-' + sym);
