@@ -4834,6 +4834,7 @@ function runStrategies(P, V){
     return macdCache[key];
   };
   const start = 110;
+  const split = Math.max(start + 20, Math.floor(P.length * 0.65));
   const ens = new Array(P.length).fill(0);
   const results = [];
   for(const st of buildStrategies()){
@@ -4842,8 +4843,8 @@ function runStrategies(P, V){
       switch(st.type){
         case 'rsi': sig[i] = R(st.p)[i] >= 50 ? 1 : 0; break;
         case 'smacross': {
-          const f = anSmaFast(pre, st.f, i), s = anSmaFast(pre, st.s, i);
-          sig[i] = (f != null && s != null && f > s) ? 1 : 0; break;
+          const f = anSmaFast(pre, st.f, i), s2 = anSmaFast(pre, st.s, i);
+          sig[i] = (f != null && s2 != null && f > s2) ? 1 : 0; break;
         }
         case 'emacross': sig[i] = E(st.f)[i] > E(st.s)[i] ? 1 : 0; break;
         case 'macd': { const m = MACD(st.a, st.b, st.c); sig[i] = m.line[i] > m.sig[i] ? 1 : 0; break; }
@@ -4867,8 +4868,8 @@ function runStrategies(P, V){
           sig[i] = (hh > ll && (P[i] - ll) / (hh - ll) * 100 > 50) ? 1 : 0; break;
         }
         case 'dual': {
-          const f = anSmaFast(pre, st.f, i), s = anSmaFast(pre, st.s, i);
-          sig[i] = (R(st.p)[i] > 50 && f != null && s != null && f > s) ? 1 : 0; break;
+          const f = anSmaFast(pre, st.f, i), s2 = anSmaFast(pre, st.s, i);
+          sig[i] = (R(st.p)[i] > 50 && f != null && s2 != null && f > s2) ? 1 : 0; break;
         }
         case 'triple': {
           const mid = anSmaFast(pre, 20, i);
@@ -4973,17 +4974,12 @@ function runStrategies(P, V){
             if(P[j] > hh){ hh = P[j]; hiI = j; }
             if(P[j] < ll){ ll = P[j]; loI = j; }
           }
-          const up = (p - (i - hiI)) / p * 100, dn = (p - (i - loI)) / p * 100;
-          sig[i] = up > dn ? 1 : 0;
-          break;
-        }
-        case 'kelt': {
-          sig[i] = P[i] > E(20)[i] + st.mult * anAtr(P, 14, i) ? 1 : 0;
+          sig[i] = ((p - (i - hiI)) > (p - (i - loI))) ? 1 : 0;
           break;
         }
         case 'gold': {
-          const f = anSmaFast(pre, 50, i), s = anSmaFast(pre, 200, i);
-          sig[i] = (f != null && s != null && f > s) ? 1 : 0;
+          const f = anSmaFast(pre, 50, i), s2 = anSmaFast(pre, 200, i);
+          sig[i] = (f != null && s2 != null && f > s2) ? 1 : 0;
           break;
         }
         case 'ribbon': {
@@ -5002,15 +4998,58 @@ function runStrategies(P, V){
       }
       ens[i] += sig[i];
     }
+    /* in-sample backtest with equity curve */
     let cash = 1000, coin = 0, inM = false, trades = 0;
+    const eq = [];
     for(let i = start; i < P.length; i++){
       if(!inM && sig[i]){ coin = cash / P[i]; cash = 0; inM = true; trades++; }
       else if(inM && !sig[i]){ cash = coin * P[i]; coin = 0; inM = false; trades++; }
+      eq.push(inM ? coin * P[i] : cash);
     }
-    const final = inM ? coin * P[P.length - 1] : cash;
-    results.push({ name: st.name, ret: (final / 1000 - 1) * 100, trades, bull: !!sig[P.length - 1] });
+    const final = eq.length ? eq[eq.length - 1] : 1000;
+    const ret = (final / 1000 - 1) * 100;
+    let vol = 0;
+    if(eq.length > 2){
+      const rs = [];
+      for(let i = 1; i < eq.length; i++) rs.push((eq[i] - eq[i - 1]) / eq[i - 1]);
+      const m = rs.reduce((a, b) => a + b, 0) / rs.length;
+      vol = Math.sqrt(rs.reduce((a, b) => a + (b - m) * (b - m), 0) / rs.length) * 100;
+    }
+    const sharpe = vol > 0 ? ret / vol : (ret > 0 ? 3 : 0);
+    /* out-of-sample backtest (data the weighting never saw) + trade log for Kelly */
+    let c2 = 1000, cn2 = 0, in2 = false, entryEq = 0;
+    let wins = 0, losses = 0, winSum = 0, lossSum = 0;
+    const eq2 = [];
+    for(let i = split; i < P.length; i++){
+      if(!in2 && sig[i]){ entryEq = c2; cn2 = c2 / P[i]; c2 = 0; in2 = true; }
+      else if(in2 && !sig[i]){
+        c2 = cn2 * P[i]; cn2 = 0; in2 = false;
+        const pnl = c2 - entryEq;
+        if(pnl >= 0){ wins++; winSum += pnl; } else { losses++; lossSum -= pnl; }
+      }
+      eq2.push(in2 ? cn2 * P[i] : c2);
+    }
+    const final2 = eq2.length ? eq2[eq2.length - 1] : 1000;
+    const oosRet = (final2 / 1000 - 1) * 100;
+    let maxDD = 0, peak = 1000;
+    eq2.forEach(v => { if(v > peak) peak = v; const dd = (peak - v) / peak * 100; if(dd > maxDD) maxDD = dd; });
+    results.push({ name: st.name, type: st.type, mode: st.mode, ret, vol, sharpe, trades,
+      bull: !!sig[P.length - 1], oosRet, maxDD, wins, losses, winSum, lossSum });
   }
-  return { results, ens, start };
+  /* ensemble out-of-sample performance */
+  let eC = 1000, eN = 0, eIn = false;
+  const eEq = [];
+  for(let i = split; i < P.length; i++){
+    const on = (ens[i] / results.length) >= 0.5;
+    if(!eIn && on){ eN = eC / P[i]; eC = 0; eIn = true; }
+    else if(eIn && !on){ eC = eN * P[i]; eN = 0; eIn = false; }
+    eEq.push(eIn ? eN * P[i] : eC);
+  }
+  const ensFinal = eEq.length ? eEq[eEq.length - 1] : 1000;
+  let ensDD = 0, pk = 1000;
+  eEq.forEach(v => { if(v > pk) pk = v; const dd = (pk - v) / pk * 100; if(dd > ensDD) ensDD = dd; });
+  return { results, ens, start, split,
+    oos: { ens: (ensFinal / 1000 - 1) * 100, bh: (P[P.length - 1] / P[split] - 1) * 100, dd: ensDD } };
 }
 let anCache = {};
 function showAnalysis(id, full, w30, w90, newsItems, P, V, deriv, pat, coinName, st){
@@ -5355,6 +5394,7 @@ function anActionBox(P, results, info){
     '</div>' +
     '<div style="margin-top:10px;font-size:.75rem;color:var(--muted)">🏆 Best 180-day strategies: ' + bestTxt + '</div>' +
     '<div style="margin-top:10px;font-size:.75rem;color:var(--muted)">💸 Derivatives: ' + (info.dNote || 'unavailable') + '</div>' +
+    (info.kelly ? '<div style="margin-top:5px;font-size:.75rem;color:var(--muted)">' + info.kelly + '</div>' : '') +
     (info.patHtml || '') +
     '<div style="margin-top:10px;padding:10px 12px;background:var(--card);border-radius:8px;font-size:.84rem;color:var(--text);line-height:1.55">' + summary + '</div>' +
     '</div>';
@@ -5394,13 +5434,29 @@ function findPatterns(P){
   });
   return { count: matches.length, stats };
 }
+function stratFam(r){
+  const t = r.type;
+  if(t === 'rsi' || t === 'mfi' || t === 'wr' || t === 'cci' || t === 'srsi' || t === 'stoch' || t === 'zscore' || t === 'dip') return 'mr';
+  if(t === 'bb' || t === 'sqz') return (r.mode === 'bounce' || r.mode === 'up') ? 'mr' : 'trend';
+  return 'trend';
+}
 function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
   const res = fullR.results, n = res.length;
   const bulls = res.filter(r => r.bull).length;
-  /* performance-weighted technical score */
+  /* market regime: Kaufman Efficiency Ratio over last 30 days */
+  const erN = 30;
+  let net = Math.abs(P[P.length - 1] - P[P.length - 1 - erN]);
+  let pathLen = 0;
+  for(let i = P.length - erN; i < P.length; i++) pathLen += Math.abs(P[i] - P[i - 1]);
+  const er = pathLen > 0 ? net / pathLen : 0;
+  const regime = er >= 0.45 ? 'trending' : er <= 0.25 ? 'ranging' : 'mixed';
+  const famW = regime === 'trending' ? { trend: 1.5, mr: 0.7 }
+    : regime === 'ranging' ? { trend: 0.7, mr: 1.5 }
+    : { trend: 1, mr: 1 };
+  /* Sharpe-weighted + regime-adapted voting */
   let wSum = 0, wBull = 0;
   res.forEach(r => {
-    const w = 1 + Math.max(0, Math.min(3, r.ret / 10));
+    const w = (1 + Math.max(0, Math.min(3, (r.sharpe || 0) * 0.4))) * famW[stratFam(r)];
     wSum += w; if(r.bull) wBull += w;
   });
   const techW = wBull / wSum * 100;
@@ -5492,7 +5548,7 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
   v.textContent = decision + ' · ' + Math.round(combined) + '/100';
   v.style.color = dCol;
   document.getElementById('anWhy').textContent =
-    (alignTF ? 'All 3 timeframes agree. ' : 'Timeframes are mixed. ') +
+    (alignTF ? 'All 3 timeframes agree. ' : 'Timeframes are mixed. ') + 'Market is ' + regime + '. ' +
     'Mix: strategies 55% + news 12% + Fear & Greed 12% + market 8% + derivatives 10% + volume/pattern nudge. Not financial advice.';
   /* components rows: 4 factors + 3 timeframes + total */
   document.getElementById('anComponents').innerHTML =
@@ -5504,9 +5560,19 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
     compRow('📅 Short-term (30-day) vote', tf30, Math.round(tf30) + '% bullish') +
     compRow('📅 Mid-term (90-day) vote', tf90, Math.round(tf90) + '% bullish') +
     anTotalRow(combined, dCol, decision) +
-    '<div style="font-size:.75rem;color:var(--muted);margin:-4px 0 8px">' + volNote + '</div>';
-  anActionBox(P, res, { bulls: bulls, n: n, combined: combined, txt: decision, dNote: dNote, patHtml: patHtml });
+    '<div style="font-size:.75rem;color:var(--muted);margin:-4px 0 8px">' + volNote + '</div>' +
+    '<div style="font-size:.75rem;color:var(--muted);margin:-2px 0 10px">🌡️ Regime: <b style="color:var(--text)">' + regime.toUpperCase() + '</b> (efficiency ' + er.toFixed(2) + ') → ' + (regime === 'trending' ? 'trend strategies ×1.5' : regime === 'ranging' ? 'mean-reversion ×1.5' : 'normal weighting') + '</div>';
+  anActionBox(P, res, { bulls: bulls, n: n, combined: combined, txt: decision, dNote: dNote, patHtml: patHtml, kelly: kellyTxt });
   /* stats */
+  let KW = 0, KL = 0, KSw = 0, KSl = 0;
+  res.forEach(r => { KW += r.wins; KL += r.losses; KSw += r.winSum; KSl += r.lossSum; });
+  let kellyTxt = '';
+  const totT = KW + KL;
+  if(totT >= 4 && KSl > 0){
+    const W = KW / totT, RR = KSw / KSl;
+    const k = Math.max(0, W - (1 - W) / RR);
+    kellyTxt = '💰 Suggested position size (¼-Kelly, educational): <b style="color:var(--text)">' + Math.min(25, (k / 4 * 100)).toFixed(0) + '% of capital</b> · out-of-sample win rate ' + (W * 100).toFixed(0) + '% (' + totT + ' trades)';
+  }
   const rets = res.map(r => r.ret).sort((a, b) => a - b);
   const avg = rets.reduce((a, b) => a + b, 0) / n;
   const median = rets[Math.floor(n / 2)];
@@ -5515,8 +5581,9 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
   const beaters = res.filter(r => r.ret > bhRet).length;
   document.getElementById('anBt').innerHTML =
     '🗳️ ' + bulls + '/' + n + ' strategies bullish · avg backtest <b style="color:' + (avg >= 0 ? '#55efc4' : '#ff6b6b') + '">' + (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%</b> (median ' + (median >= 0 ? '+' : '') + median.toFixed(1) + '%)';
+  const oos = fullR.oos || { ens: 0, bh: 0, dd: 0 };
   document.getElementById('anBtSub').textContent =
-    'Buy & hold: ' + (bhRet >= 0 ? '+' : '') + bhRet.toFixed(1) + '% over 365 days · ' + beaters + '/' + n + ' strategies beat buy & hold · Past performance ≠ future results';
+    '✅ Out-of-sample (last ' + (P.length - fullR.split) + ' days, unseen data): ensemble ' + (oos.ens >= 0 ? '+' : '') + oos.ens.toFixed(1) + '% vs buy & hold ' + (oos.bh >= 0 ? '+' : '') + oos.bh.toFixed(1) + '% · max drawdown ' + oos.dd.toFixed(1) + '% · Past performance ≠ future results';
 }
 function drawAnChart(P, scores){
   const cv = document.getElementById('anChart');
