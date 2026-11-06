@@ -254,6 +254,7 @@
   <button class="tab" data-panel="letter">✉️ Letter</button>
   <button class="tab" data-panel="iptrack">🌐 IP Tracker</button>
   <button class="tab" data-panel="crypto">🪙 Crypto</button>
+  <button class="tab" data-panel="crypto" data-mode="futures">📈 Futures</button>
 </nav>
 
 <main>
@@ -1478,6 +1479,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
 
 <!-- ============ CRYPTO TOOLS ============ -->
 <section class="panel" id="crypto">
+  <div id="modeBanner" class="sub" style="margin-bottom:12px"></div>
   <div class="card">
     <h2>🪙 Crypto Market Overview</h2>
     <p class="sub"><span class="live-dot"></span><b style="color:#ff6b6b;font-size:.75rem">LIVE real-time prices</b> <span id="liveStatus" style="color:#55efc4;font-size:.72rem"></span> · 150-strategy analyzer · Not financial advice.</p>
@@ -1571,6 +1573,7 @@ Kindly process this request at your earliest convenience. Thank you for your coo
       <div id="newsBox" style="margin-top:12px"></div>
       <div id="upgradeBox" style="margin-top:12px"></div>
     </div>
+    <div id="futResult" style="margin-top:14px;display:none"></div>
     <div style="margin-top:16px"><button class="btn btn-ghost" onclick="scanTop()">🔭 Scan top 100 coins for setups</button><div id="scanBox" style="display:none;margin-top:12px"></div></div>
   </div>
 
@@ -1586,6 +1589,78 @@ Kindly process this request at your earliest convenience. Thank you for your coo
     <button class="btn" onclick="calcPL()">Calculate P/L</button>
     <div class="result" id="plResult"><div class="big"></div><small></small></div>
   </div>
+<div class="card">
+    <h2>📈 Market Pulse</h2>
+    <p class="sub">The biggest moves among the top 100 coins right now, with turnover (24h volume ÷ market cap).</p>
+    <button class="btn btn-ghost" onclick="dskPulse()">Show biggest moves</button>
+    <div id="pulseOut" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+    <h2>🔭 Seven-setup board</h2>
+    <p class="sub">Seven rules scanned across the top 100 coins, using hourly prices from the last 7 days. None has shown an edge in testing yet. These are filters, not signals.</p>
+    <button class="btn btn-ghost" onclick="dskBoard()">Scan seven setups</button>
+    <div id="boardOut" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+    <h2>🧭 Coin card</h2>
+    <p class="sub">Trend, levels, liquidity, funding, open interest and the latest headline for one coin.</p>
+    <div class="row">
+      <div><label>Coin</label><select id="ccCoin" onfocus="dskFillCoins()"></select></div>
+      <div style="align-self:flex-end"><button class="btn" onclick="dskCoinCard()">Build card</button></div>
+    </div>
+    <div id="ccOut" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+    <h2>🛡️ Plan, size and limits</h2>
+    <p class="sub">Plan the exit before the entry, size the position to your max loss, check liquidation and run the plan past your limits. This never places an order.</p>
+    <div class="row">
+      <div><label>Account ($)</label><input type="number" id="rkAcc" value="10000"></div>
+      <div><label>Max loss per trade (%)</label><input type="number" id="rkLoss" value="1" step="0.1"></div>
+      <div><label>Side</label><select id="rkSide"><option value="long">Long</option><option value="short">Short</option></select></div>
+      <div><label>Entry ($)</label><input type="number" id="rkEntry" value="30000"></div>
+      <div><label>Stop ($)</label><input type="number" id="rkStop" value="29000"></div>
+      <div><label>Target ($)</label><input type="number" id="rkTgt" value="33000"></div>
+      <div><label>Leverage (x)</label><input type="number" id="rkLev" value="3"></div>
+      <div><label>Max leverage (x)</label><input type="number" id="rkMaxLev" value="5"></div>
+      <div><label>Max share of account (%)</label><input type="number" id="rkMaxPos" value="50"></div>
+      <div><label>Loss already today ($)</label><input type="number" id="rkDay" value="0"></div>
+      <div><label>Daily loss limit ($)</label><input type="number" id="rkDayLim" value="300"></div>
+    </div>
+    <button class="btn" onclick="dskPlan()">Check plan</button>
+    <div id="rkOut" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+    <h2>📓 Trade journal</h2>
+    <p class="sub">Saved on this device only.</p>
+    <div class="row">
+      <div><label>Coin</label><input type="text" id="jCoin" placeholder="BTC"></div>
+      <div><label>Side</label><select id="jSide"><option value="long">Long</option><option value="short">Short</option></select></div>
+      <div><label>Entry ($)</label><input type="number" id="jEntry"></div>
+      <div><label>Exit ($)</label><input type="number" id="jExit"></div>
+      <div><label>Quantity</label><input type="number" id="jQty" value="1"></div>
+      <div><label>Followed the plan?</label><select id="jPlan"><option value="yes">Yes</option><option value="no">No</option></select></div>
+    </div>
+    <div style="margin-top:10px"><label>Why I took it (setup, and what would prove me wrong)</label><input type="text" id="jWhy"></div>
+    <button class="btn" style="margin-top:12px" onclick="dskJournalAdd()">Save trade</button>
+    <div id="jOut" style="margin-top:12px"></div>
+</div>
+
+<div class="card">
+    <h2>💡 Idea lab</h2>
+    <p class="sub">Test one rule on a coin's real past year of daily prices, after fees, against entering on every day. Every test is counted, because the more ideas you try, the more likely one looks good by luck.</p>
+    <div class="row">
+      <div><label>Coin</label><select id="ilCoin" onfocus="dskFillCoins()"></select></div>
+      <div><label>Rule</label><select id="ilRule"><option value="sma20">Price crosses above its 20-day average</option><option value="rsi30">RSI(14) drops below 30</option><option value="break20">Close breaks above the 20-day high</option><option value="ema921">EMA 9 crosses above EMA 21</option></select></div>
+      <div><label>Hold (days)</label><input type="number" id="ilHold" value="5" min="1" max="30"></div>
+      <div><label>Fee per side (%)</label><input type="number" id="ilFee" value="0.1" step="0.01"></div>
+    </div>
+    <button class="btn" style="margin-top:12px" onclick="dskIdea()">Test idea</button>
+    <div id="ilOut" style="margin-top:12px"></div>
+</div>
 </section>
 
 <footer>54 free tools · © 2026 ToolBox<br>
@@ -5092,9 +5167,12 @@ function showAnalysis(id, full, w30, w90, newsItems, P, V, deriv, pat, coinName,
     const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
     drawAnChart(P, ensScores);
     try { renderUpgrade(P, full, newsItems, coinName); } catch(err){ document.getElementById('upgradeBox').innerHTML = '<small>Setup upgrade could not be drawn for this coin.</small>'; }
+    window._anReady = true;
+    try { renderFutures(P, deriv, coinName, newsItems); } catch(err){ document.getElementById('futResult').innerHTML = '<small>Futures view could not be drawn for this coin.</small>'; window._futReady = true; }
     renderNewsBox(newsItems, coinName);
     st.style.display = 'none';
     document.getElementById('anResult').style.display = 'block';
+    applyCryptoMode();
   } catch(err){
     st.style.display = 'block';
     st.textContent = '❌ ' + (err && err.message ? err.message : err) + ' — please try again';
@@ -5759,26 +5837,17 @@ function upStd(a){
   const m = a.reduce((s, x) => s + x, 0) / a.length;
   return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / Math.max(1, a.length - 1));
 }
-/* Stop: the wider of the 30-day low or 1.5 daily standard deviations (never more than 25% away).
-   Target: the 30-day high or 2 units of risk, whichever is further. */
-function upPlan(P){
-  const entry = P[P.length - 1], w = P.slice(-30);
-  const sup = Math.min(...w), resi = Math.max(...w);
-  const rets = [];
-  for(let i = P.length - 30; i < P.length; i++) rets.push(Math.log(P[i] / P[i - 1]));
-  const sd = upStd(rets);
-  const stopDist = Math.min(Math.max(entry - sup, 1.5 * sd * entry, entry * 0.005), entry * 0.25);
-  const stop = entry - stopDist, target = Math.max(resi, entry + 2 * stopDist);
-  return { entry, stop, target, stopPct: stopDist / entry, tgtPct: (target - entry) / entry, rr: (target - entry) / stopDist, sd };
-}
-/* Bar-by-bar entry: when the 9-day average last crossed above the 21-day average. */
-function upEntry(P){
-  const e9 = upEma(P, 9), e21 = upEma(P, 21), last = P.length - 1;
-  for(let i = last; i > last - 60 && i > 21; i--){
-    if(e9[i] > e21[i] && e9[i - 1] <= e21[i - 1])
-      return { fired: true, daysAgo: last - i, price: P[i], movePct: (P[last] / P[i] - 1) * 100 };
-  }
-  return { fired: false };
+/* Hourly candles of the last 7 days, used by the futures Time Machine. */
+function upHourly(id){ const m = marketCache[id]; return m && m.sparkline_in_7d && m.sparkline_in_7d.price ? m.sparkline_in_7d.price : null; }
+/* Stop and target for a long or a short. Stop: the wider of the 30-day range edge or 1.5 daily standard deviations (never more than 25% away). Target: the far 30-day edge or 2 units of risk, whichever is further. */
+function upPlan(P, side){
+  const entry = P[P.length - 1], w = P.slice(-30), sup = Math.min(...w), resi = Math.max(...w);
+  const rets = []; for(let i = P.length - 30; i < P.length; i++) rets.push(Math.log(P[i] / P[i - 1]));
+  const sd = upStd(rets), short = side === 'short';
+  const stopDist = Math.min(Math.max(short ? resi - entry : entry - sup, 1.5 * sd * entry, entry * 0.005), entry * 0.25);
+  const stop = short ? entry + stopDist : entry - stopDist;
+  const target = short ? Math.min(sup, entry - 2 * stopDist) : Math.max(resi, entry + 2 * stopDist);
+  return { side: short ? 'short' : 'long', entry, stop, target, stopPct: stopDist / entry, tgtPct: Math.abs(target - entry) / entry, rr: Math.abs(target - entry) / stopDist, sd };
 }
 /* Time Machine: 10,000 replays of the next 14 days, built from 5-day blocks of the coin's own last-year daily moves. */
 function upMonteCarlo(P, plan){
@@ -5806,6 +5875,7 @@ function upMonteCarlo(P, plan){
   const q = x => ends[Math.floor(x * (PATHS - 1))] * 100;
   return { hitT: hitT / PATHS * 100, hitS: hitS / PATHS * 100, up: up / PATHS * 100, p10: q(0.1), p50: q(0.5), p90: q(0.9) };
 }
+
 /* Past setups: each day the 150-strategy vote flipped to bullish, judged with today's stop and target. */
 function upAnalogs(P, full, plan){
   const H = 14, n = full.results.length;
@@ -5823,18 +5893,7 @@ function upAnalogs(P, full, plan){
   }
   return out;
 }
-/* Scanner rule on 7 days of hourly prices: EMA 12 crossed above EMA 26 in the last 6 hours and RSI 14 is below 70. */
-function upScanCoin(pr){
-  if(!pr || pr.length < 60) return null;
-  const e12 = upEma(pr, 12), e26 = upEma(pr, 26), last = pr.length - 1;
-  for(let i = last; i > last - 6; i--){
-    if(e12[i] > e26[i] && e12[i - 1] <= e26[i - 1]){
-      const rsi = upRsi(pr, 14);
-      return rsi < 70 ? { hrs: last - i, rsi } : null;
-    }
-  }
-  return null;
-}
+
 function renderUpgrade(P, full, newsItems, coinName){
   const box = document.getElementById('upgradeBox');
   const plan = upPlan(P), entry = upEntry(P), mc = upMonteCarlo(P, plan), an = upAnalogs(P, full, plan);
@@ -5866,6 +5925,51 @@ function renderUpgrade(P, full, newsItems, coinName){
     '</div>' +
     '<small style="display:block;color:var(--muted);margin-top:8px">The replays use this coin\'s own last year of daily moves, and the past setups come from the same year. They describe history, not what will happen next. Not financial advice.</small>';
 }
+
+/* Futures Time Machine: 10,000 replays of one day, side-aware (long or short), from the coin's hourly candles of the last 7 days (24 hourly steps) when available, otherwise one daily move. */
+function ftMonteCarlo(P, plan, hourly){
+  const PATHS = 10000, useH = Array.isArray(hourly) && hourly.length > 30, src = useH ? hourly : P, rets = [];
+  for(let i = 1; i < src.length; i++) rets.push(Math.log(src[i] / src[i - 1]));
+  const steps = useH ? 24 : 1, L = rets.length, sgn = plan.side === 'short' ? -1 : 1;
+  const ends = []; let hitT = 0, hitS = 0, profit = 0;
+  for(let p = 0; p < PATHS; p++){
+    let price = plan.entry, res = null;
+    for(let k = 0; k < steps && res === null; k++){
+      price *= Math.exp(rets[Math.floor(Math.random() * L)]);
+      const hitTarget = sgn > 0 ? price >= plan.target : price <= plan.target;
+      const hitStop = sgn > 0 ? price <= plan.stop : price >= plan.stop;
+      if(hitTarget) res = 'T'; else if(hitStop) res = 'S';
+    }
+    if(res === 'T') hitT++; else if(res === 'S') hitS++;
+    const pl = sgn * (price / plan.entry - 1);
+    if(pl > 0) profit++;
+    ends.push(pl);
+  }
+  ends.sort((a, b) => a - b);
+  const q = x => ends[Math.floor(x * (PATHS - 1))] * 100;
+  return { steps, hitT: hitT / PATHS * 100, hitS: hitS / PATHS * 100, neither: 100 - hitT / PATHS * 100 - hitS / PATHS * 100, profit: profit / PATHS * 100, p10: q(0.1), p50: q(0.5), p90: q(0.9) };
+}
+/* Bar-by-bar entry: when the 9-day average last crossed above the 21-day average. */
+function upEntry(P){
+  const e9 = upEma(P, 9), e21 = upEma(P, 21), last = P.length - 1;
+  for(let i = last; i > last - 60 && i > 21; i--){
+    if(e9[i] > e21[i] && e9[i - 1] <= e21[i - 1])
+      return { fired: true, daysAgo: last - i, price: P[i], movePct: (P[last] / P[i] - 1) * 100 };
+  }
+  return { fired: false };
+}
+/* Scanner rule on 7 days of hourly prices: EMA 12 crossed above EMA 26 in the last 6 hours and RSI 14 is below 70. */
+function upScanCoin(pr){
+  if(!pr || pr.length < 60) return null;
+  const e12 = upEma(pr, 12), e26 = upEma(pr, 26), last = pr.length - 1;
+  for(let i = last; i > last - 6; i--){
+    if(e12[i] > e26[i] && e12[i - 1] <= e26[i - 1]){
+      const rsi = upRsi(pr, 14);
+      return rsi < 70 ? { hrs: last - i, rsi } : null;
+    }
+  }
+  return null;
+}
 function scanTop(){
   const box = document.getElementById('scanBox');
   box.style.display = 'block';
@@ -5893,6 +5997,314 @@ function pickCoin(id){
   analyzeCoin();
   s.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
+/* ---------- Trading desk: market pulse, seven-setup board, coin card, plan and limits, journal, idea lab ---------- */
+function dskEma(arr, n){ const k = 2 / (n + 1), o = new Array(arr.length); o[0] = arr[0]; for(let i = 1; i < arr.length; i++) o[i] = arr[i] * k + o[i - 1] * (1 - k); return o; }
+function dskRsiVal(ag, al){ return al === 0 ? (ag === 0 ? 50 : 100) : 100 - 100 / (1 + ag / al); }
+function dskRsi(p, n){
+  const out = new Array(p.length).fill(50); let ag = 0, al = 0;
+  for(let i = 1; i < p.length; i++){
+    const d = p[i] - p[i - 1], g = Math.max(d, 0), l = Math.max(-d, 0);
+    if(i <= n){ ag += g / n; al += l / n; if(i === n) out[i] = dskRsiVal(ag, al); }
+    else { ag = (ag * (n - 1) + g) / n; al = (al * (n - 1) + l) / n; out[i] = dskRsiVal(ag, al); }
+  }
+  return out;
+}
+function dskSp(m){ return (m && m.sparkline_in_7d && m.sparkline_in_7d.price) || null; }
+function dskRow(k, v){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--card2);font-size:.85rem"><span style="color:var(--muted)">' + k + '</span><span style="text-align:right">' + v + '</span></div>'; }
+function dskFillCoins(){
+  const list = Object.values(marketCache).sort((a, b) => (a.market_cap_rank || 999) - (b.market_cap_rank || 999));
+  ['ccCoin', 'ilCoin'].forEach(id => {
+    const s = document.getElementById(id);
+    if(!s || s.dataset.n === String(list.length)) return;
+    s.innerHTML = list.map(m => '<option value="' + upEsc(m.id) + '">' + upEsc(m.name) + ' (' + upEsc((m.symbol || '').toUpperCase()) + ')</option>').join('');
+    s.dataset.n = String(list.length);
+  });
+}
+/* Market Pulse: biggest 24h moves among the top 100 coins, with turnover (24h volume / market cap). */
+function dskPulse(){
+  const out = document.getElementById('pulseOut');
+  const coins = Object.values(marketCache).filter(m => m.price_change_percentage_24h != null);
+  if(!coins.length){ out.innerHTML = '<small class="err">Load prices first: tap Refresh prices in the market overview.</small>'; return; }
+  const top = coins.slice().sort((a, b) => Math.abs(b.price_change_percentage_24h) - Math.abs(a.price_change_percentage_24h)).slice(0, 8);
+  out.innerHTML = top.map(m => {
+    const ch = m.price_change_percentage_24h, turn = m.market_cap ? m.total_volume / m.market_cap * 100 : null;
+    return dskRow(upEsc(m.name) + ' <small style="color:var(--muted)">' + upEsc((m.symbol || '').toUpperCase()) + '</small>',
+      '<span style="color:' + (ch >= 0 ? 'var(--accent2)' : '#ff6b6b') + '">' + (ch >= 0 ? '+' : '') + ch.toFixed(1) + '%</span><br><small style="color:var(--muted)">turnover ' + (turn == null ? '—' : turn.toFixed(1) + '%') + '</small>');
+  }).join('') + '<small style="display:block;margin-top:8px;color:var(--muted)">Volume against a usual day needs each coin\'s past volume, which this page does not load yet.</small>';
+}
+/* Seven-setup board: each rule returns hours since it fired (0 = now) or null. */
+function dskLast6(pr, test){ for(let i = pr.length - 1; i > pr.length - 7; i--) if(test(i)) return pr.length - 1 - i; return null; }
+function dskRules(){
+  return [
+    ['EMA 12 crosses above EMA 26 in the last 6h, RSI below 70', m => { const h = upScanCoin(dskSp(m)); return h ? h.hrs : null; }],
+    ['RSI(14) bounces up through 30 in the last 6h', m => { const pr = dskSp(m); if(!pr) return null; const r = dskRsi(pr, 14); return dskLast6(pr, i => r[i - 1] <= 30 && r[i] > 30); }],
+    ['Breaks above the prior 48h high in the last 6h', m => { const pr = dskSp(m); if(!pr) return null; return dskLast6(pr, i => { if(i < 50) return false; let hi = -Infinity, hp = -Infinity; for(let j = i - 48; j < i; j++) hi = Math.max(hi, pr[j]); for(let j = i - 49; j < i - 1; j++) hp = Math.max(hp, pr[j]); return pr[i] > hi && pr[i - 1] <= hp; }); }],
+    ['Pullback in an uptrend, price within 1.5% of EMA 26', m => { const pr = dskSp(m); if(!pr) return null; const e12 = dskEma(pr, 12), e26 = dskEma(pr, 26), L = pr.length - 1; return e12[L] > e26[L] && pr[L] >= e26[L] * 0.995 && pr[L] <= e26[L] * 1.015 ? 0 : null; }],
+    ['Up more than 5% in 24h', m => (m.price_change_percentage_24h > 5 ? 0 : null)],
+    ['Down more than 5% in 24h', m => (m.price_change_percentage_24h < -5 ? 0 : null)],
+    ['Stretched 3% or more above its 7-day average', m => { const pr = dskSp(m); if(!pr) return null; const mean = pr.reduce((a, b) => a + b, 0) / pr.length; return pr[pr.length - 1] > mean * 1.03 ? 0 : null; }]
+  ];
+}
+function dskBoard(){
+  const out = document.getElementById('boardOut'), coins = Object.values(marketCache);
+  if(coins.length < 10){ out.innerHTML = '<small class="err">Load prices first: tap Refresh prices in the market overview.</small>'; return; }
+  out.innerHTML = dskRules().map(([name, fn]) => {
+    const hits = coins.map(m => ({ m, hrs: fn(m) })).filter(x => x.hrs !== null && x.hrs !== undefined).sort((a, b) => a.hrs - b.hrs);
+    const names = hits.slice(0, 3).map(x => upEsc((x.m.symbol || '').toUpperCase())).join(', ') || 'none right now';
+    return dskRow(upEsc(name), hits.length + ' coin' + (hits.length === 1 ? '' : 's') + '<br><small style="color:var(--muted)">' + names + '</small>');
+  }).join('') + '<small style="display:block;margin-top:8px;color:var(--muted)">None of these rules has shown an edge in testing yet. Treat matches as a watchlist, not a trade. Track records are not shown on this page.</small>';
+}
+/* Coin card: trend, levels, liquidity, funding, open interest, latest headline. */
+async function dskCoinCard(){
+  dskFillCoins();
+  const out = document.getElementById('ccOut'), m = marketCache[document.getElementById('ccCoin').value];
+  if(!m){ out.innerHTML = '<small class="err">Load prices first, then pick a coin.</small>'; return; }
+  out.innerHTML = '<small style="color:var(--muted)">Loading funding, open interest and the latest headline…</small>';
+  const sym = (m.symbol || '').toUpperCase(), pr = dskSp(m) || [m.current_price], L = pr.length - 1;
+  const e12 = dskEma(pr, 12), e26 = dskEma(pr, 26), hi = Math.max(...pr), lo = Math.min(...pr);
+  const [der, oi, news] = await Promise.all([
+    fetchDerivatives(sym + 'USDT').catch(() => null),
+    fetchT('https://fapi.binance.com/fapi/v1/openInterest?symbol=' + sym + 'USDT', 6000).then(r => (r.ok ? r.json() : null)).catch(() => null),
+    Promise.race([fetchCryptoNews(m.name).catch(() => []), new Promise(r => setTimeout(() => r([]), 8000))])
+  ]);
+  const turn = m.market_cap ? m.total_volume / m.market_cap * 100 : null;
+  const pos = hi > lo ? (pr[L] - lo) / (hi - lo) * 100 : 50;
+  const oiUsd = oi && oi.openInterest ? +oi.openInterest * m.current_price : null;
+  const head = news && news.length ? upEsc(news[0].title) + ' <small style="color:var(--muted)">· ' + newsAge(news[0].pub) + '</small>' : 'none loaded right now';
+  out.innerHTML = '<b>' + upEsc(m.name) + ' (' + upEsc(sym) + ') at ' + fmtPrice(m.current_price) + '</b>' +
+    dskRow('Trend (fast vs slow average, hourly)', e12[L] > e26[L] ? 'up' : 'down') +
+    dskRow('Change over 7 days', pr.length > 1 ? ((pr[L] / pr[0] - 1) * 100).toFixed(1) + '%' : '—') +
+    dskRow('7-day low / high', fmtPrice(lo) + ' / ' + fmtPrice(hi)) +
+    dskRow('Where price sits in its 7-day range', pos.toFixed(0) + '%') +
+    dskRow('Liquidity (24h volume ÷ market cap)', turn == null ? '—' : turn.toFixed(1) + '%') +
+    dskRow('Funding (Binance, per 8 hours)', der && der.fr != null ? der.fr.toFixed(4) + '%' : 'unavailable') +
+    dskRow('Long / short accounts (Binance)', der && der.lsRatio ? der.lsRatio.toFixed(2) : 'unavailable') +
+    dskRow('Open interest (approx. USD)', oiUsd ? '$' + (oiUsd / 1e6).toFixed(1) + 'M' : 'unavailable') +
+    dskRow('Latest headline', head) +
+    dskRow('Next US CPI print', 'not loaded here; check the BLS release calendar');
+}
+/* Plan and limits: sizes to max loss, estimates liquidation, checks the plan. It never places an order. */
+function dskPlan(){
+  const v = id => +document.getElementById(id).value, out = document.getElementById('rkOut');
+  const side = document.getElementById('rkSide').value, long = side === 'long';
+  const acc = v('rkAcc'), lossPct = v('rkLoss'), entry = v('rkEntry'), stop = v('rkStop'), tgt = v('rkTgt');
+  const lev = Math.max(1, v('rkLev') || 1), maxLev = v('rkMaxLev'), maxPos = v('rkMaxPos'), dayLoss = v('rkDay') || 0, dayLim = v('rkDayLim');
+  if(!(acc > 0 && entry > 0 && stop > 0 && tgt > 0 && entry !== stop && lossPct > 0)){
+    out.innerHTML = '<small class="err">Enter an account size, a loss limit, and an entry, stop and target, with the stop different from the entry.</small>';
+    return;
+  }
+  const risk = acc * lossPct / 100, dist = Math.abs(entry - stop), units = risk / dist, notional = units * entry;
+  const liq = long ? entry * (1 - 1 / lev + 0.005) : entry * (1 + 1 / lev - 0.005), rr = Math.abs(tgt - entry) / dist;
+  const checks = [
+    ['Stop and target are on the right sides of entry', long ? stop < entry && tgt > entry : stop > entry && tgt < entry],
+    ['Stop is at least 0.5% from entry', dist / entry >= 0.005],
+    ['Reward to risk is at least 2', rr >= 2],
+    ['Leverage is within your limit', lev <= maxLev],
+    ['Position is within your share of the account', notional <= acc * maxPos / 100],
+    ['Stop sits before liquidation', long ? stop > liq : stop < liq],
+    ['Planned loss keeps today within the daily limit', dayLoss + risk <= dayLim]
+  ];
+  const failed = checks.filter(c => !c[1]).length;
+  out.innerHTML = '<div class="big" style="color:' + (failed ? '#ff6b6b' : 'var(--accent2)') + '">' +
+    (failed ? failed + (failed === 1 ? ' limit is' : ' limits are') + ' not met: do not take this trade' : 'All limits met: this is a plan, not an order') + '</div>' +
+    dskRow('Units to buy', units.toLocaleString(undefined, { maximumFractionDigits: 6 })) +
+    dskRow('Position value', '$' + notional.toFixed(0)) +
+    dskRow('Margin needed at ' + lev + 'x', '$' + (notional / lev).toFixed(0)) +
+    dskRow('Loss if the stop hits', '$' + risk.toFixed(0) + ' (' + lossPct.toFixed(2) + '% of account)') +
+    dskRow('Reward to risk', rr.toFixed(2)) +
+    dskRow('Approximate liquidation price', '$' + liq.toFixed(2) + ' (estimate; check your exchange)') +
+    checks.map(c => dskRow(c[0], c[1] ? '<span style="color:var(--accent2)">✓</span>' : '<span style="color:#ff6b6b">✗</span>')).join('') +
+    '<small style="display:block;margin-top:8px;color:var(--muted)">Liquidation uses a 0.5% maintenance margin and isolated margin. Exchanges use tiered rates, so treat this as a rough check.</small>';
+}
+/* Trade journal, saved on this device only. */
+function dskLoadJ(){ try { return JSON.parse(localStorage.getItem('tb_journal')) || []; } catch(e){ return []; } }
+function dskSaveJ(a){ try { localStorage.setItem('tb_journal', JSON.stringify(a)); } catch(e){} }
+function dskJournalAdd(){
+  const v = id => document.getElementById(id).value, out = document.getElementById('jOut');
+  const entry = +v('jEntry'), exit = +v('jExit'), qty = +v('jQty'), side = document.getElementById('jSide').value;
+  if(!(entry > 0 && exit > 0 && qty > 0 && v('jCoin').trim())){ out.innerHTML = '<small class="err">Enter a coin, entry, exit and quantity.</small>'; return; }
+  const list = dskLoadJ();
+  list.unshift({ t: new Date().toLocaleDateString(), coin: v('jCoin').trim().toUpperCase().slice(0, 12), side, entry, exit, qty,
+    plan: v('jPlan') === 'yes', why: v('jWhy').slice(0, 200), pnl: (exit - entry) * qty * (side === 'long' ? 1 : -1) });
+  dskSaveJ(list.slice(0, 200));
+  ['jCoin', 'jEntry', 'jExit', 'jWhy'].forEach(id => { document.getElementById(id).value = ''; });
+  dskJournalRender();
+}
+function dskJournalRender(){
+  const out = document.getElementById('jOut');
+  if(!out) return;
+  const list = dskLoadJ();
+  if(!list.length){ out.innerHTML = '<small style="color:var(--muted)">No trades saved yet.</small>'; return; }
+  const total = list.reduce((s, x) => s + x.pnl, 0), wins = list.filter(x => x.pnl > 0).length, followed = list.filter(x => x.plan).length;
+  out.innerHTML = '<b>' + list.length + ' trades · P/L ' + (total >= 0 ? '+' : '') + total.toFixed(2) + ' · win rate ' + Math.round(wins / list.length * 100) + '% · followed plan ' + Math.round(followed / list.length * 100) + '%</b>' +
+    list.slice(0, 20).map(x => '<div style="padding:6px 0;border-bottom:1px solid var(--card2);font-size:.82rem">' + upEsc(x.t) + ' · ' + upEsc(x.coin) + ' ' + x.side + ' · P/L <span style="color:' + (x.pnl >= 0 ? 'var(--accent2)' : '#ff6b6b') + '">' + (x.pnl >= 0 ? '+' : '') + x.pnl.toFixed(2) + '</span>' + (x.plan ? '' : ' · off plan') +
+      (x.why ? '<br><small style="color:var(--muted)">' + upEsc(x.why) + '</small>' : '') + '</div>').join('');
+}
+/* Idea lab: one rule, real past daily prices, fees charged, compared with entering on every day. */
+function dskSignals(P, rule){
+  const n = P.length, out = [], e9 = dskEma(P, 9), e21 = dskEma(P, 21), r14 = dskRsi(P, 14);
+  const sma = (i, k) => { let s = 0; for(let j = i - k + 1; j <= i; j++) s += P[j]; return s / k; };
+  for(let i = 25; i < n; i++){
+    let on = false;
+    if(rule === 'sma20') on = P[i] > sma(i, 20) && P[i - 1] <= sma(i - 1, 20);
+    else if(rule === 'rsi30') on = r14[i] < 30 && r14[i - 1] >= 30;
+    else if(rule === 'break20'){
+      let hi = -Infinity, hp = -Infinity;
+      for(let j = i - 20; j < i; j++) hi = Math.max(hi, P[j]);
+      for(let j = i - 21; j < i - 1; j++) hp = Math.max(hp, P[j]);
+      on = P[i] > hi && P[i - 1] <= hp;
+    }
+    else if(rule === 'ema921') on = e9[i] > e21[i] && e9[i - 1] <= e21[i - 1];
+    if(on) out.push(i);
+  }
+  return out;
+}
+function dskBacktest(P, rule, H, fee){
+  const cost = (1 - fee) * (1 - fee), n = P.length;
+  const net = i => P[i + H] / P[i] * cost - 1;
+  const idea = dskSignals(P, rule).filter(i => i + H < n).map(net);
+  const all = []; for(let i = 0; i + H < n; i++) all.push(net(i));
+  const avg = a => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0);
+  const win = a => (a.length ? a.filter(x => x > 0).length / a.length : 0);
+  return { n: idea.length, win: win(idea), avg: avg(idea), baseWin: win(all), baseAvg: avg(all) };
+}
+async function dskIdea(){
+  dskFillCoins();
+  const out = document.getElementById('ilOut'), m = marketCache[document.getElementById('ilCoin').value];
+  const rule = document.getElementById('ilRule').value, H = Math.min(30, Math.max(1, Math.round(+document.getElementById('ilHold').value || 5)));
+  const fee = Math.max(0, +document.getElementById('ilFee').value || 0) / 100;
+  if(!m){ out.innerHTML = '<small class="err">Load prices first, then pick a coin.</small>'; return; }
+  out.innerHTML = '<small style="color:var(--muted)">Downloading one year of daily prices and testing…</small>';
+  try {
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/' + encodeURIComponent(m.id) + '/market_chart?vs_currency=usd&days=365', 20000);
+    if(!r.ok) throw new Error(r.status === 429 ? 'the price service is busy; wait a minute' : 'price service error ' + r.status);
+    const P = (await r.json()).prices.map(x => x[1]);
+    if(P.length < 120) throw new Error('not enough price history');
+    const t = dskBacktest(P, rule, H, fee);
+    let ideas = 0;
+    try { ideas = (+localStorage.getItem('tb_ideas') || 0) + 1; localStorage.setItem('tb_ideas', String(ideas)); } catch(e){}
+    const pp = x => (x * 100).toFixed(2) + '%';
+    const verdict = t.n < 20 ? 'Too few signals (' + t.n + ') to judge. Try another rule, a longer hold or a different coin.'
+      : (t.avg > t.baseAvg + 0.005 && t.win > t.baseWin + 0.05) ? 'Did better than random entries here, after fees. Test it on fresh data before you trust it.'
+      : 'No clear edge over random entries on this coin\'s past year, after fees.';
+    out.innerHTML = '<div class="big" style="font-size:1.05rem">' + verdict + '</div>' +
+      dskRow('Signals tested (each counts as one trade)', String(t.n)) +
+      dskRow('Win rate: this rule vs random entry', Math.round(t.win * 100) + '% vs ' + Math.round(t.baseWin * 100) + '%') +
+      dskRow('Average net return: this rule vs random entry', pp(t.avg) + ' vs ' + pp(t.baseAvg)) +
+      '<small style="display:block;margin-top:8px;color:var(--muted)">Ideas tested on this device: ' + ideas + '. The more ideas you try, the more likely one looks good by luck. Entries use the daily close, fees are charged on both sides, and past results do not show what comes next.</small>';
+  } catch(e){ out.innerHTML = '<small class="err">Test stopped: ' + upEsc(e && e.message ? e.message : e) + '</small>'; }
+}
+if(document.readyState !== 'loading') dskJournalRender(); else document.addEventListener('DOMContentLoaded', dskJournalRender);
+/* ---------- Futures mode: long or short bias from 150 two-sided configurations ---------- */
+/* fn(i, cur) returns 1 (long), -1 (short), 9 (go flat) or 0 (keep the current position). */
+function ftRun(P, fn){ const n = P.length, a = new Int8Array(n); let cur = 0; for(let i = 0; i < n; i++){ const v = fn(i, cur); if(v === 9) cur = 0; else if(v) cur = v; a[i] = cur; } return a; }
+function ftSma(P, n, i){ let s = 0; for(let j = i - n + 1; j <= i; j++) s += P[j]; return s / n; }
+function ftConfigs(){
+  const C = [];
+  for(const f of [5, 8, 10, 12, 15, 20, 25, 30]) for(const s of [40, 50, 60, 80, 100, 150, 200])
+    C.push(P => ftRun(P, i => i < s - 1 ? 0 : (ftSma(P, f, i) > ftSma(P, s, i) ? 1 : -1)));
+  for(const n of [7, 10, 14, 21]) for(const lo of [20, 25, 30, 35]) for(const hi of [65, 70, 75, 80])
+    C.push(P => { const r = dskRsi(P, n); return ftRun(P, (i, cur) => { if(i < n) return 0; if(r[i] < lo) return 1; if(r[i] > hi) return -1; return (cur === 1 && r[i] > 50) || (cur === -1 && r[i] < 50) ? 9 : 0; }); });
+  for(const n of [10, 15, 20, 30, 50]) for(const k of [1.5, 2, 2.5])
+    C.push(P => ftRun(P, (i, cur) => { if(i < n - 1) return 0; const m = ftSma(P, n, i); let v = 0; for(let j = i - n + 1; j <= i; j++) v += (P[j] - m) * (P[j] - m); const sd = Math.sqrt(v / n); if(P[i] < m - k * sd) return 1; if(P[i] > m + k * sd) return -1; return (cur === 1 && P[i] > m) || (cur === -1 && P[i] < m) ? 9 : 0; }));
+  for(const n of [10, 15, 20, 25, 30, 40, 50, 60, 75, 90, 100, 120, 150, 180, 200])
+    C.push(P => ftRun(P, i => { if(i < n) return 0; let hi = -Infinity, lo = Infinity; for(let j = i - n; j < i; j++){ if(P[j] > hi) hi = P[j]; if(P[j] < lo) lo = P[j]; } return P[i] > hi ? 1 : (P[i] < lo ? -1 : 0); }));
+  return C;
+}
+/* Holds a long (+1), short (-1) or flat (0) position. Pays a fee per side, and funding per day while held (longs pay positive funding, shorts receive it). */
+function ftBacktest(P, a, fee, fd){
+  let eq = 1, peak = 1, mdd = 0, cur = 0, entry = 0, trades = 0, wins = 0;
+  for(let i = 0; i < P.length; i++){
+    if(i > 0 && cur) eq *= 1 + cur * (P[i] / P[i - 1] - 1) - cur * fd;
+    if(a[i] !== cur){
+      eq *= 1 - fee * ((cur ? 1 : 0) + (a[i] ? 1 : 0));
+      if(cur){ trades++; if(cur * (P[i] / entry - 1) - 2 * fee > 0) wins++; }
+      if(a[i]) entry = P[i];
+      cur = a[i];
+    }
+    peak = Math.max(peak, eq); mdd = Math.max(mdd, (peak - eq) / peak);
+  }
+  return { ret: eq - 1, trades, win: trades ? wins / trades : 0, mdd };
+}
+function ftAnalyze(P, deriv){
+  const n = P.length, fee = 0.0005, fr = deriv && deriv.fr != null ? deriv.fr : null, fd = fr != null ? fr / 100 * 3 : 0;
+  const states = ftConfigs().map(make => make(P));
+  const res = states.map(a => ftBacktest(P, a, fee, fd));
+  const sum = new Int16Array(n);
+  states.forEach(a => { for(let i = 0; i < n; i++) sum[i] += a[i]; });
+  const T = 30, last = sum[n - 1];
+  const bias = last >= T ? 'LONG' : (last <= -T ? 'SHORT' : 'NONE');
+  const bh = P[n - 1] / P[0] - 1, rets = res.map(r => r.ret).sort((a, b) => a - b);
+  const flipsL = [], flipsS = [];
+  for(let i = 1; i < n - 1; i++){
+    if(sum[i] >= T && sum[i - 1] < T) flipsL.push(i);
+    if(sum[i] <= -T && sum[i - 1] > -T) flipsS.push(i);
+  }
+  return { bias, N: states.length, longN: states.filter(a => a[n - 1] === 1).length, shortN: states.filter(a => a[n - 1] === -1).length,
+    bh, median: rets[Math.floor(rets.length / 2)], beat: res.filter(r => r.ret > bh).length, profitable: res.filter(r => r.ret > 0).length, flipsL, flipsS, fr };
+}
+function ftNextDay(P, flips, sgn){
+  const moves = flips.filter(i => i + 1 < P.length).map(i => sgn * (P[i + 1] / P[i] - 1));
+  return { n: moves.length, win: moves.length ? moves.filter(m => m > 0).length / moves.length : 0 };
+}
+function renderFutures(P, deriv, coinName, newsItems){
+  const box = document.getElementById('futResult'), id = document.getElementById('anCoin').value;
+  const fb = ftAnalyze(P, deriv), side = fb.bias === 'LONG' ? 'long' : (fb.bias === 'SHORT' ? 'short' : null);
+  const pc = x => (x >= 0 ? '+' : '') + Number(x).toFixed(1) + '%';   // x in percent
+  const pcf = x => pc(x * 100);                                        // x as a fraction
+  const lev = Math.max(1, +document.getElementById('rkLev').value || 3);
+  const col = fb.bias === 'LONG' ? 'var(--accent2)' : (fb.bias === 'SHORT' ? '#ff6b6b' : 'var(--muted)');
+  let planHtml = '<small style="color:var(--muted)">No clear bias, so no plan is filled in. Waiting is a valid choice.</small>', tmHtml = '';
+  if(side){
+    const plan = upPlan(P, side), mc = ftMonteCarlo(P, plan, upHourly(id));
+    const liq = side === 'long' ? plan.entry * (1 - 1 / lev + 0.005) : plan.entry * (1 + 1 / lev - 0.005);
+    document.getElementById('rkSide').value = side;
+    document.getElementById('rkEntry').value = plan.entry.toFixed(2);
+    document.getElementById('rkStop').value = plan.stop.toFixed(2);
+    document.getElementById('rkTgt').value = plan.target.toFixed(2);
+    planHtml = dskRow('Side', side.toUpperCase()) + dskRow('Entry (last close)', fmtPrice(plan.entry)) +
+      dskRow('Stop-loss', fmtPrice(plan.stop) + ' (' + pcf(side === 'long' ? -plan.stopPct : plan.stopPct) + ')') +
+      dskRow('Target', fmtPrice(plan.target) + ' (' + pcf(side === 'long' ? plan.tgtPct : -plan.tgtPct) + ')') +
+      dskRow('Reward to risk', '1 : ' + plan.rr.toFixed(1)) +
+      dskRow('Liquidation at ' + lev + 'x (estimate)', fmtPrice(liq)) +
+      '<small style="display:block;margin-top:6px;color:var(--muted)">Filled into the Plan, size and limits card below. Run its checks before you do anything else.</small>';
+    const nd = ftNextDay(P, side === 'long' ? fb.flipsL : fb.flipsS, side === 'long' ? 1 : -1);
+    tmHtml = '<b style="display:block;margin-top:12px">Time Machine (one day)</b>' +
+      dskRow('10,000 replays: target first', mc.hitT.toFixed(0) + '%') +
+      dskRow('10,000 replays: stop first', mc.hitS.toFixed(0) + '%') +
+      dskRow('10,000 replays: neither', mc.neither.toFixed(0) + '%') +
+      dskRow('Replays ending in profit', mc.profit.toFixed(0) + '% (middle 80%: ' + pc(mc.p10) + ' to ' + pc(mc.p90) + ')') +
+      dskRow('Past flips to this bias, right the next day', nd.n < 8 ? nd.n + ' cases (too few to trust)' : Math.round(nd.win * 100) + '% of ' + nd.n + ' cases');
+  }
+  const rec = '<b style="display:block;margin-top:12px">Record, same year, after costs</b>' +
+    dskRow('Buy and hold', pcf(fb.bh)) +
+    dskRow('Configurations that beat buy and hold', fb.beat + ' of ' + fb.N) +
+    dskRow('Configurations profitable', fb.profitable + ' of ' + fb.N) +
+    dskRow('Median configuration', pcf(fb.median)) +
+    dskRow('Votes: long / short / flat', fb.longN + ' / ' + fb.shortN + ' / ' + (fb.N - fb.longN - fb.shortN)) +
+    dskRow('Funding used', fb.fr != null ? fb.fr.toFixed(4) + '% per 8h (current)' : 'not available, left out');
+  box.innerHTML = '<div style="border-top:1px solid var(--card2);padding-top:14px"><b>📈 Futures · ' + upEsc(coinName || '') + '</b>' +
+    '<div class="big" style="color:' + col + ';margin-top:8px">Futures bias: ' + (side ? side.toUpperCase() : 'NO CLEAR BIAS') + '</div>' +
+    '<small style="display:block;margin:6px 0 10px;color:var(--muted)">Rule-based and educational: a bias needs at least 20 percentage points more configurations on one side. ' +
+      (fb.beat < fb.N / 2 ? 'Most configurations did not beat buy and hold this year.' : 'Most configurations beat buy and hold this year, but that is in-sample.') + ' This is not a signal to trade.</small>' +
+    rec + '<b style="display:block;margin-top:12px">Plan</b>' + planHtml + tmHtml +
+    '<small style="display:block;margin-top:12px;color:#ff6b6b">Futures use leverage. At ' + lev + 'x, a move of about ' + (100 / lev).toFixed(0) + '% against you closes the position, and you can lose the whole margin. Check the liquidation price before any trade.</small></div>';
+  window._futReady = true;
+}
+var cryptoMode = 'spot';
+function applyCryptoMode(){
+  const spot = document.getElementById('anResult'), fut = document.getElementById('futResult'), banner = document.getElementById('modeBanner');
+  if(banner) banner.innerHTML = cryptoMode === 'futures' ? '<b>Futures mode:</b> long or short bias, leverage and liquidation. Educational only.' : '<b>Spot mode:</b> buy or wait, no leverage. Educational only.';
+  if(spot) spot.style.display = cryptoMode === 'spot' && window._anReady ? 'block' : 'none';
+  if(fut) fut.style.display = cryptoMode === 'futures' && window._futReady ? 'block' : 'none';
+  document.querySelectorAll('.tab[data-panel="crypto"]').forEach(b => b.classList.toggle('active', (b.dataset.mode || 'spot') === cryptoMode));
+}
+function setCryptoMode(m){ cryptoMode = m === 'futures' ? 'futures' : 'spot'; applyCryptoMode(); }
+function ftInit(){
+  document.querySelectorAll('.tab[data-panel="crypto"]').forEach(b => b.addEventListener('click', () => setCryptoMode(b.dataset.mode || 'spot')));
+  applyCryptoMode();
+}
+if(document.readyState !== 'loading') ftInit(); else document.addEventListener('DOMContentLoaded', ftInit);
 </script>
 </body>
 </html>
