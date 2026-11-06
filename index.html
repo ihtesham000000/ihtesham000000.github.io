@@ -1569,7 +1569,9 @@ Kindly process this request at your earliest convenience. Thank you for your coo
       <canvas id="anChart" style="width:100%;height:200px;display:block;margin-top:12px;background:var(--card2);border-radius:10px"></canvas>
       <p class="sub" style="margin-top:8px;font-size:.75rem">▲ green = past BUY signal · ▼ red = past SELL signal (180 days)</p>
       <div id="newsBox" style="margin-top:12px"></div>
+      <div id="upgradeBox" style="margin-top:12px"></div>
     </div>
+    <div style="margin-top:16px"><button class="btn btn-ghost" onclick="scanTop()">🔭 Scan top 100 coins for setups</button><div id="scanBox" style="display:none;margin-top:12px"></div></div>
   </div>
 
 <div class="card">
@@ -4400,17 +4402,43 @@ function fmtB(v){
   return v >= 1e12 ? (v/1e12).toFixed(2) + 'T' : v >= 1e9 ? (v/1e9).toFixed(1) + 'B' : (v/1e6).toFixed(0) + 'M';
 }
 async function loadCrypto(){
+  const ids = COINS.map(c => c[0]).join(',');
+  const grab = async (url) => {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(url, { signal: ctl.signal });
+      if(r.status === 429) return { err: 'busy' };
+      if(!r.ok) return { err: 'server' };
+      return { data: await r.json() };
+    } catch(e) {
+      return { err: navigator.onLine === false ? 'offline' : 'unreachable' };
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+  const [sp, mk, gl] = await Promise.all([
+    grab('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true'),
+    grab('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h'),
+    grab('https://api.coingecko.com/api/v3/global')
+  ]);
+  const prices = sp.data && typeof sp.data === 'object' && !sp.data.status ? sp.data : null;
+  const markets = Array.isArray(mk.data) ? mk.data : null;
+  if(!prices || !markets){
+    const reasons = {
+      offline: 'This device is offline. Connect to the internet, then tap Refresh prices.',
+      busy: 'The price service is busy. Wait a minute, then tap Refresh prices.',
+      server: 'The price service returned an error. Try again shortly.',
+      unreachable: 'The price service could not be reached. Check your connection, or open the page in Chrome or on your GitHub Pages link if you are using a preview.'
+    };
+    toast('Live prices not loaded. ' + (reasons[sp.err || mk.err] || 'Tap Refresh prices to try again.'));
+    loadFNG();
+    return;
+  }
   try {
-    const ids = COINS.map(c => c[0]).join(',');
-    const res = await Promise.all([
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=usd,pkr&include_24hr_change=true').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=24h').then(r => r.json()),
-      fetch('https://api.coingecko.com/api/v3/global').then(r => r.json()).catch(() => null)
-    ]);
-    cryptoCache = res[0] || {};
+    cryptoCache = prices;
     marketCache = {};
-    (res[1] || []).forEach(m => { marketCache[m.id] = m; });
-    const g = res[2] && res[2].data;
+    markets.forEach(m => { marketCache[m.id] = m; });
+    const g = gl.data && gl.data.data;
     if(g){
       document.getElementById('mcapVal').textContent = '$' + fmtB(g.total_market_cap.usd);
       document.getElementById('domVal').textContent = g.market_cap_percentage.btc.toFixed(1) + '%';
@@ -4429,7 +4457,9 @@ async function loadCrypto(){
         .join('');
     }
     renderCoins(); renderMovers(); drawChart(); loadFNG(); cvConvert(); pfRender(); notifInit(); startPriceStream();
-  } catch(e) { toast('Could not load prices — check internet'); }
+  } catch(e) {
+    toast('Prices arrived but could not be shown. Tap Refresh prices to try again.');
+  }
 }
 function coinChange(id){
   const m = marketCache[id];
@@ -4513,7 +4543,7 @@ function drawChart(){
 }
 function loadFNG(){
   fetch('https://api.alternative.me/fng/?limit=1')
-    .then(r => r.json())
+    .then(r => { if(!r.ok) throw new Error('fng'); return r.json(); })
     .then(d => {
       const v = +d.data[0].value, cls = d.data[0].value_classification;
       window._fng = v;
@@ -4522,7 +4552,10 @@ function loadFNG(){
       document.getElementById('fngVal').style.color = col;
       document.getElementById('fngSub').textContent = 'Fear & Greed Index · ' + (v < 45 ? 'fear in the market 😰' : v > 55 ? 'greed in the market 🤑' : 'neutral market 😐');
     })
-    .catch(() => {});
+    .catch(() => {
+      document.getElementById('fngVal').textContent = 'Unavailable';
+      document.getElementById('fngSub').textContent = 'Fear & Greed Index · needs an internet connection';
+    });
 }
 function cvConvert(){
   const amt = +document.getElementById('cvAmt').value || 0;
@@ -5058,6 +5091,7 @@ function showAnalysis(id, full, w30, w90, newsItems, P, V, deriv, pat, coinName,
     renderConsensus(id, full, w30, w90, newsItems, P, V, deriv, pat);
     const ensScores = full.ens.map(v => v >= 50 ? 3 : (v === 0 ? 0 : -3));
     drawAnChart(P, ensScores);
+    try { renderUpgrade(P, full, newsItems, coinName); } catch(err){ document.getElementById('upgradeBox').innerHTML = '<small>Setup upgrade could not be drawn for this coin.</small>'; }
     renderNewsBox(newsItems, coinName);
     st.style.display = 'none';
     document.getElementById('anResult').style.display = 'block';
@@ -5562,7 +5596,6 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
     anTotalRow(combined, dCol, decision) +
     '<div style="font-size:.75rem;color:var(--muted);margin:-4px 0 8px">' + volNote + '</div>' +
     '<div style="font-size:.75rem;color:var(--muted);margin:-2px 0 10px">🌡️ Regime: <b style="color:var(--text)">' + regime.toUpperCase() + '</b> (efficiency ' + er.toFixed(2) + ') → ' + (regime === 'trending' ? 'trend strategies ×1.5' : regime === 'ranging' ? 'mean-reversion ×1.5' : 'normal weighting') + '</div>';
-  anActionBox(P, res, { bulls: bulls, n: n, combined: combined, txt: decision, dNote: dNote, patHtml: patHtml, kelly: kellyTxt });
   /* stats */
   let KW = 0, KL = 0, KSw = 0, KSl = 0;
   res.forEach(r => { KW += r.wins; KL += r.losses; KSw += r.winSum; KSl += r.lossSum; });
@@ -5573,6 +5606,7 @@ function renderConsensus(id, fullR, w30, w90, newsItems, P, V, deriv, pat){
     const k = Math.max(0, W - (1 - W) / RR);
     kellyTxt = '💰 Suggested position size (¼-Kelly, educational): <b style="color:var(--text)">' + Math.min(25, (k / 4 * 100)).toFixed(0) + '% of capital</b> · out-of-sample win rate ' + (W * 100).toFixed(0) + '% (' + totT + ' trades)';
   }
+  anActionBox(P, res, { bulls: bulls, n: n, combined: combined, txt: decision, dNote: dNote, patHtml: patHtml, kelly: kellyTxt });
   const rets = res.map(r => r.ret).sort((a, b) => a - b);
   const avg = rets.reduce((a, b) => a + b, 0) / n;
   const median = rets[Math.floor(n / 2)];
@@ -5707,6 +5741,157 @@ const hashTool = location.hash.match(/tool=(\w+)/);
 if(hashTool){
   const tt = document.querySelector('.tab[data-panel="' + hashTool[1] + '"]');
   if(tt) tt.click();
+}
+/* ---------- Setup upgrade: trade plan, bar-by-bar entry, Time Machine, past-setup odds, scanner ---------- */
+function upEsc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]); }
+function upEma(arr, n){
+  const k = 2 / (n + 1), out = new Array(arr.length);
+  out[0] = arr[0];
+  for(let i = 1; i < arr.length; i++) out[i] = arr[i] * k + out[i - 1] * (1 - k);
+  return out;
+}
+function upRsi(p, n){
+  let g = 0, l = 0;
+  for(let i = p.length - n; i < p.length; i++){ const d = p[i] - p[i - 1]; if(d > 0) g += d; else l -= d; }
+  return l === 0 ? 100 : 100 - 100 / (1 + g / l);
+}
+function upStd(a){
+  const m = a.reduce((s, x) => s + x, 0) / a.length;
+  return Math.sqrt(a.reduce((s, x) => s + (x - m) * (x - m), 0) / Math.max(1, a.length - 1));
+}
+/* Stop: the wider of the 30-day low or 1.5 daily standard deviations (never more than 25% away).
+   Target: the 30-day high or 2 units of risk, whichever is further. */
+function upPlan(P){
+  const entry = P[P.length - 1], w = P.slice(-30);
+  const sup = Math.min(...w), resi = Math.max(...w);
+  const rets = [];
+  for(let i = P.length - 30; i < P.length; i++) rets.push(Math.log(P[i] / P[i - 1]));
+  const sd = upStd(rets);
+  const stopDist = Math.min(Math.max(entry - sup, 1.5 * sd * entry, entry * 0.005), entry * 0.25);
+  const stop = entry - stopDist, target = Math.max(resi, entry + 2 * stopDist);
+  return { entry, stop, target, stopPct: stopDist / entry, tgtPct: (target - entry) / entry, rr: (target - entry) / stopDist, sd };
+}
+/* Bar-by-bar entry: when the 9-day average last crossed above the 21-day average. */
+function upEntry(P){
+  const e9 = upEma(P, 9), e21 = upEma(P, 21), last = P.length - 1;
+  for(let i = last; i > last - 60 && i > 21; i--){
+    if(e9[i] > e21[i] && e9[i - 1] <= e21[i - 1])
+      return { fired: true, daysAgo: last - i, price: P[i], movePct: (P[last] / P[i] - 1) * 100 };
+  }
+  return { fired: false };
+}
+/* Time Machine: 10,000 replays of the next 14 days, built from 5-day blocks of the coin's own last-year daily moves. */
+function upMonteCarlo(P, plan){
+  const H = 14, PATHS = 10000, BLOCK = 5;
+  const rets = [];
+  for(let i = 1; i < P.length; i++) rets.push(Math.log(P[i] / P[i - 1]));
+  const L = rets.length, ends = [];
+  let hitT = 0, hitS = 0, up = 0;
+  for(let p = 0; p < PATHS; p++){
+    let price = plan.entry, day = 0, res = null;
+    while(day < H && res === null){
+      const s = Math.floor(Math.random() * (L - BLOCK));
+      for(let b = 0; b < BLOCK && day < H && res === null; b++){
+        price *= Math.exp(rets[s + b]);
+        day++;
+        if(price >= plan.target) res = 'T';
+        else if(price <= plan.stop) res = 'S';
+      }
+    }
+    if(res === 'T') hitT++; else if(res === 'S') hitS++;
+    if(price > plan.entry) up++;
+    ends.push(price / plan.entry - 1);
+  }
+  ends.sort((a, b) => a - b);
+  const q = x => ends[Math.floor(x * (PATHS - 1))] * 100;
+  return { hitT: hitT / PATHS * 100, hitS: hitS / PATHS * 100, up: up / PATHS * 100, p10: q(0.1), p50: q(0.5), p90: q(0.9) };
+}
+/* Past setups: each day the 150-strategy vote flipped to bullish, judged with today's stop and target. */
+function upAnalogs(P, full, plan){
+  const H = 14, n = full.results.length;
+  const share = i => full.ens[i] / n;
+  const out = { n: 0, hitT: 0, hitS: 0, neither: 0 };
+  for(let i = 1; i < P.length - H; i++){
+    if(!(share(i) >= 0.5 && share(i - 1) < 0.5)) continue;
+    out.n++;
+    const tgt = P[i] * (1 + plan.tgtPct), stp = P[i] * (1 - plan.stopPct);
+    let res = null;
+    for(let k = 1; k <= H && res === null; k++){
+      if(P[i + k] >= tgt) res = 'T'; else if(P[i + k] <= stp) res = 'S';
+    }
+    if(res === 'T') out.hitT++; else if(res === 'S') out.hitS++; else out.neither++;
+  }
+  return out;
+}
+/* Scanner rule on 7 days of hourly prices: EMA 12 crossed above EMA 26 in the last 6 hours and RSI 14 is below 70. */
+function upScanCoin(pr){
+  if(!pr || pr.length < 60) return null;
+  const e12 = upEma(pr, 12), e26 = upEma(pr, 26), last = pr.length - 1;
+  for(let i = last; i > last - 6; i--){
+    if(e12[i] > e26[i] && e12[i - 1] <= e26[i - 1]){
+      const rsi = upRsi(pr, 14);
+      return rsi < 70 ? { hrs: last - i, rsi } : null;
+    }
+  }
+  return null;
+}
+function renderUpgrade(P, full, newsItems, coinName){
+  const box = document.getElementById('upgradeBox');
+  const plan = upPlan(P), entry = upEntry(P), mc = upMonteCarlo(P, plan), an = upAnalogs(P, full, plan);
+  const pc = x => x == null ? '—' : (x >= 0 ? '+' : '') + Number(x).toFixed(1) + '%';
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const row = (k, v) => '<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--card2);font-size:.85rem"><span style="color:var(--muted)">' + k + '</span><span style="text-align:right">' + v + '</span></div>';
+  const entryTxt = entry.fired
+    ? 'EMA 9 crossed above EMA 21 ' + entry.daysAgo + (entry.daysAgo === 1 ? ' day' : ' days') + ' ago at ' + fmtPrice(entry.price) + ' (now ' + pc(entry.movePct) + ')'
+    : 'no fresh EMA 9 / 21 cross in 60 days; wait for one';
+  let news = 'feed unavailable';
+  if(newsItems && newsItems.length){
+    let pos = 0, neg = 0;
+    newsItems.forEach(it => { const s = scoreHeadline(it.title); if(s > 0) pos++; else if(s < 0) neg++; });
+    news = pos + ' positive, ' + neg + ' negative (' + newsItems.length + ' stories)';
+  }
+  const anTxt = an.n === 0 ? 'none in this year of data'
+    : an.n + (an.n === 1 ? ' case' : ' cases') + ' · target first ' + pct(an.hitT, an.n) + ' · stop first ' + pct(an.hitS, an.n) + ' · neither ' + pct(an.neither, an.n) + (an.n < 8 ? ' (too few cases to trust)' : '');
+  box.innerHTML =
+    '<div style="border-top:1px solid var(--card2);padding-top:14px"><b>⚡ Setup upgrade · ' + upEsc(coinName || '') + '</b>' +
+    row('Entry (last close)', fmtPrice(plan.entry)) +
+    row('Stop-loss', fmtPrice(plan.stop) + ' (' + pc(-plan.stopPct * 100) + ')') +
+    row('Target', fmtPrice(plan.target) + ' (' + pc(plan.tgtPct * 100) + ')') +
+    row('Reward to risk', '1 : ' + plan.rr.toFixed(1)) +
+    row('Bar-by-bar entry', upEsc(entryTxt)) +
+    row('Time Machine, 10,000 replays of 14 days', 'target first ' + mc.hitT.toFixed(0) + '% · stop first ' + mc.hitS.toFixed(0) + '% · neither ' + (100 - mc.hitT - mc.hitS).toFixed(0) + '%') +
+    row('Ends above entry', mc.up.toFixed(0) + '% of replays (middle 80%: ' + pc(mc.p10) + ' to ' + pc(mc.p90) + ')') +
+    row('Past setups like this', upEsc(anTxt)) +
+    row('Headlines', upEsc(news)) +
+    '</div>' +
+    '<small style="display:block;color:var(--muted);margin-top:8px">The replays use this coin\'s own last year of daily moves, and the past setups come from the same year. They describe history, not what will happen next. Not financial advice.</small>';
+}
+function scanTop(){
+  const box = document.getElementById('scanBox');
+  box.style.display = 'block';
+  const coins = Object.values(marketCache);
+  if(coins.length < 10){ box.innerHTML = '<small>Load prices first: tap Refresh prices in the market overview, then scan again.</small>'; return; }
+  const hits = [];
+  coins.forEach(m => {
+    const hit = upScanCoin(m.sparkline_in_7d && m.sparkline_in_7d.price);
+    if(hit) hits.push(Object.assign({ m }, hit));
+  });
+  hits.sort((a, b) => a.hrs - b.hrs);
+  const pc = x => x == null ? '—' : (x >= 0 ? '+' : '') + Number(x).toFixed(1) + '%';
+  const rows = hits.slice(0, 10).map(h =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--card2)">' +
+    '<span>' + upEsc(h.m.name) + ' <small style="color:var(--muted)">(' + upEsc((h.m.symbol || '').toUpperCase()) + ')</small><br>' +
+    '<small style="color:var(--muted)">' + fmtPrice(h.m.current_price) + ' · 24h ' + pc(h.m.price_change_percentage_24h) + ' · cross ' + h.hrs + 'h ago · RSI ' + Math.round(h.rsi) + '</small></span>' +
+    '<button class="btn btn-ghost" onclick="pickCoin(\'' + upEsc(h.m.id) + '\')">Analyze</button></div>').join('');
+  box.innerHTML = '<b>Setups found: ' + hits.length + ' of ' + coins.length + ' top coins</b>' +
+    '<small style="display:block;color:var(--muted);margin:4px 0 6px">Rule: EMA 12 crossed above EMA 26 in the last 6 hours and RSI 14 below 70, on 7 days of hourly prices. A filter, not advice.</small>' +
+    (rows || '<small>No coin matches the rule right now.</small>');
+}
+function pickCoin(id){
+  const s = document.getElementById('anCoin');
+  s.value = id;
+  analyzeCoin();
+  s.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
 </body>
