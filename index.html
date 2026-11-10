@@ -201,6 +201,7 @@
 
 <nav>
   <button class="tab active" data-panel="menu">🏠 All Tools</button>
+  <button class="tab" data-panel="aidesk">🤖 AI Desk</button>
   <button class="tab" data-panel="resize">🖼️ Resizer</button>
   <button class="tab" data-panel="compress">🗜️ Compress KB</button>
   <button class="tab" data-panel="bgremove">🪄 BG Remover</button>
@@ -291,6 +292,504 @@
 </section>
 
 <!-- ============ IMAGE RESIZER ============ -->
+<section class="panel" id="aidesk">
+<iframe id="aiDeskFrame" title="AI Desk" style="display:block;width:100%;height:960px;border:0" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;!-- AI Desk: one-page paper-mode demo. Change BRAND and MARKETS in the script. Replace the simulated feed (tick, paperOrder) with your own data and broker API before going live. --&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;title&gt;AI Desk&lt;/title&gt;
+&lt;style&gt;
+:root{--bg:#07080f;--panel:#10121c;--line:#232740;--text:#e8eaf6;--muted:#8b90a8;--accent:#5b6cff;--up:#2ee07a;--down:#ff5d5d;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,&quot;Segoe UI&quot;,Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:12px}
+header{display:flex;align-items:center;justify-content:space-between;padding:4px 0 12px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700}
+.mark{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#5b6cff,#c44dff);display:grid;place-items:center;color:#fff;font-weight:800}
+.pill{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font:12px var(--mono);color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+h1{margin:0;font-size:20px;letter-spacing:.5px}
+h2{margin:0 0 12px;font-size:17px}
+h3{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.sub{color:var(--muted);font-size:12px;margin-top:4px}
+.clock{font:600 18px var(--mono);text-align:right}
+.status{display:inline-block;margin-top:6px;font:11px var(--mono);padding:4px 8px;border:1px solid var(--line);border-radius:6px;color:var(--muted)}
+.status.live{color:var(--up);border-color:var(--up)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{font:inherit;cursor:pointer;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.rec{color:#ff6b9a;border-color:#ff6b9a}
+button.rec.on{background:#ff6b9a;color:#000}
+.ticker{overflow-x:auto;white-space:nowrap;font:13px var(--mono);padding:10px 12px;margin-top:12px}
+.tk{margin-right:22px}
+.up{color:var(--up)}
+.down{color:var(--down)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.wall{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(min-width:900px){.grid,.wall{grid-template-columns:repeat(4,1fr)}}
+.agent{border-left:3px solid var(--c)}
+.agent .n{font-weight:700;color:var(--c);letter-spacing:.5px}
+.agent .r{color:var(--muted);font-size:12px;min-height:34px;margin-top:2px}
+.agent .s{font:12px var(--mono);margin-top:6px}
+.agent.alert .s{color:var(--down)}
+.bar{height:6px;background:#1b1e2e;border-radius:4px;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--c)}
+.agent .m{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mk{font:12px var(--mono);color:var(--muted);padding:10px}
+.mk svg{width:100%;height:44px;margin-top:6px;display:block}
+.sec{margin-top:12px}
+.log{max-height:260px;overflow:auto;font:12px var(--mono)}
+.log div{padding:5px 0;border-bottom:1px solid var(--line)}
+.log span{color:var(--muted)}
+.log b{color:var(--c,#fff)}
+.foot{color:var(--muted);font-size:11px;text-align:center;margin:14px 0 6px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:14px;z-index:9}
+.modal.open{display:flex}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;width:100%;max-width:420px;max-height:90vh;overflow:auto}
+.opt{display:flex;align-items:center;gap:8px;padding:6px 0}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.strat{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+.strat.on{border-color:var(--accent)}
+.strat p{margin:4px 0 8px;color:var(--muted);font-size:13px}
+.row{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.setup{border:1px solid var(--line);border-left:3px solid var(--up);border-radius:12px;padding:12px;margin-top:10px}
+.setup.short{border-left-color:var(--down)}
+.setup.best{box-shadow:0 0 0 1px var(--accent)}
+.setup .hd{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+.setup .lv{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font:13px var(--mono);margin:10px 0}
+.setup .lv span{display:block;color:var(--muted);font-size:11px}
+.setup .why{color:var(--muted);font-size:12px;margin-bottom:10px}
+.setup button{width:100%}
+.tag{font:11px var(--mono);padding:3px 7px;border-radius:6px;color:#000;background:var(--up)}
+.tag.short{background:var(--down)}
+.tag.best{background:var(--accent);color:#fff}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;wrap&quot;&gt;
+  &lt;header&gt;
+    &lt;div class=&quot;brand&quot;&gt;&lt;div class=&quot;mark&quot; id=&quot;mark&quot;&gt;Y&lt;/div&gt;&lt;span id=&quot;brand&quot;&gt;YourBrand&lt;/span&gt;&lt;/div&gt;
+    &lt;div class=&quot;pill&quot;&gt;PAPER MODE&lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;section class=&quot;panel&quot;&gt;
+    &lt;div class=&quot;head&quot;&gt;
+      &lt;div&gt;
+        &lt;h1&gt;AI DESK&lt;/h1&gt;
+        &lt;div class=&quot;sub&quot; id=&quot;subline&quot;&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;div class=&quot;clock&quot; id=&quot;clock&quot;&gt;--:--&lt;/div&gt;
+        &lt;div&gt;&lt;span class=&quot;status&quot; id=&quot;status&quot;&gt;NOT SET UP&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;btns&quot;&gt;
+      &lt;button class=&quot;primary&quot; id=&quot;setupBtn&quot;&gt;Set up the desk&lt;/button&gt;
+      &lt;button id=&quot;stratBtn&quot;&gt;Strategies&lt;/button&gt;
+      &lt;button id=&quot;scanBtn&quot;&gt;Scan all markets&lt;/button&gt;
+      &lt;button class=&quot;rec&quot; id=&quot;recBtn&quot;&gt;● Record&lt;/button&gt;
+      &lt;button id=&quot;pauseBtn&quot; hidden&gt;Pause&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;panel ticker&quot; id=&quot;ticker&quot;&gt;&lt;/section&gt;
+  &lt;div class=&quot;grid&quot; id=&quot;agents&quot;&gt;&lt;/div&gt;
+
+  &lt;section class=&quot;panel sec&quot;&gt;
+    &lt;h3&gt;Trade setups &lt;span id=&quot;scanTime&quot;&gt;&lt;/span&gt;&lt;/h3&gt;
+    &lt;div id=&quot;setups&quot;&gt;&lt;div class=&quot;sub&quot;&gt;Tap &quot;Scan all markets&quot; to check every market for trade setups.&lt;/div&gt;&lt;/div&gt;
+    &lt;div class=&quot;sub&quot; style=&quot;margin-top:10px&quot;&gt;Setups use live 15-minute BTC and ETH candles from Coinbase, with a 2-hour time exit. Not financial advice. Paper mode only.&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;panel sec&quot;&gt;
+    &lt;h3&gt;Markets on the wall (simulated)&lt;/h3&gt;
+    &lt;div class=&quot;wall&quot; id=&quot;wall&quot;&gt;&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;section class=&quot;panel sec&quot;&gt;
+    &lt;h3&gt;Desk log&lt;/h3&gt;
+    &lt;div class=&quot;log&quot; id=&quot;log&quot;&gt;&lt;/div&gt;
+  &lt;/section&gt;
+
+  &lt;div class=&quot;foot&quot;&gt;Paper mode. Ticker and wall prices are simulated. Setups use live crypto candles. No real orders are placed.&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;modal&quot; id=&quot;setupModal&quot;&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h2&gt;Set up the desk&lt;/h2&gt;
+    &lt;h3&gt;Markets&lt;/h3&gt;
+    &lt;div id=&quot;mktOpts&quot;&gt;&lt;/div&gt;
+    &lt;h3 style=&quot;margin-top:14px&quot;&gt;Risk per trade&lt;/h3&gt;
+    &lt;div class=&quot;seg&quot; id=&quot;riskSeg&quot;&gt;
+      &lt;button data-r=&quot;0.25&quot;&gt;Low 0.25%&lt;/button&gt;
+      &lt;button data-r=&quot;0.5&quot;&gt;Medium 0.5%&lt;/button&gt;
+      &lt;button data-r=&quot;1&quot;&gt;High 1%&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;row&quot;&gt;
+      &lt;button id=&quot;cancelSetup&quot;&gt;Cancel&lt;/button&gt;
+      &lt;button class=&quot;primary&quot; id=&quot;startDesk&quot;&gt;Start desk&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;modal&quot; id=&quot;stratModal&quot;&gt;
+  &lt;div class=&quot;box&quot;&gt;
+    &lt;h2&gt;Strategies&lt;/h2&gt;
+    &lt;div id=&quot;stratList&quot;&gt;&lt;/div&gt;
+    &lt;div class=&quot;row&quot;&gt;&lt;button id=&quot;closeStrat&quot;&gt;Close&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+// ----- Settings: change these for your site -----
+const BRAND = 'YourBrand';
+const MARKETS = [
+  { sym: 'BTC/USD', price: 75968.78, dec: 2, vol: 0.004 },
+  { sym: 'ETH/USD', price: 2310.4, dec: 2, vol: 0.005 },
+  { sym: 'EUR/USD', price: 1.11368, dec: 5, vol: 0.0012 },
+  { sym: 'XAU/USD', price: 3012.5, dec: 2, vol: 0.0025 }
+];
+const STRATEGIES = [
+  { id: 'trend', name: 'Trend following', desc: 'Long when EMA 9 is above EMA 21 and RSI is 50 to 70. Short when the reverse.' },
+  { id: 'revert', name: 'Mean reversion', desc: 'Long when RSI is below 30, short when RSI is above 70.' },
+  { id: 'break', name: 'Breakout', desc: 'Long on a break above the last 20 bars, short on a break below.' }
+];
+const AGENTS = [
+  { id: 'chief', name: 'CHIEF', role: 'Runs the desk and merges reports', c: '#8b8cff', msgs: ['Cycle running across all markets', 'Merged the latest agent reports', 'Priorities set for the next pass'] },
+  { id: 'scan', name: 'SCAN', role: 'Finds setups across your markets', c: '#ff5d5d', msgs: ['Found 2 candidate setups', 'No clean setup on this pass', 'Ranked setups by strength'] },
+  { id: 'vet', name: 'VET', role: 'Checks liquidity and setup quality', c: '#ff5fc8', msgs: ['Liquidity and spread look fine', 'Setup passed quality checks', 'Setup rejected: thin volume'] },
+  { id: 'social', name: 'SOCIAL', role: 'Reads sentiment and news buzz', c: '#2ee07a', msgs: ['Sentiment neutral to positive', 'Mention spike detected', 'Sentiment turning cautious'] },
+  { id: 'size', name: 'SIZE', role: 'Sizes positions from your risk', c: '#4d9bff', msgs: [] },
+  { id: 'fills', name: 'FILLS', role: 'Places paper orders only', c: '#ffc23d', msgs: [] },
+  { id: 'risk', name: 'RISK', role: 'Enforces exposure and loss limits', c: '#ff8a3d', msgs: ['Exposure within limits', 'Trimmed exposure on one market', 'Daily loss check passed'] },
+  { id: 'crawler', name: 'CRAWLER', role: 'Collects headlines and data', c: '#a86bff', msgs: ['Indexed 38 new headlines', 'Economic calendar synced', 'Price history refreshed'] }
+];
+
+// ----- State -----
+const state = { setUp: false, running: false, markets: MARKETS.map(m =&gt; m.sym), risk: 0.5, strategy: 'trend', trades: 0, rec: false, recLines: [], recStart: 0 };
+let pendingRisk = 0.5, logEntries = [], recTimer = null;
+
+// ----- Helpers -----
+const $ = id =&gt; document.getElementById(id);
+const pick = arr =&gt; arr[Math.floor(Math.random() * arr.length)];
+const fmt = m =&gt; m.price.toLocaleString('en-US', { minimumFractionDigits: m.dec, maximumFractionDigits: m.dec });
+const change = m =&gt; (m.price - m.base) / m.base * 100;
+const mmss = ms =&gt; { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+const openModal = id =&gt; $(id).classList.add('open');
+const closeModal = id =&gt; $(id).classList.remove('open');
+
+// ----- Desk logic (simulated) -----
+// Swap this for your own order logic and broker API.
+function paperOrder() {
+  const m = MARKETS.find(x =&gt; x.sym === pick(state.markets));
+  state.trades++;
+  return `Paper ${Math.random() &lt; 0.5 ? 'BUY' : 'SELL'} ${(Math.random() * 2 + 0.1).toFixed(2)} lots ${m.sym} @ ${fmt(m)}`;
+}
+
+function logLine(a, msg) {
+  const t = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  logEntries = [{ t, name: a.name, c: a.c, msg }, ...logEntries].slice(0, 40);
+  if (state.rec) state.recLines.push(`${t}  ${a.name.padEnd(8)} ${msg}`);
+}
+
+function stepAgents() {
+  AGENTS.forEach(a =&gt; {
+    a.progress += 3 + Math.random() * 8;
+    if (a.progress &gt;= 100) a.progress = 0;
+  });
+}
+
+// ----- Rendering -----
+function spark(hist, col) {
+  const w = 120, h = 44, min = Math.min(...hist), span = (Math.max(...hist) - min) || 1;
+  const pts = hist.map((v, i) =&gt; `${(i / (hist.length - 1)) * w},${h - 2 - ((v - min) / span) * (h - 4)}`).join(' ');
+  return `&lt;svg viewBox=&quot;0 0 ${w} ${h}&quot; preserveAspectRatio=&quot;none&quot; style=&quot;color:${col}&quot;&gt;&lt;polyline points=&quot;${pts}&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; vector-effect=&quot;non-scaling-stroke&quot;/&gt;&lt;/svg&gt;`;
+}
+function renderTicker() {
+  $('ticker').innerHTML = MARKETS.map(m =&gt; {
+    const ch = change(m);
+    return `&lt;span class=&quot;tk&quot;&gt;${m.sym} &lt;b&gt;${fmt(m)}&lt;/b&gt; &lt;span class=&quot;${ch &gt;= 0 ? 'up' : 'down'}&quot;&gt;${ch &gt;= 0 ? '▲' : '▼'}${Math.abs(ch).toFixed(2)}%&lt;/span&gt;&lt;/span&gt;`;
+  }).join('');
+}
+function renderWall() {
+  $('wall').innerHTML = MARKETS.map(m =&gt; {
+    const col = change(m) &gt;= 0 ? 'var(--up)' : 'var(--down)';
+    return `&lt;div class=&quot;panel mk&quot;&gt;&lt;div&gt;${m.sym} · ${fmt(m)}&lt;/div&gt;${spark(m.hist, col)}&lt;/div&gt;`;
+  }).join('');
+}
+function renderAgents() {
+  $('agents').innerHTML = AGENTS.map(a =&gt; {
+    const label = !state.setUp ? 'Waiting' : !state.running ? 'Paused' : a.state === 'alert' ? 'Alert' : 'Working';
+    return `&lt;div class=&quot;panel agent${label === 'Alert' ? ' alert' : ''}&quot; style=&quot;--c:${a.c}&quot;&gt;
+      &lt;div class=&quot;n&quot;&gt;${a.name}&lt;/div&gt;
+      &lt;div class=&quot;r&quot;&gt;${a.role}&lt;/div&gt;
+      &lt;div class=&quot;s&quot;&gt;${label}&lt;/div&gt;
+      &lt;div class=&quot;bar&quot;&gt;&lt;i style=&quot;width:${Math.min(a.progress, 100)}%&quot;&gt;&lt;/i&gt;&lt;/div&gt;
+      &lt;div class=&quot;m&quot;&gt;${a.last || ''}&lt;/div&gt;
+    &lt;/div&gt;`;
+  }).join('');
+}
+function renderLog() {
+  $('log').innerHTML = logEntries.map(e =&gt; `&lt;div&gt;&lt;span&gt;${e.t}&lt;/span&gt; &lt;b style=&quot;--c:${e.c}&quot;&gt;${e.name}&lt;/b&gt; ${e.msg}&lt;/div&gt;`).join('');
+}
+function renderHeader() {
+  const st = $('status');
+  st.textContent = !state.setUp ? 'NOT SET UP' : state.running ? 'LIVE · PAPER' : 'PAUSED';
+  st.className = 'status' + (state.running ? ' live' : '');
+  const strat = STRATEGIES.find(s =&gt; s.id === state.strategy).name;
+  $('subline').textContent = `8 AI agents · ${state.markets.length} markets · ${strat} · ${state.trades} paper trades`;
+  $('setupBtn').textContent = state.setUp ? 'Edit setup' : 'Set up the desk';
+  $('pauseBtn').hidden = !state.setUp;
+  $('pauseBtn').textContent = state.running ? 'Pause' : 'Resume';
+}
+function renderClock() {
+  $('clock').textContent = new Date().toISOString().slice(11, 16) + ' UTC';
+}
+function tick() {
+  MARKETS.forEach(m =&gt; {
+    m.price *= 1 + (Math.random() - 0.5) * m.vol;
+    m.hist.push(m.price);
+    if (m.hist.length &gt; 40) m.hist.shift();
+  });
+  if (state.running) stepAgents();
+  renderClock(); renderTicker(); renderWall(); renderAgents(); renderLog(); renderHeader();
+}
+
+// ----- Trade setups: rule-based scan of every active market -----
+const ACCOUNT = 10000;   // paper account size
+const MAX_OPEN = 2;      // RISK agent: setups kept per scan
+Object.assign(state, { setups: [], scanInfo: null });
+const ag = id =&gt; AGENTS.find(a =&gt; a.id === id);
+const fmtP = (m, p) =&gt; p.toLocaleString('en-US', { minimumFractionDigits: m.dec, maximumFractionDigits: m.dec });
+const fmtUnits = u =&gt; u &gt;= 100 ? Math.round(u).toLocaleString('en-US') : u.toFixed(2);
+const emaOf = (arr, n) =&gt; { const k = 2 / (n + 1); let e = arr[0]; for (let i = 1; i &lt; arr.length; i++) e = arr[i] * k + e * (1 - k); return e; };
+const rsiOf = (arr, n = 14) =&gt; {
+  let g = 0, l = 0;
+  for (let i = arr.length - n; i &lt; arr.length; i++) { const d = arr[i] - arr[i - 1]; if (d &gt;= 0) g += d; else l -= d; }
+  return l === 0 ? 100 : 100 - 100 / (1 + g / l);
+};
+// Live candles from Coinbase's public endpoint. Only BTC and ETH have a feed here.
+const LIVE = { 'BTC/USD': 'BTC-USD', 'ETH/USD': 'ETH-USD' };
+const CANDLE_SEC = 900;   // 15-minute candles
+const HOLD_MIN = 120;     // time exit: 2 hours
+async function loadCandles(product) {
+  const end = new Date(), start = new Date(end - 100 * CANDLE_SEC * 1000);
+  const url = `https://api.exchange.coinbase.com/products/${product}/candles?granularity=${CANDLE_SEC}&amp;start=${start.toISOString()}&amp;end=${end.toISOString()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  // Rows are [time, low, high, open, close, volume]. Sort oldest first and drop a candle that is still forming.
+  let rows = (await res.json()).sort((a, b) =&gt; a[0] - b[0]);
+  if (rows.length &amp;&amp; rows[rows.length - 1][0] + CANDLE_SEC &gt; Date.now() / 1000) rows.pop();
+  if (rows.length &lt; 30) throw new Error('not enough candles');
+  return rows.map(r =&gt; ({ low: +r[1], high: +r[2], close: +r[4] }));
+}
+const atrOf = (c, n = 14) =&gt; {
+  let s = 0;
+  for (let i = c.length - n; i &lt; c.length; i++) {
+    const pc = c[i - 1].close;
+    s += Math.max(c[i].high - c[i].low, Math.abs(c[i].high - pc), Math.abs(c[i].low - pc));
+  }
+  return s / n;
+};
+
+// Stop = 1.5x ATR (14 candles), target = 3x ATR (1:2 reward to risk).
+function findSetup(m, c) {
+  const h = c.map(x =&gt; x.close), p = h[h.length - 1], v = atrOf(c) || 1e-9;
+  const fast = emaOf(h, 9), slow = emaOf(h, 21), r = rsiOf(h);
+  const prior = h.slice(-21, -1), hi = Math.max(...prior), lo = Math.min(...prior);
+  const mean = prior.reduce((x, y) =&gt; x + y, 0) / prior.length;
+  let dir = null, ref = 0, why = '';
+  if (state.strategy === 'trend') {
+    if (fast &gt; slow &amp;&amp; r &gt; 50 &amp;&amp; r &lt; 70) { dir = 'LONG'; ref = slow; why = `EMA 9 above EMA 21, RSI ${r.toFixed(0)}`; }
+    else if (fast &lt; slow &amp;&amp; r &lt; 50 &amp;&amp; r &gt; 30) { dir = 'SHORT'; ref = slow; why = `EMA 9 below EMA 21, RSI ${r.toFixed(0)}`; }
+  } else if (state.strategy === 'revert') {
+    if (r &lt; 30) { dir = 'LONG'; ref = mean; why = `RSI ${r.toFixed(0)}, oversold`; }
+    else if (r &gt; 70) { dir = 'SHORT'; ref = mean; why = `RSI ${r.toFixed(0)}, overbought`; }
+  } else {
+    if (p &gt; hi) { dir = 'LONG'; ref = hi; why = 'Broke above the 20-bar high'; }
+    else if (p &lt; lo) { dir = 'SHORT'; ref = lo; why = 'Broke below the 20-bar low'; }
+  }
+  if (!dir) return null;
+  const sign = dir === 'LONG' ? 1 : -1, stop = v * 1.5;
+  return {
+    m, dir, why, entry: p,
+    stop: p - sign * stop,
+    target: p + sign * v * 3,
+    stopPct: stop / p * 100,
+    strength: Math.abs(p - ref) / v,
+    units: (ACCOUNT * state.risk / 100) / stop
+  };
+}
+
+function renderSetups() {
+  const info = state.scanInfo;
+  const summary = info.failed ? 'Live candles are unavailable right now, so no setups are shown.'
+    : !info.scanned ? 'No selected market has a live feed. Pick BTC/USD or ETH/USD.'
+    : `Scanned ${info.scanned} live market(s): ${info.found} signal(s), ${info.vetRejected} rejected by VET, ${info.held} held back by RISK.` + (info.skipped ? ` ${info.skipped} skipped (no live feed).` : '');
+  const cards = state.setups.map((s, i) =&gt; `
+    &lt;div class=&quot;setup ${s.dir.toLowerCase()}${i === 0 ? ' best' : ''}&quot;&gt;
+      &lt;div class=&quot;hd&quot;&gt;&lt;span&gt;${s.m.sym}&lt;/span&gt;&lt;span&gt;&lt;span class=&quot;tag ${s.dir.toLowerCase()}&quot;&gt;${s.dir}&lt;/span&gt;${i === 0 ? ' &lt;span class=&quot;tag best&quot;&gt;BEST&lt;/span&gt;' : ''}&lt;/span&gt;&lt;/div&gt;
+      &lt;div class=&quot;lv&quot;&gt;
+        &lt;div&gt;${fmtP(s.m, s.entry)}&lt;span&gt;Entry&lt;/span&gt;&lt;/div&gt;
+        &lt;div&gt;${fmtP(s.m, s.stop)}&lt;span&gt;Stop&lt;/span&gt;&lt;/div&gt;
+        &lt;div&gt;${fmtP(s.m, s.target)}&lt;span&gt;Target&lt;/span&gt;&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;why&quot;&gt;${s.why} · R:R 1:2 · Size ${fmtUnits(s.units)} units · Stop ${s.stopPct.toFixed(2)}% · Time exit ${s.exitBy}&lt;/div&gt;
+      &lt;button data-take=&quot;${i}&quot;${s.taken ? ' disabled' : ''}&gt;${s.taken ? 'Paper trade taken' : 'Take paper trade'}&lt;/button&gt;
+    &lt;/div&gt;`).join('');
+  $('setups').innerHTML = `&lt;div class=&quot;sub&quot;&gt;${summary}&lt;/div&gt;` + (cards || '&lt;div class=&quot;sub&quot; style=&quot;margin-top:10px&quot;&gt;No setups passed VET and RISK this scan.&lt;/div&gt;');
+}
+
+async function scanAll() {
+  const active = MARKETS.filter(m =&gt; state.markets.includes(m.sym));
+  const live = active.filter(m =&gt; LIVE[m.sym]);
+  const info = { scanned: live.length, skipped: active.length - live.length, found: 0, vetRejected: 0, held: 0, failed: false };
+  let setups = [];
+  if (live.length) {
+    try {
+      const candles = await Promise.all(live.map(m =&gt; loadCandles(LIVE[m.sym])));
+      const found = live.map((m, i) =&gt; findSetup(m, candles[i])).filter(Boolean);
+      const passed = found.filter(s =&gt; s.stopPct &gt;= 0.1 &amp;&amp; s.stopPct &lt;= 5);
+      const ranked = passed.sort((x, y) =&gt; y.strength - x.strength);
+      setups = ranked.slice(0, MAX_OPEN);
+      Object.assign(info, { found: found.length, vetRejected: found.length - passed.length, held: ranked.length - setups.length });
+    } catch (e) {
+      info.failed = true;
+    }
+  }
+  setups.forEach(s =&gt; { s.exitBy = new Date(Date.now() + HOLD_MIN * 60000).toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit' }); });
+  state.setups = setups;
+  state.scanInfo = info;
+  const best = setups[0];
+  [
+    [ag('scan'), info.failed ? 'Live candles unavailable' : `Scanned ${info.scanned} live market(s), ${info.found} signal(s)`],
+    [ag('vet'), `${info.found - info.vetRejected} passed, ${info.vetRejected} rejected`],
+    [ag('risk'), `Max ${MAX_OPEN} open, ${info.held} held back`],
+    [ag('size'), `Sized at ${state.risk}% risk per setup`],
+    [ag('fills'), best ? 'Ready. Take a setup to paper trade' : 'Waiting for a setup'],
+    [ag('chief'), best ? `Best setup: ${best.m.sym} ${best.dir}` : 'No setups this scan'],
+    [ag('social'), 'Not connected to a news feed'],
+    [ag('crawler'), live.length ? 'Live 15-minute candles' : 'No live feed for selected markets']
+  ].forEach(([a, msg]) =&gt; { a.last = msg; logLine(a, msg); });
+  $('scanTime').textContent = '· ' + new Date().toLocaleTimeString('en-GB', { hour12: false });
+  renderSetups();
+}
+
+function takeSetup(i) {
+  const s = state.setups[i];
+  if (!s || s.taken) return;
+  s.taken = true;
+  state.trades++;
+  const f = ag('fills'), msg = `Paper ${s.dir} ${fmtUnits(s.units)} ${s.m.sym} @ ${fmtP(s.m, s.entry)}`;
+  f.last = msg;
+  logLine(f, msg);
+  renderSetups();
+}
+
+$('scanBtn').onclick = scanAll;
+$('setups').onclick = e =&gt; { const b = e.target.closest('[data-take]'); if (b &amp;&amp; !b.disabled) takeSetup(+b.dataset.take); };
+
+// ----- Setup, strategies, record, pause -----
+function buildMarketOpts() {
+  $('mktOpts').innerHTML = MARKETS.map(m =&gt; `&lt;label class=&quot;opt&quot;&gt;&lt;input type=&quot;checkbox&quot; value=&quot;${m.sym}&quot;${state.markets.includes(m.sym) ? ' checked' : ''}&gt; ${m.sym}&lt;/label&gt;`).join('');
+}
+function setRiskButtons() {
+  document.querySelectorAll('#riskSeg button').forEach(b =&gt; b.classList.toggle('on', +b.dataset.r === pendingRisk));
+}
+function buildStrategies() {
+  $('stratList').innerHTML = STRATEGIES.map(s =&gt; {
+    const on = s.id === state.strategy;
+    return `&lt;div class=&quot;strat${on ? ' on' : ''}&quot;&gt;&lt;b&gt;${s.name}&lt;/b&gt;&lt;p&gt;${s.desc}&lt;/p&gt;&lt;button data-s=&quot;${s.id}&quot;&gt;${on ? 'In use' : 'Use this'}&lt;/button&gt;&lt;/div&gt;`;
+  }).join('');
+  document.querySelectorAll('#stratList button').forEach(b =&gt; b.onclick = () =&gt; {
+    state.strategy = b.dataset.s;
+    if (state.setUp) logLine(AGENTS[0], 'Strategy set to ' + STRATEGIES.find(s =&gt; s.id === state.strategy).name);
+    buildStrategies();
+    renderHeader();
+  });
+}
+
+$('setupBtn').onclick = () =&gt; { buildMarketOpts(); pendingRisk = state.risk; setRiskButtons(); openModal('setupModal'); };
+$('cancelSetup').onclick = () =&gt; closeModal('setupModal');
+document.querySelectorAll('#riskSeg button').forEach(b =&gt; b.onclick = () =&gt; { pendingRisk = +b.dataset.r; setRiskButtons(); });
+$('startDesk').onclick = () =&gt; {
+  const picked = [...$('mktOpts').querySelectorAll('input:checked')].map(i =&gt; i.value);
+  if (!picked.length) { alert('Pick at least one market.'); return; }
+  Object.assign(state, { markets: picked, risk: pendingRisk, setUp: true, running: true });
+  AGENTS.forEach(a =&gt; { a.state = 'working'; a.progress = 0; a.last = 'Starting up'; });
+  logLine(AGENTS[0], `Desk started in paper mode. Markets: ${picked.join(', ')}. Risk ${state.risk}%.`);
+  closeModal('setupModal');
+  renderHeader();
+  scanAll();
+};
+$('stratBtn').onclick = () =&gt; { buildStrategies(); openModal('stratModal'); };
+$('closeStrat').onclick = () =&gt; closeModal('stratModal');
+$('pauseBtn').onclick = () =&gt; {
+  state.running = !state.running;
+  logLine(AGENTS[0], state.running ? 'Desk resumed' : 'Desk paused');
+  renderHeader();
+};
+$('recBtn').onclick = () =&gt; {
+  const btn = $('recBtn');
+  if (!state.rec) {
+    Object.assign(state, { rec: true, recLines: [], recStart: Date.now() });
+    logLine(AGENTS[0], 'Recording started');
+    btn.classList.add('on');
+    btn.textContent = '■ Stop 00:00';
+    recTimer = setInterval(() =&gt; { btn.textContent = '■ Stop ' + mmss(Date.now() - state.recStart); }, 1000);
+    return;
+  }
+  state.rec = false;
+  clearInterval(recTimer);
+  btn.classList.remove('on');
+  btn.textContent = '● Record';
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([state.recLines.join('\n') || 'No events recorded.'], { type: 'text/plain' }));
+  link.download = 'desk-log-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.txt';
+  link.click();
+};
+document.querySelectorAll('.modal').forEach(m =&gt; m.addEventListener('click', e =&gt; { if (e.target === m) m.classList.remove('open'); }));
+
+// ----- Init -----
+MARKETS.forEach(m =&gt; {
+  m.hist = [m.price];
+  for (let i = 1; i &lt; 40; i++) { m.price *= 1 + (Math.random() - 0.5) * m.vol; m.hist.push(m.price); }
+  m.base = m.hist[0];
+});
+AGENTS.forEach(a =&gt; { a.state = 'waiting'; a.progress = 0; a.last = 'Waiting for setup'; });
+$('brand').textContent = BRAND;
+$('mark').textContent = BRAND.charAt(0).toUpperCase();
+logEntries = [{ t: '', name: 'SYS', c: '#8b90a8', msg: 'Desk not set up yet. Tap &quot;Set up the desk&quot; to start in paper mode.' }];
+buildStrategies();
+tick();
+setInterval(tick, 1000);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+</section>
+<script>
+(function(){
+  var f = document.getElementById('aiDeskFrame');
+  function fit(){
+    try {
+      var d = f.contentDocument;
+      var h = d && d.body ? Math.ceil(d.body.getBoundingClientRect().height) : 0;
+      if (h) f.style.height = (h + 2) + 'px';
+    } catch (e) {}
+  }
+  f.addEventListener('load', function(){
+    fit();
+    try { new f.contentWindow.ResizeObserver(fit).observe(f.contentDocument.body); } catch (e) {}
+    setInterval(fit, 1000);
+  });
+  window.addEventListener('resize', fit);
+})();
+</script>
 <section class="panel" id="resize">
   <div class="card">
     <h2>Image Resizer</h2>
